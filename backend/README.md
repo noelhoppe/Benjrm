@@ -17,4 +17,10 @@ $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ cargo run # optional: --release
 ```
 
+The port the backend binds on defaults to port 80. If the backend is run locally outside of a container, it is common for the system to respond with a "permission denied" error when binding a port below 1024. To run the backend without elevated privileges, set the `PORT` environment variable to something higher, for example 8080.
+
+```bash
+$ PORT=8080 cargo run # optional: --release
+```
+
 > **Hint:** Release builds compile the frontend into the binary while debug builds require a running vite dev server (on port 5173).
