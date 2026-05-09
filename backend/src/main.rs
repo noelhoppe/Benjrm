@@ -14,6 +14,7 @@ pub use app_data::AppData;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let _ = dotenvy::dotenv(); // ignore missing `.env` file
     if cfg!(debug_assertions) {
         // Safety: because this is the start of our program, there are no other threads reading from the environment
         unsafe {

@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: benjrm
       POSTGRES_USER: benjrm
-      POSTGRES_PASSWORD: <password>
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U benjrm -d benjrm"]
       interval: 5s

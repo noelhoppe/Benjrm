@@ -1,3 +1,5 @@
+.env*
+!.env.example
 /database
 
 # Editor directories and files
