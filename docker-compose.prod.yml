@@ -1,0 +1,26 @@
+services:
+  identity-provider:
+    image: quay.io/keycloak/keycloak:26.6.1
+    ports:
+      - "8088:8088" # access locally via http://127.0.0.1:8088
+      - "9000:9000" # access locally via http://127.0.0.1:9000
+    volumes:
+      - ./services/identity-provider/mounts/realm-prod.json:/realm-prod.json
+    env_file:
+      - .env.example
+    entrypoint:
+      - '/bin/bash'
+      - '-c'
+      - |
+        /opt/keycloak/bin/kc.sh show-config --verbose
+        /opt/keycloak/bin/kc.sh import --file realm-prod.json
+        /opt/keycloak/bin/kc.sh start
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "{ printf 'HEAD /health/ready HTTP/1.0\r\n\r\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000"
+      ]
+      start_period: "15s"
+      interval: 30s
+      timeout: 10s
+      retries: 3
