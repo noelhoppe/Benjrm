@@ -41,7 +41,7 @@ async fn main() -> std::io::Result<()> {
         cookie::Key::generate()
     };
 
-    let data = web::Data::new(AppData::from_env());
+    let data = web::Data::new(AppData::from_env().await);
 
     // Use `PORT` from the environment or default to 80 if not set
     let port = std::env::var("PORT")
