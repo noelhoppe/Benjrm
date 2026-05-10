@@ -1,6 +1,7 @@
 .env*
 !.env.example
 /database
+/benjrm.db
 
 # Editor directories and files
 .vscode/*

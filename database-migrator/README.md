@@ -2,6 +2,10 @@
 
 You will probably only use this migrator directly to create new migrations. While you can apply or rollback migrations directly using this tool, the backend will automatically apply all pending migrations during startup.
 
+Supported databases backends currently are:
+- PostgreSQL
+- SQLite
+
 ## Generate a new migration file
 
 ```bash
@@ -13,7 +17,7 @@ $ cargo run -- generate <migration_name>
 To apply migrations using the migrator directly, you have to pass the database url to it:
 
 ```bash
-$ DATABASE_URL="postgres://benjrm:<password>@localhost:5432/benjrm" cargo run -- <command>
+$ DATABASE_URL="<db_url>" cargo run -- <command>
 ```
 
 Important commands:
