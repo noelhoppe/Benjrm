@@ -1,0 +1,24 @@
+name: CI
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches:
+      - main
+      - feature/**
+
+jobs:
+  lint:
+    uses: Benjrm/demo-repository/.github/workflows/lint.yml@v1.0.0
+    with:
+      frontend-path: "frontend"
+      backend-path: "backend"
+
+  security:
+    uses: Benjrm/demo-repository/.github/workflows/security.yml@v1.0.0
+    with:
+      frontend-path: "frontend"
+      sonar-host-url: ${{ vars.SONAR_HOST_URL}}
+      sonar-project-key: ${{ vars.SONAR_PROJECT_KEY}}
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN}}
