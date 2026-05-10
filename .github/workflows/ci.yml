@@ -6,7 +6,7 @@ on:
     branches:
       - main
       - feature/**
-  workflow_dispatch:
+  workflow_dispatch: # manual trigger
 
 jobs:
   lint:
