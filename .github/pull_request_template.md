@@ -4,6 +4,8 @@ Use this section for review explanations, discussion points, or todos. A clear a
 - Reasoning
 - Additional context
 
+This PR is a: [New feature, Bug fix, Refactor, Performance improvement, something else]
+
 ## Screenshots
 
 Screenshots or a screen recording of visual changes associated with this PR. You can remove this section for non-visual changes.
