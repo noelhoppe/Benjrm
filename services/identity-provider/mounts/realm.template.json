@@ -2,6 +2,19 @@
   "realm": "${KC_REALM_ID}",
   "enabled": true,
   "sslRequired": "external",
+  "registrationAllowed": true,
+  "resetPasswordAllowed": true,
+  "verifyEmail": true,
+  "rememberMe": true,
+  "smtpServer": {
+    "from": "${KC_SMTP_SERVER_FROM}",
+    "host": "${KC_SMTP_SERVER_HOST}",
+    "port": "${KC_SMTP_SERVER_PORT}",
+    "ssl": "${KC_SMTP_SERVER_SSL}",
+    "auth": "${KC_SMTP_SERVER_AUTH}",
+    "password": "${KC_SMTP_SERVER_PASSWORD}",
+    "user": "${KC_SMTP_SERVER_USER}"
+  },
   "clients": [
     {
       "clientId": "web",
@@ -19,7 +32,7 @@
         "${KC_CLIENTID_WEB_REDIRECT_URIS}"
       ],
       "webOrigins": [
-       "${KC_CLIENTID_WEB_WEB_ORIGINS}"
+        "${KC_CLIENTID_WEB_WEB_ORIGINS}"
       ]
     },
     {
