@@ -1,13 +1,27 @@
 name: Linting pipeline
+run-name: Linting for ${{ github.event_name }} by @${{ github.actor }}
 
 on:
   push:
     branches:
-      - "**"
+      - main
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/lint.yml"
   pull_request:
     branches:
       - main
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/lint.yml"
   workflow_dispatch:
+
+# Cancel concurrent running workflows, after a new one is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -15,7 +29,7 @@ permissions:
 
 jobs:
   #
-  # Prüfen welches Linting ausgeführt wird (Frontend oder Backend)
+  # Check which linting job to run (Frontend or Backend)
   #
   check_changes:
     name: "Detect changed Files"
@@ -30,9 +44,9 @@ jobs:
         with:
           filters: |
             frontend:
-              - "frontend/**"
+              - 'frontend/**'
             backend:
-              - "backend/**"
+              - 'backend/**'
 
   # Frontend Linting
   frontend_lint:
@@ -46,7 +60,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: "frontend/package-lock.json"
       - name: Install dependencies
         run: cd "frontend" && npm ci --prefer-offline
@@ -54,7 +68,7 @@ jobs:
         run: cd "frontend" && npm run type:check
       - name: Lint & Format Check
         run: cd "frontend" && npm run lint
-  
+
   # Backend Linting
   backend_lint:
     name: "Rust Linting for Backend"
@@ -81,4 +95,3 @@ jobs:
       - name: Audit
         run: cargo audit
         working-directory: backend
-      

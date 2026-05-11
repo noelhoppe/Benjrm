@@ -1,35 +1,49 @@
 name: Security Scan
+run-name: Security Scan for ${{ github.event_name }} by @${{ github.actor }}
 
 on:
   push:
-    branches: ["**"]
+    branches:
+      - main
   pull_request:
     branches:
       - main
   workflow_dispatch:
+
+# Cancel concurrent running workflows, after a new one is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
   pull-requests: read
 
 jobs:
+  #
+  # Check which security job to run (Frontend, Backend, Docker or both)
+  #
   detect-changes:
     name: "Detect Changes"
     runs-on: ubuntu-latest
     outputs:
-      security: ${{ steps.filter.outputs.security }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      docker: ${{ steps.filter.outputs.docker }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
             filters: |
-                security:
+                frontend:
                 - "frontend/package*.json"
-                - '**/Dockerfile*'
-                - 'docker-compose*.yml'
+                backend:
                 - "backend/Cargo.toml"
                 - "backend/Cargo.lock"
+                docker:
+                - '**/Dockerfile*'
+                - 'docker-compose*.yml'
 
   # SonarQube for SAST
   sonarqube:
@@ -50,18 +64,45 @@ jobs:
             -Dsonar.sources=.
             -Dsonar.qualitygate.wait=true
 
-  # Trivy File System Scan
-  # Information and Documentation:
-  # https://github.com/marketplace/actions/aqua-security-trivy?version=v0.36.0
-  #
-  trivy:
-    name: "Trivy Filesystem Scan"
+  # Trivy Frontend Scan
+  trivy_frontend:
+    name: "Trivy Frontend Scan"
     needs: detect-changes
     runs-on: ubuntu-24.04
-    if: needs.detect-changes.outputs.security == 'true' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.frontend == 'true'
     steps:
       - uses: actions/checkout@v4
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy for Frontend
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'frontend'
+          trivy-config: 'trivy.yaml'
+
+  # Trivy Backend Scan
+  trivy_backend:
+    name: "Trivy Backend Scan"
+    needs: detect-changes
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.backend == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy for Backend
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'backend'
+          trivy-config: 'trivy.yaml'
+
+  # Trivy Docker & Config Scan
+  trivy_docker:
+    name: "Trivy Docker Scan"
+    needs: detect-changes
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.docker == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy for Docker
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
