@@ -101,9 +101,21 @@ function create_users() {
   done
 }
 
+function configure_user_profile() {
+  echo -e "${BLUE}==> Configuring user profile...${NO_COLOR}"
+  curl -s -X PUT "$KEYCLOAK_URL/admin/realms/${KC_REALM_ID}/users/profile" \
+    -H "Authorization: Bearer $ACCESS_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d @/user-profile.json
+}
+
 function main() {
   get_admin_token
-  create_users
+  configure_user_profile
+  if [ "${INIT_MODE}" == "DEV" ]; then
+    echo -e "${YELLOW} Warning: Running in development mode, creating default users... ${NO_COLOR}"
+    create_users
+  fi
   echo -e "${GREEN}==> Done${NO_COLOR}"
 }
 main
