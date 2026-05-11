@@ -31,6 +31,24 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    # note the difference: in the development stage, we use an 'idp-init' service to initialize the Keycloak instance
-    # with example user data via the REST API interface, while in the production stage, we rely on the 'identity-provider' service itself with
-    # its realm and client configuration.
+  idp-init:
+    # note: in the deployment stage, we will use image: <keycloak-image-from-github-container-registry> here
+    build:
+      context: ./services/identity-provider
+      dockerfile: Dockerfile.init
+    env_file:
+      # it is mandatory to include the same environment variables as the identity-provider service,
+      # since the initialization shell script relies on the following environment variables
+      # 'KC_HTTP_PORT'
+      # 'KC_BOOTSTRAP_ADMIN_USERNAME''
+      # 'KC_BOOTSTRAP_ADMIN_PASSWORD'
+      # 'KC_REALM_ID'
+      - .env.example
+    # note the difference in comparison to the 'docker-compose.dev.yml' file:
+    # in the production environment we do not want to create test users in the Keycloak instance, but we want to
+    # set up the Keycloak's user profile (necessary fields and their validation)
+    depends_on:
+      # Checks if Keycloak is ready to process requests or not.
+      # If this procedure fails, the application is temporarily unavailable to serve new requests, and traffic should be directed elsewhere.
+      identity-provider:
+        condition: service_healthy
