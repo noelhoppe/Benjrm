@@ -13,7 +13,7 @@ FROM quay.io/keycloak/keycloak:26.6.1
 # The realm called 'benjrm' is created with the following two clients:
 # - 'web' for the client-side application, which uses the authorization code flow with PKCE and does not require a client secret.
 # - 'api' for the server-side application, which uses the client credentials flow and requires a client secret.
-# Please note that the realm configuration uses environment variables for the client confiiguration, so you need
+# Please note that the realm configuration uses environment variables for the client configuration, so you need
 # to adjust '.env.example' file with the appropriate values for the client configuration.
 # https://www.keycloak.org/server/importExport#_using_environment_variables_within_the_realm_configuration_files
 COPY ./mounts/realm.template.json \
@@ -23,6 +23,6 @@ ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 
 # start the server in production mode and import the realm on first startup
 # https://www.keycloak.org/server/importExport#_importing_a_realm_during_startup
-# note: this command will be overriden by the command start-dev --import realm in the docker-compose.dev.yml file
+# note: this command will be overridden by the command start-dev --import realm in the docker-compose.dev.yml file
 # to start the server in development mode.
 CMD ["start", "--import-realm"]

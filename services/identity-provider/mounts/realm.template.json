@@ -47,7 +47,7 @@
       },
       "rootUrl": "${KC_CLIENTID_API_ROOT_URL}",
       "baseUrl": "${KC_CLIENTID_API_BASE_URL}",
-      "secret": "${KC_CLIENTID_API_SECRET}"
+      "secret": "${KC_CLIENTID_API_CLIENT_SECRET}"
     }
   ]
 }

@@ -5,7 +5,7 @@
 2. [JSON Schema for Keycloak Import/Export - Schemas](https://jirutka.github.io/keycloak-json-schema/)
 3. [JSON Schema for Keycloak Import/Export - Keycloak Version 26](assets/keycloak-realm-26.json)
 4. [All configuration options for Keycloak](https://www.keycloak.org/server/all-config)
-5. [Observability - Health Check endppints](https://www.keycloak.org/observability/health)
+5. [Observability - Health Check endpoints](https://www.keycloak.org/observability/health)
 6. [Securing applications and services with OpenID Connect](https://www.keycloak.org/securing-apps/oidc-layers)
 7. [Authorization Code Flow](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow)
 8. [Authorization Code Flow with Proof Key for Code Exchange (PKCE)](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce)
@@ -33,7 +33,7 @@ docker compose -f docker-compose.prod.yml up --build
 2. **Port 9000**: [Management interface](https://www.keycloak.org/server/management-interface)
 providing [health check endpoints](https://www.keycloak.org/observability/health) and [metrics](https://www.keycloak.org/observability/configuration-metrics)
 if enabled in the configuration. Note that only the health check endpoints are currently enabled in the provided Keycloak configuration.
-*Note: You should not proxy port 9000 as health checks and metric suse those ports directly, and you do not want to expose this information to external callers.*
+*Note: You should not proxy port 9000 as health checks and metrics use those ports directly, and you do not want to expose this information to external callers.*
 
 ## Hostname Configuration
 [Configuring the hostname (v2)](https://www.keycloak.org/server/hostname#_using_a_reverse_proxy)
