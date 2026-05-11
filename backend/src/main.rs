@@ -14,6 +14,7 @@ pub use app_data::AppData;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let _ = dotenvy::dotenv(); // ignore missing `.env` file
     if cfg!(debug_assertions) {
         // Safety: because this is the start of our program, there are no other threads reading from the environment
         unsafe {
@@ -41,7 +42,7 @@ async fn main() -> std::io::Result<()> {
         cookie::Key::generate()
     };
 
-    let data = web::Data::new(AppData::from_env());
+    let data = web::Data::new(AppData::from_env().await);
 
     // Use `PORT` from the environment or default to 80 if not set
     let port = std::env::var("PORT")

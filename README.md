@@ -5,7 +5,8 @@
 We're currently building this project. Stay tuned for updates in the coming days.
 
 ## Development environment
-To set up the development environment for Benjrm, follow the instructions in the [backend README](backend/README.md) and the [frontend README](frontend/README.md).
+First, set up the database by creating an `.env` file based on `.env.example` and running `docker compose up`.
+Next, follow the instructions in the [backend README](backend/README.md) and the [frontend README](frontend/README.md).
 
 ## Why Benjrm
 
