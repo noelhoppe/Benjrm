@@ -1,6 +1,6 @@
 # Benjrm's backend
 
-This is the backend for Benjrm's quizes. Here is how to run it:
+This is the backend for Benjrm's quizzes. Here is how to run it:
 
 <details>
 <summary>Install Rust and Cargo</summary>
