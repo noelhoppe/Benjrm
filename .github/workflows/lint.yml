@@ -1,0 +1,56 @@
+name: Linting pipeline
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  #
+  # Prüfen welches Linting ausgeführt wird (Frontend oder Backend)
+  #
+  check_changes:
+    name: "Detect changed Files"
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - "frontend/**"
+            backend:
+              - "backend/**"
+
+  # Frontend Linting
+  frontend_lint:
+    name: "Frontend Linting with ESLint"
+    runs-on: ubuntu-latest
+    needs: check_changes
+    if: needs.check_changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: "frontend/package-lock.json"
+      - name: Install dependencies
+        run: cd "frontend" && npm ci --prefer-offline
+      - name: Type-Check
+        run: cd "frontend" && npm run type:check
+      - name: Lint & Format Check
+        run: cd "frontend" && npm run lint
