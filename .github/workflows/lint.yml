@@ -9,14 +9,14 @@ on:
     paths:
       - "frontend/**"
       - "backend/**"
-      - ".github/workflows/lint.yml"
+      - ".github/workflows/*.yml"
   pull_request:
     branches:
       - main
     paths:
       - "frontend/**"
       - "backend/**"
-      - ".github/workflows/lint.yml"
+      - ".github/workflows/*.yml"
   workflow_dispatch:
 
 # Cancel concurrent running workflows, after a new one is triggered

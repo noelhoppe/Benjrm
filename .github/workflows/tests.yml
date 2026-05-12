@@ -10,12 +10,14 @@ on:
     paths:
       - 'backend/**'
       - 'frontend/**'
+      - '.github/workflows/*.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'backend/**'
       - 'frontend/**'
+      - '.github/workflows/*.yml'
   workflow_dispatch:
 
 # Cancel concurrent running workflows, after a new one is triggered
