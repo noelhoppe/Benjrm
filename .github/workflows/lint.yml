@@ -35,6 +35,8 @@ jobs:
   check_changes:
     name: "Detect changed Files"
     runs-on: ubuntu-latest
+    # Skip pull_request event for internal PRs (push covers it)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
