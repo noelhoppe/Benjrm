@@ -18,11 +18,11 @@
 
 ### Starting Keycloak in development mode + Providing testusers configurable via `REPOSITORY_ROOT/services/identity-provider/mounts/init.sh`:
 ```bash
-docker compose -f docker-compose.dev.yml up --build
+docker compose -f compose.dev.yaml up --build
 ```
 ### Starting Keycloak in production mode without testusers:
 ```bash
-docker compose -f docker-compose.prod.yml up --build
+docker compose up --build
 ```
 > Note: Use --build option to build images before starting containers.
 > This ensures that any changes to the Dockerfiles or realm configuration are included in the new images.
