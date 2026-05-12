@@ -33,69 +33,16 @@ export default function Navbar() {
                     </NavLink>
                 </nav>
 
-                {/* Right: Buttons & Theme (Desktop & Tablet) */}
-                <div className="hidden md:flex items-center gap-2 sm:gap-3">
-                    <Button
-                        variant="outline"
-                        className="text-sm font-medium border-muted/50 hover:bg-accent hover:text-foreground"
-                    >
-                        LOGIN
-                    </Button>
-                    <Button
-                        className="text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer transition-colors"
-                    >
-                        SIGN UP
-                    </Button>
-                    <ThemeToggle />
-                </div>
-
-                {/* Mobile Controls (Theme Toggle & Hamburger Menu) */}
-                <div className="flex md:hidden items-center gap-2">
-                    <ThemeToggle />
-                    <button
-                        className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        aria-label="Toggle menu"
-                    >
-                        {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                    </button>
-                </div>
-            </div>
-
-            {/* Mobile Navigation Dropdown */}
-            {isMobileMenuOpen && (
-                <div className="md:hidden border-t border-border bg-background px-4 py-6 space-y-6 shadow-lg">
-                    {/* Mobile Links - Mittig */}
-                    <nav className="flex flex-col items-center gap-5">
-                        <NavLink
-                            to="/about"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className={({ isActive }) =>
-                                `text-base transition-colors ${
-                                    isActive
-                                        ? "text-[#00F2FF] font-bold"
-                                        : "text-muted-foreground hover:text-foreground font-medium"
-                                }`
-                            }
-                        >
-                            ABOUT US
-                        </NavLink>
-                    </nav>
-
-                    {/* Mobile Buttons */}
-                    <div className="flex flex-col gap-3 pt-6 border-t border-border/50">
+                    {/* Replaced two buttons with a single Keycloak gateway button */}
+                    <div className="flex items-center gap-2 sm:gap-3">
                         <Button
-                            variant="outline"
-                            className="w-full justify-center text-sm font-medium border-muted/50 hover:bg-accent hover:text-foreground"
-                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer transition-colors"
+                            onClick={() => {
+                                // TODO: Implement the actual Keycloak redirect here later
+                                console.log("Redirecting to Keycloak...");
+                            }}
                         >
-                            LOGIN
-                        </Button>
-                        <Button
-                            className="w-full justify-center text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                            SIGN UP
+                            SIGN IN
                         </Button>
                     </div>
                 </div>

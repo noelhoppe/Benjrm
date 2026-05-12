@@ -36,6 +36,7 @@ export default function LandingPage() {
                             <Input
                                 type="text"
                                 placeholder="ENTER GAME PIN"
+                                aria-label="Enter Game PIN"
                                 className="w-full h-12 sm:h-14 text-center text-lg sm:text-xl font-bold tracking-widest bg-background border-border placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-[#00F2FF] focus-visible:border-transparent transition-all"
                             />
                             <Button
