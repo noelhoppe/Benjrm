@@ -13,7 +13,7 @@ async fn create_one(
     quiz: web::Json<quiz::NewQuiz>,
     app_data: web::Data<AppData>,
 ) -> Result<HttpResponse> {
-    let model = quiz::create_one(&app_data.db, *DUMMY_USER_UUID, quiz.into_inner()).await?;
+    let model = quiz::create_one(&app_data.db, *DUMMY_USER_UUID, &quiz.into_inner()).await?;
     Ok(HttpResponse::Created().json(model))
 }
 
@@ -22,12 +22,8 @@ async fn create_many(
     new_quizzes: web::Json<Vec<quiz::NewQuiz>>,
     app_data: web::Data<AppData>,
 ) -> Result<HttpResponse> {
-    let models = quiz::create_many(
-        &app_data.db,
-        *DUMMY_USER_UUID,
-        new_quizzes.into_inner(),
-    )
-    .await?;
+    let models =
+        quiz::create_many(&app_data.db, *DUMMY_USER_UUID, &new_quizzes.into_inner()).await?;
     Ok(HttpResponse::Created().json(models))
 }
 
@@ -36,8 +32,7 @@ async fn get_many(
     app_data: web::Data<AppData>,
     filter: web::Query<quiz::QuizFilter>,
 ) -> Result<HttpResponse> {
-    let quizzes =
-        quiz::get_many(&app_data.db, *DUMMY_USER_UUID, filter.into_inner()).await?;
+    let quizzes = quiz::get_many(&app_data.db, *DUMMY_USER_UUID, &filter.into_inner()).await?;
     Ok(HttpResponse::Ok().json(quizzes))
 }
 
@@ -57,7 +52,7 @@ async fn patch(
         &app_data.db,
         *DUMMY_USER_UUID,
         id.into_inner(),
-        quiz.into_inner(),
+        &quiz.into_inner(),
     )
     .await?;
     Ok(HttpResponse::Ok().json(model))

@@ -20,4 +20,21 @@ impl AppData {
 
         Self { db }
     }
+
+    /// For test purposes only.
+    /// Create an empty SQLite database in memory
+    #[cfg(test)]
+    pub async fn test() -> Self {
+        let db = {
+            use migration::{Migrator, MigratorTrait};
+            let db = sea_orm::Database::connect("sqlite::memory:")
+                .await
+                .expect("Unable to connect to database");
+            Migrator::up(&db, None)
+                .await
+                .expect("Failed to run migrations");
+            db
+        };
+        AppData { db }
+    }
 }
