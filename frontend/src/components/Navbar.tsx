@@ -20,28 +20,24 @@ export default function Navbar() {
                         className={({ isActive }) =>
                             `hidden sm:block text-sm transition-colors ${
                                 isActive
-                                    ? "text-[#00F2FF] font-bold" // Active state: Cyan and bold
-                                    : "text-muted-foreground hover:text-foreground font-medium" // Inactive state
+                                    ? "text-[#00F2FF] font-bold"
+                                    : "text-muted-foreground hover:text-foreground font-medium"
                             }`
                         }
                     >
                         ABOUT US
                     </NavLink>
 
+                    {/* Replaced two buttons with a single Keycloak gateway button */}
                     <div className="flex items-center gap-2 sm:gap-3">
                         <Button
-                            variant="outline"
-                            className="sm:flex text-sm font-medium border-muted/50 hover:bg-accent hover:text-foreground"
+                            className="text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer transition-colors"
+                            onClick={() => {
+                                // TODO: Implement the actual Keycloak redirect here later
+                                console.log("Redirecting to Keycloak...");
+                            }}
                         >
-                            LOGIN
-                        </Button>
-                        <Button
-                            className="text-sm font-medium
-                            bg-black text-white hover:bg-gray-800
-                            dark:bg-white dark:text-black dark:hover:bg-gray-200
-                            cursor-pointer transition-colors"
-                        >
-                            SIGN UP
+                            SIGN IN
                         </Button>
                     </div>
 
