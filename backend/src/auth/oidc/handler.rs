@@ -1,0 +1,145 @@
+use {
+    crate::{
+        AppData,
+        auth::{User, oidc::error::Error},
+    },
+    actix_session::Session,
+    actix_web::{HttpResponse, get, post, web},
+    oauth2::{CsrfToken, PkceCodeVerifier},
+    openidconnect::Nonce,
+    serde::{Deserialize, Serialize},
+    std::time::{Duration, Instant},
+};
+
+lazy_static::lazy_static! {
+    static ref EPOCH: Instant = Instant::now();
+}
+
+#[derive(Serialize, Deserialize)]
+struct State {
+    csrf_token: CsrfToken,
+    pkce_verifier: Option<PkceCodeVerifier>,
+    nonce: Option<Nonce>,
+    time: u64,
+    redirect_path: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct Path {
+    path: Option<String>,
+}
+
+#[get("/login")]
+async fn login(data: web::Data<AppData>, session: Session, path: web::Query<Path>) -> HttpResponse {
+    let (auth_url, csrf_token, pkce_verifier, nonce) = data.oidc.client.authorization_url();
+
+    let redirect_path =
+        path.into_inner()
+            .path
+            .or_else(|| match session.get::<State>("oidc_state") {
+                Ok(Some(state)) => state.redirect_path,
+                _ => None,
+            });
+
+    let state = State {
+        csrf_token,
+        pkce_verifier,
+        nonce,
+        time: EPOCH.elapsed().as_secs(),
+        redirect_path,
+    };
+    session.insert("oidc_state", state).unwrap();
+
+    HttpResponse::Found()
+        .append_header(("Location", auth_url.as_str()))
+        .finish()
+}
+
+#[derive(Deserialize)]
+struct OauthResponse {
+    state: String,
+    #[serde(rename = "iss")]
+    issuer: String,
+    code: String,
+}
+
+#[get("/oidc/callback")]
+async fn callback(
+    data: web::Data<AppData>,
+    session: Session,
+    response: web::Query<OauthResponse>,
+) -> Result<HttpResponse, Error> {
+    let response = response.into_inner();
+
+    let state = session
+        .get::<State>("oidc_state")
+        .map_err(Error::InvalidState)?
+        .ok_or(Error::MissingState)?;
+
+    if response.state != *state.csrf_token.secret() {
+        return Err(Error::InvalidCsrfToken);
+    }
+    if Some(response.issuer) != data.oidc.client.config().issuer_uri {
+        return Err(Error::InvalidIssuer);
+    }
+    let time_start = EPOCH
+        .checked_add(Duration::from_secs(state.time))
+        .ok_or(Error::InvalidStateTime(state.time))?;
+    if time_start.elapsed() > Duration::from_mins(30) {
+        return Err(Error::Timeout);
+    }
+
+    let (oauth_user, oidc_user) = data
+        .oidc
+        .client
+        .exchange_code(&response.code, state.pkce_verifier, state.nonce.as_ref())
+        .await?;
+
+    let user = oidc_user.ok_or(Error::MissingOidcUser(Box::new(oauth_user)))?;
+
+    let user = User {
+        sub: user.oauth2_user.sub,
+        id_token: user.id_token,
+    };
+    session.insert("user", user).map_err(Error::SessionInsert)?;
+    session.remove("oidc_state");
+
+    let location = state.redirect_path.as_deref().unwrap_or("/dashboard");
+
+    Ok(HttpResponse::Found()
+        .append_header(("Location", location))
+        .finish())
+}
+
+#[post("/logout")]
+async fn logout(data: web::Data<AppData>, session: Session) -> HttpResponse {
+    let user = session.get::<User>("user").ok().flatten();
+    session.purge();
+    if let Some(user) = user
+        && let Some(id_token) = user.id_token
+    {
+        let mut url = data.oidc.logout_url.clone();
+        url.query_pairs_mut()
+            .append_pair("id_token_hint", &id_token)
+            .append_pair("post_logout_redirect_uri", data.oidc.public_url.as_str());
+
+        return HttpResponse::Found()
+            .append_header(("Location", url.as_str()))
+            .finish();
+    }
+    HttpResponse::Found()
+        .append_header(("Location", "/"))
+        .finish()
+}
+
+#[get("/session")]
+async fn get_session(user: User) -> HttpResponse {
+    HttpResponse::Ok().json(user)
+}
+
+pub fn init(cfg: &mut web::ServiceConfig) {
+    cfg.service(login);
+    cfg.service(callback);
+    cfg.service(logout);
+    cfg.service(get_session);
+}

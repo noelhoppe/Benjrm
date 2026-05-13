@@ -8,6 +8,7 @@ use {
 };
 
 mod app_data;
+mod auth;
 mod frontend;
 
 pub use app_data::AppData;
@@ -67,7 +68,7 @@ async fn main() -> std::io::Result<()> {
         {
             app = app.app_data(awc::Client::new());
         }
-        app.configure(frontend::init)
+        app.configure(frontend::init).configure(auth::init)
     })
     .bind(("0.0.0.0", port))?
     .run()

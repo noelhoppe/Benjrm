@@ -1,5 +1,8 @@
+use crate::auth::oidc::Oidc;
+
 pub struct AppData {
     pub db: sea_orm::DbConn,
+    pub oidc: Oidc,
 }
 
 impl AppData {
@@ -18,6 +21,33 @@ impl AppData {
             db
         };
 
-        Self { db }
+        let oidc = Oidc::from_env().await;
+
+        Self { db, oidc }
+    }
+}
+
+pub fn env_var(key: &str) -> String {
+    match std::env::var(key) {
+        Ok(x) => x,
+        Err(_) => {
+            panic!("Missing environement variable: {key}");
+        }
+    }
+}
+
+pub fn env_var_default(
+    key: &str,
+    default_name: &str,
+    r#default: impl FnOnce() -> Option<String>,
+) -> String {
+    match std::env::var(key) {
+        Ok(x) => x,
+        Err(_) => match r#default() {
+            Some(x) => x,
+            None => {
+                panic!("Missing environement variable: {key} (set {default_name} to use default)")
+            }
+        },
     }
 }
