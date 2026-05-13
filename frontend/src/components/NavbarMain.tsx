@@ -62,6 +62,7 @@ export default function NavbarMain() {
                         <input
                             type="text"
                             placeholder="Search Quiz..."
+                            aria-label={"Search Quiz"}
                             className="w-40 sm:w-52 bg-transparent outline-none placeholder:text-muted-foreground text-sm"
                         />
                         <Search className="ml-2 h-4 w-4 shrink-0" />
@@ -99,7 +100,7 @@ export default function NavbarMain() {
                         <Search className="ml-2 h-4 w-4 shrink-0" />
                     </div>
 
-                    {/* Mobile Links - Mittig */}
+                    {/* Mobile Links - Center */}
                     <nav className="flex flex-col items-center gap-5">
                         <NavLink
                             to="/dashboard"

@@ -4,10 +4,10 @@ import { Link } from "react-router"
 interface Props {
     title: string;
     description: string;
-    href: string;
+    to: string;
 }
 
-export default function CategoryHeader({ title, description, href }: Props) {
+export default function CategoryHeader({ title, description, to }: Props) {
     return (
         <div className="flex items-end justify-between">
             <div>
@@ -17,7 +17,7 @@ export default function CategoryHeader({ title, description, href }: Props) {
                 <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
             </div>
             <Link
-                to={href}
+                to={to}
                 className="group flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-[#00F2FF] transition-colors tracking-widest uppercase whitespace-nowrap ml-4"
             >
                 View All

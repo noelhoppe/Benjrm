@@ -6,7 +6,7 @@ export default function GameHeroSection() {
     return (
         <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6">
             {/* Container */}
-            <div className="flex flex-col lg:flex-row bg-white dark:bg-[#111318] text-slate-900 dark:text-foreground rounded-2xl border border-slate-200 dark:border-white/8 shadow-xl overflow-hidden min-h-[320px]">
+            <div className="flex flex-col lg:flex-row bg-white dark:bg-[#111318] text-slate-900 dark:text-foreground rounded-2xl border border-slate-200 dark:border-white/8 shadow-xl overflow-hidden min-h-80">
 
                 {/* Left Side: Controls */}
                 <div className="flex-1 p-8 lg:p-10 flex flex-col justify-center gap-8 z-10">
@@ -16,6 +16,7 @@ export default function GameHeroSection() {
                         <Input
                             type="text"
                             placeholder="Code"
+                            aria-label="Input Code"
                             className="bg-slate-50 dark:bg-[#1C2028] border-slate-200 dark:border-white/10 text-slate-900 dark:text-foreground placeholder:text-slate-500 dark:placeholder:text-muted-foreground rounded-xl px-4 py-5 text-base font-medium focus-visible:ring-2 focus-visible:ring-[#00F2FF] focus-visible:border-transparent transition-all"
                         />
                         <p className="text-sm text-slate-500 dark:text-muted-foreground pl-1">
@@ -45,13 +46,13 @@ export default function GameHeroSection() {
                 </div>
 
                 {/* Right Side: Image */}
-                <div className="flex-1 relative min-h-[220px] lg:min-h-auto">
+                <div className="flex-1 relative min-h-55 lg:min-h-auto">
                     <img
                         src="/pictures/happy_people.jpg"
                         alt="People celebrating"
                         className="absolute inset-0 w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-white via-white/70 dark:from-[#111318] dark:via-[#111318]/40 to-transparent w-full md:w-1/3" />
+                    <div className="absolute inset-0 bg-linear-to-r from-white via-white/70 dark:from-[#111318] dark:via-[#111318]/40 to-transparent w-full md:w-1/3" />
                 </div>
 
             </div>

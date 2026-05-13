@@ -10,13 +10,13 @@ export default function DiscoverSection() {
             <CategoryHeader
                 title="Firefighting training"
                 description="All quizzes to help you prepare for firefighter training courses."
-                href="/categories/firefighting"
+                to="/categories/firefighting"
             />
 
             <CategoryHeader
                 title="IT-Security"
                 description="Learn everything you need to know about IT security."
-                href="/categories/it-security"
+                to="/categories/it-security"
             />
         </section>
     )

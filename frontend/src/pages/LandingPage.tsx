@@ -2,14 +2,16 @@
 import { Input } from "@/shadcn/components/ui/input";
 import { Button } from "@/shadcn/components/ui/button";
 import Navbar from "@/components/Navbar.tsx";
+import Footer from "@/components/Footer";
 
 export default function LandingPage() {
     return (
-        <div className="min-h-full bg-background text-foreground overflow-x-hidden">
+        <div className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden">
             <Navbar />
-            <main className="max-w-360 mx-auto px-4 sm:px-6 py-8 md:py-24 relative">
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-24 items-center relative z-10">
+            <div className="flex-1 w-full max-w-360 mx-auto px-4 sm:px-6 flex items-center relative py-4">
+
+                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-24 items-center relative z-10">
 
                     {/* Left Column */}
                     <div className="flex flex-col gap-6 md:gap-10">
@@ -56,7 +58,7 @@ export default function LandingPage() {
                         </div>
                     </div>
 
-                    {/* Right Column: hidden on small mobile, shown md+ */}
+                    {/* Right Column */}
                     <div className="relative hidden md:block">
                         <div className="absolute -inset-1 bg-linear-to-tr from-[#00F2FF] to-[#FF8A00] rounded-[2.5rem] blur-2xl opacity-20"></div>
 
@@ -75,7 +77,8 @@ export default function LandingPage() {
                     </div>
 
                 </div>
-            </main>
+            </div>
+            <Footer />
         </div>
     );
 }
