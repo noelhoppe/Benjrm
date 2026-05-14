@@ -18,8 +18,8 @@ impl MigrationTrait for Migration {
                     .col(string("title"))
                     .col(text_null("description"))
                     .col(boolean("hidden").default(false))
-                    .col(col_datetime(manager, "created"))
-                    .col(col_datetime(manager, "modified"))
+                    .col(col_datetime(manager, "created").default(Expr::current_timestamp()))
+                    .col(col_datetime(manager, "modified").default(Expr::current_timestamp()))
                     .to_owned(),
             )
             .await
