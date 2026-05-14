@@ -1,5 +1,7 @@
 use sea_orm_migration::{prelude::*, schema::*};
 
+use crate::col_datetime;
+
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
@@ -16,8 +18,8 @@ impl MigrationTrait for Migration {
                     .col(string("title"))
                     .col(text_null("description"))
                     .col(boolean("hidden").default(false))
-                    .col(date_time("created"))
-                    .col(date_time("modified"))
+                    .col(col_datetime(manager, "created"))
+                    .col(col_datetime(manager, "modified"))
                     .to_owned(),
             )
             .await

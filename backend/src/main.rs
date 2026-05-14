@@ -7,11 +7,10 @@ use {
     },
 };
 
-mod api;
 mod app_data;
-mod core;
-mod entities;
+mod error;
 mod frontend;
+mod quiz;
 mod update_value;
 
 pub use app_data::AppData;
@@ -66,7 +65,7 @@ async fn main() -> std::io::Result<()> {
             )
             .configure(frontend::init)
             .app_data(data.clone())
-            .service(web::scope("/api").configure(api::init));
+            .service(web::scope("/api/v1").configure(quiz::init));
 
         if cfg!(debug_assertions) {
             app.app_data(awc::Client::new())

@@ -1,10 +1,8 @@
 use {
     actix_web::{HttpResponse, ResponseError},
     sea_orm::DbErr,
-    std::fmt::{Debug, Display},
+    std::fmt,
 };
-
-pub mod quiz;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -15,9 +13,9 @@ pub enum Error {
     Database(DbErr),
 }
 
-impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Debug::fmt(self, f)
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
     }
 }
 
