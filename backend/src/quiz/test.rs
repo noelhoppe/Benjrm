@@ -1,8 +1,7 @@
 use {
     crate::{
         AppData,
-        error::Error,
-        quiz::{NewQuiz, QuizFilter, UpdateQuiz, entity::Quiz},
+        quiz::{NewQuiz, QuizError, QuizFilter, UpdateQuiz, entity::Quiz},
         update_value::{UpdateOption, UpdateValue},
     },
     sea_orm::sqlx::types::chrono::Utc,
@@ -131,7 +130,7 @@ async fn test_get_one() {
 
     let other_user = Uuid::new_v4();
     let fetched = Quiz::get(conn, other_user, quiz.id).await;
-    assert!(matches!(fetched, Err(Error::Forbidden)));
+    assert!(matches!(fetched, Err(QuizError::Forbidden)));
 }
 
 #[actix_web::test]
@@ -189,5 +188,5 @@ async fn test_delete() {
         .unwrap();
 
     let result = Quiz::get(conn, user, quiz.id).await;
-    assert!(matches!(result, Err(Error::NotFound)));
+    assert!(matches!(result, Err(QuizError::NotFound)));
 }

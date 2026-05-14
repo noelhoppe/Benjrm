@@ -1,13 +1,30 @@
+use {
+    crate::{
+        error::impl_err,
+        update_value::{UpdateOption, UpdateValue},
+    },
+    sea_orm::DbErr,
+    serde::Deserialize,
+};
+
+pub use api::init;
+
 mod api;
 mod core;
 mod entity;
 #[cfg(test)]
 mod test;
 
-pub use api::init;
-use serde::Deserialize;
-
-use crate::update_value::{UpdateOption, UpdateValue};
+impl_err! {
+    enum QuizError {
+        #[error("Quiz not found")]
+        NotFound = NOT_FOUND,
+        #[error("Forbidden")]
+        Forbidden = FORBIDDEN,
+        #[error("Internal Server Error")]
+        Database(#[from] DbErr) = INTERNAL_SERVER_ERROR,
+    }
+}
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

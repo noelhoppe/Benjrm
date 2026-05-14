@@ -1,9 +1,10 @@
 use {
+    crate::error::Error,
     actix_session::{SessionMiddleware, storage::CookieSessionStore},
     actix_web::{
         App, HttpServer,
         cookie::{self, SameSite},
-        web,
+        web::{self, JsonConfig},
     },
 };
 
@@ -55,6 +56,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let app = App::new()
             .wrap(actix_web::middleware::Logger::default())
+            .app_data(JsonConfig::default().error_handler(Error::json_handler))
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
                     .cookie_http_only(true)
