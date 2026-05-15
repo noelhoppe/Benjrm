@@ -1,0 +1,4 @@
+[env]
+# Even if it's only used to generate a new migration file,
+# the Migrator requires a database, so use an in-memory database by default
+DATABASE_URL="sqlite::memory:"

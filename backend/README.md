@@ -1,6 +1,6 @@
 # Benjrm's backend
 
-This is the backend for Benjrm's quizes. Here is how to run it:
+This is the backend for Benjrm's quizzes. Here is how to run it:
 
 <details>
 <summary>Install Rust and Cargo</summary>
@@ -24,3 +24,11 @@ $ PORT=8080 cargo run # optional: --release
 ```
 
 > **Hint:** Release builds compile the frontend into the binary while debug builds require a running vite dev server (on port 5173).
+
+## CVE-2023-49092
+
+The MySQL database driver (`sqlx-mysql`) has a dependency (`rsa`), which has a vulnerability allowing potential key recovery. As a solution, the MySQL driver has been removed from this project. `cargo audit` still reports the vulnerability due to a [Cargo bug](https://github.com/rust-lang/cargo/issues/10801) causing `rsa` to be still included in the `Cargo.lock`. You can verify that `rsa` isn't being used in this project by running `cargo tree | grep rsa`.
+
+It has not been  verified whether it is possible to use `sqlx-mysql` without being affected by the vulnerability. If you really want to use it (which would only be safe if everything is running in a **completely** trusted environment) you can add the feature `sqlx-mysql` to the dependency `sea-orm` in the `Cargo.toml`.
+
+More information on the vulnerability: [RUSTSEC-2023-0071](https://rustsec.org/advisories/RUSTSEC-2023-0071)
