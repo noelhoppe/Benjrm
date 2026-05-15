@@ -10,7 +10,7 @@ impl MigratorTrait for Migrator {
     }
 }
 
-/// Creates a optional DateTime with timezone that works across sqlite, mysql and postgres.
+/// Creates an optional DateTime with timezone that works across sqlite, mysql and postgres.
 pub fn col_datetime_null(manager: &SchemaManager<'_>, name: &'static str) -> ColumnDef {
     let timestamp = match manager.get_database_backend() {
         DatabaseBackend::Postgres => ColumnType::TimestampWithTimeZone,

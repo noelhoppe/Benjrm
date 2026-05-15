@@ -62,7 +62,7 @@ where
     type Value = UpdateOption<T>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("an UpdateValue")
+        formatter.write_str("an UpdateOption")
     }
 
     #[inline]
