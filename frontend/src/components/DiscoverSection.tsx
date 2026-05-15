@@ -1,3 +1,5 @@
+// frontend/src/components/DiscoverSection.tsx
+
 import CategoryHeader from "@/components/CategoryHeader";
 
 export default function DiscoverSection() {
@@ -8,16 +10,11 @@ export default function DiscoverSection() {
             </p>
 
             <CategoryHeader
-                title="Firefighting training"
-                description="All quizzes to help you prepare for firefighter training courses."
-                to="/categories/firefighting"
+                title="All Quizzes"
+                description="All quizzes for you to discover"
+                to="/quizzes"
             />
 
-            <CategoryHeader
-                title="IT-Security"
-                description="Learn everything you need to know about IT security."
-                to="/categories/it-security"
-            />
         </section>
     )
 }

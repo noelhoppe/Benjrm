@@ -1,4 +1,5 @@
-// src/components/Footer.tsx
+// frontend/src/components/Footer.tsx
+
 import { NavLink } from "react-router";
 
 export default function Footer() {
@@ -15,13 +16,13 @@ export default function Footer() {
 
                 {/* Center: Copyright text */}
                 <div className="text-sm font-medium text-muted-foreground text-center shrink-0">
-                    &copy; 2026 Benjrm. All Rights Reserved.
+                    &copy; {new Date().getFullYear()} Benjrm. All Rights Reserved.
                 </div>
 
                 {/* Right side: Links */}
                 <nav className="flex-1 flex flex-wrap justify-center md:justify-end items-center gap-4 sm:gap-6">
                     <NavLink
-                        to="/impressum"
+                        to="/imprint"
                         className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
                         Impressum

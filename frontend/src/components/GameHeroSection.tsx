@@ -1,3 +1,5 @@
+// frontend/src/components/GamerHeroSection.tsx
+
 import { Input } from "@/shadcn/components/ui/input";
 import { Button } from "@/shadcn/components/ui/button";
 import { PlusSquare } from "lucide-react";

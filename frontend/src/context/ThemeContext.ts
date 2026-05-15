@@ -1,3 +1,5 @@
+// frontend/src/context/ThemeContext.ts
+
 import { createContext, useContext } from "react"
 
 export type Theme = "dark" | "light" | "auto"

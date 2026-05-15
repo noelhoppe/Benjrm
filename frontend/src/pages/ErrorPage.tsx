@@ -1,3 +1,5 @@
+// frontend/src/pages/ErrorPage.tsx
+
 type ErrorPageProps = {
     title: string
     message: string

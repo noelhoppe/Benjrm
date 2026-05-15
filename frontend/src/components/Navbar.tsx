@@ -1,4 +1,5 @@
-// src/components/Navbar.tsx
+// frontend/src/components/Navbar.tsx
+
 import { NavLink } from "react-router";
 
 import { Button } from "@/shadcn/components/ui/button";
@@ -16,22 +17,6 @@ export default function Navbar() {
                 >
                     Benjrm
                 </NavLink>
-
-                {/* Center/Desktop Navigation */}
-                <nav className="hidden md:flex items-center gap-6">
-                    <NavLink
-                        to="/about"
-                        className={({ isActive }) =>
-                            `text-sm transition-colors ${
-                                isActive
-                                    ? "text-[#00F2FF] font-bold"
-                                    : "text-muted-foreground hover:text-foreground font-medium"
-                            }`
-                        }
-                    >
-                        ABOUT US
-                    </NavLink>
-                </nav>
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 sm:gap-3">

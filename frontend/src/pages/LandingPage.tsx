@@ -1,13 +1,12 @@
-// src/pages/LandingPage.tsx
+// frontend/src/pages/LandingPage.tsx
+
 import { Input } from "@/shadcn/components/ui/input";
 import { Button } from "@/shadcn/components/ui/button";
-import Navbar from "@/components/Navbar.tsx";
 import Footer from "@/components/Footer";
 
 export default function LandingPage() {
     return (
         <div className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden">
-            <Navbar />
 
             <div className="flex-1 w-full max-w-360 mx-auto px-4 sm:px-6 flex items-center relative py-4">
 

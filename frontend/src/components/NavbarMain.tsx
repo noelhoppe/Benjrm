@@ -3,6 +3,7 @@ import { useState } from "react"
 import { NavLink } from "react-router"
 import { Search, Menu, X } from "lucide-react"
 import ThemeToggle from "./ThemeToggle"
+import NavItem from "./NavItem"
 
 export default function NavbarMain() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -10,50 +11,22 @@ export default function NavbarMain() {
     return (
         <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
             <div className="max-w-360 mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-4">
-                {/* Logo */}
-                <NavLink
-                    to="/"
-                    className="text-2xl sm:text-3xl font-extrabold tracking-tighter text-[#00F2FF] shrink-0"
-                >
-                    Benjrm
-                </NavLink>
 
-                {/* Desktop Navigation */}
-                <nav className="hidden md:flex items-center gap-6">
+                {/* Left side*/}
+                <div className="flex items-center gap-8">
+                    {/* Logo */}
                     <NavLink
-                        to="/dashboard"
-                        end
-                        className={({ isActive }) =>
-                            isActive
-                                ? "text-[#00F2FF] font-bold text-sm transition-colors"
-                                : "text-muted-foreground hover:text-foreground font-medium text-sm transition-colors"
-                        }
+                        to="/"
+                        className="text-2xl sm:text-3xl font-extrabold tracking-tighter text-[#00F2FF] shrink-0"
                     >
-                        Home
+                        Benjrm
                     </NavLink>
 
-                    <NavLink
-                        to="/favourites"
-                        className={({ isActive }) =>
-                            isActive
-                                ? "text-[#00F2FF] font-bold text-sm transition-colors"
-                                : "text-muted-foreground hover:text-foreground font-medium text-sm transition-colors"
-                        }
-                    >
-                        Favourites
-                    </NavLink>
-
-                    <NavLink
-                        to="/quizzes"
-                        className={({ isActive }) =>
-                            isActive
-                                ? "text-[#00F2FF] font-bold text-sm transition-colors"
-                                : "text-muted-foreground hover:text-foreground font-medium text-sm transition-colors"
-                        }
-                    >
-                        My Quizzes
-                    </NavLink>
-                </nav>
+                    {/* Desktop Navigation */}
+                    <nav className="hidden md:flex items-center gap-6">
+                        <NavItem to="/dashboard">Home</NavItem>
+                    </nav>
+                </div>
 
                 {/* Right side (Search, Theme, Profile, Mobile Menu Toggle) */}
                 <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -102,42 +75,13 @@ export default function NavbarMain() {
 
                     {/* Mobile Links - Center */}
                     <nav className="flex flex-col items-center gap-5">
-                        <NavLink
+                        <NavItem
                             to="/dashboard"
-                            end
+                            isMobile
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className={({ isActive }) =>
-                                isActive
-                                    ? "text-[#00F2FF] font-bold text-base transition-colors"
-                                    : "text-muted-foreground hover:text-foreground font-medium text-base transition-colors"
-                            }
                         >
                             Home
-                        </NavLink>
-
-                        <NavLink
-                            to="/favourites"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className={({ isActive }) =>
-                                isActive
-                                    ? "text-[#00F2FF] font-bold text-base transition-colors"
-                                    : "text-muted-foreground hover:text-foreground font-medium text-base transition-colors"
-                            }
-                        >
-                            Favourites
-                        </NavLink>
-
-                        <NavLink
-                            to="/quizzes"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className={({ isActive }) =>
-                                isActive
-                                    ? "text-[#00F2FF] font-bold text-base transition-colors"
-                                    : "text-muted-foreground hover:text-foreground font-medium text-base transition-colors"
-                            }
-                        >
-                            My Quizzes
-                        </NavLink>
+                        </NavItem>
                     </nav>
                 </div>
             )}
