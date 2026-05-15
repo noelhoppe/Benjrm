@@ -1,20 +1,20 @@
-import path from 'node:path'
+import path from "node:path"
 
-import { includeIgnoreFile } from '@eslint/compat'
-import js from '@eslint/js'
-import { defineConfig, globalIgnores } from 'eslint/config'
-import { configs, plugins, rules } from 'eslint-config-airbnb-extended'
-import { rules as prettierConfigRules } from 'eslint-config-prettier'
-import prettierPlugin from 'eslint-plugin-prettier'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import globals from 'globals'
+import { includeIgnoreFile } from "@eslint/compat"
+import js from "@eslint/js"
+import { defineConfig, globalIgnores } from "eslint/config"
+import { configs, plugins, rules } from "eslint-config-airbnb-extended"
+import { rules as prettierConfigRules } from "eslint-config-prettier"
+import prettierPlugin from "eslint-plugin-prettier"
+import reactRefresh from "eslint-plugin-react-refresh"
+import globals from "globals"
 
-const gitignorePath = path.resolve('.', '.gitignore')
+const gitignorePath = path.resolve(".", ".gitignore")
 
 const jsConfig = defineConfig([
     // ESLint recommended config
     {
-        name: 'js/config',
+        name: "js/config",
         ...js.configs.recommended,
     },
     // Stylistic plugin
@@ -54,23 +54,23 @@ const typescriptConfig = defineConfig([
 const prettierConfig = defineConfig([
     // Prettier plugin
     {
-        name: 'prettier/plugin/config',
+        name: "prettier/plugin/config",
         plugins: {
             prettier: prettierPlugin,
         },
     },
     // Prettier config
     {
-        name: 'prettier/config',
+        name: "prettier/config",
         rules: {
             ...prettierConfigRules,
-            'prettier/prettier': 'error',
+            "prettier/prettier": "error",
         },
     },
 ])
 
 export default defineConfig([
-    globalIgnores(['dist', 'src/shadcn']),
+    globalIgnores(["dist", "src/shadcn"]),
     // Ignore files and folders listed in .gitignore
     includeIgnoreFile(gitignorePath),
     // JavaScript config
@@ -83,22 +83,26 @@ export default defineConfig([
     ...prettierConfig,
     // Project-specific overrides
     {
-        files: ['**/*.{ts,tsx}'],
+        files: ["**/*.{ts,tsx}"],
         languageOptions: {
             globals: globals.browser,
         },
         plugins: {
-            'react-refresh': reactRefresh,
+            "react-refresh": reactRefresh,
         },
         rules: {
-            'react/react-in-jsx-scope': 'off',
-            'react/prop-types': 'off',
-            'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-            'import-x/extensions': 'off',
-            'react/function-component-definition': 'off',
-            'react/jsx-fragments': 'off',
-            '@typescript-eslint/no-non-null-assertion': 'warn',
-            'import-x/order': ['error', { 'newlines-between': 'ignore' }],
+            "react/react-in-jsx-scope": "off",
+            "react/prop-types": "off",
+            "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+            "import-x/extensions": "off",
+            "react/function-component-definition": "off",
+            "react/jsx-fragments": "off",
+            "@typescript-eslint/no-non-null-assertion": "warn",
+            "import-x/order": ["error", { "newlines-between": "ignore" }],
+            "linebreak-style": ["error", "unix"],
+            "@typescript-eslint/no-explicit-any": "error",
+            camelcase: "error",
+            "eol-last": "error",
         },
     },
 ])

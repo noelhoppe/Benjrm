@@ -1,11 +1,10 @@
 name: Testing pipeline
 run-name: Testing for ${{ github.event_name }} by @${{ github.actor }}
 
-
 on:
   push:
     branches:
-      - main
+      - 'main'
       - 'feature/*'
     paths:
       - 'backend/**'
@@ -13,7 +12,7 @@ on:
       - '.github/workflows/*.yml'
   pull_request:
     branches:
-      - main
+      - 'main'
     paths:
       - 'backend/**'
       - 'frontend/**'
@@ -32,8 +31,8 @@ permissions:
 jobs:
   # Check which files have changed to avoid unnecessary tests
   check_changes:
-    name: "Detect changed Files"
-    runs-on: ubuntu-latest
+    name: Detect changed Files
+    runs-on: 'ubuntu-24.04'
     # Skip pull_request event for internal PRs (push covers it)
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     outputs:
@@ -56,8 +55,8 @@ jobs:
 
   # Backend Tests
   backend_tests:
-    name: "Backend Unit & Integration Tests"
-    runs-on: ubuntu-latest
+    name: Backend Unit & Integration Tests
+    runs-on: 'ubuntu-24.04'
     needs: [check_changes, build_frontend]
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.check_changes.outputs.backend == 'true'
     steps:
@@ -66,10 +65,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist-${{ github.sha }}
-          path: frontend/dist
+          path: 'frontend/dist'
       - name: Test (debug)
         run: cargo test --all-features
-        working-directory: backend
+        working-directory: 'backend'
       - name: Test (release)
         run: cargo test --all-features --release
-        working-directory: backend
+        working-directory: 'backend'
+        

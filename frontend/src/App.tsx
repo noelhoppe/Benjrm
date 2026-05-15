@@ -1,5 +1,5 @@
-import type { JSX } from 'react'
-import { Button } from '@/shadcn/components/ui/button'
+import type { JSX } from "react"
+import { Button } from "@/shadcn/components/ui/button"
 
 function App(): JSX.Element {
     return (
