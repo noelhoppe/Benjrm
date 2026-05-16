@@ -26,7 +26,7 @@ jobs:
       - name: Start API
         run: |
           cargo run --manifest-path backend/Cargo.toml &
-          sleep 30
+          sleep 90
         env:
           DATABASE_URL: 'sqlite::memory:'
           PORT: '8080'
