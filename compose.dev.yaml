@@ -8,11 +8,11 @@ services:
       # access admin interface locally via http://127.0.0.1:8088
       # admin interface should be accessible to external traffic,
       # since it is used by the frontend application to authenticate users and manage sessions.
-      - "8088:8088"
+      - "127.0.0.1:8088:8088"
       # access management interface locally via http://127.0.0.1:9000
       # note: this management interface should not be exposed to external traffic.
       # It should be protected with a reverse proxy and only accessible to internal traffic
-      - "9000:9000"
+      - "127.0.0.1:9000:9000"
     env_file:
       # it is mandatory to include this environment variable files to configure the Keycloak instance
       # https://www.keycloak.org/server/configuration#_formats_for_configuration
