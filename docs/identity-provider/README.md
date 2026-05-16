@@ -97,6 +97,8 @@ The user has the option to check the "Remember Me" checkbox to stay logged in be
 3. In case of forgotten credentials, the user can click the "Forgot Password?" link to initiate the password reset process, 
 which will send a password reset email to the user's verified registered email address.
 
+![Keycloak Forgot Password](assets/forgot-password.png)
+
 ![Keycloak Reset Password Mail](./assets/reset-password.png)
 
 ![Keycloak Update Password Interface](./assets/update-password.png)
