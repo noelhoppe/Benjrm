@@ -48,6 +48,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Quiz'
+        400:
+          description: Bad Request
         401:
           description: Unauthorized
         500:
