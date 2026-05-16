@@ -1,9 +1,9 @@
 // src/components/ThemeToggle.tsx
 import { Sun, Moon, Monitor } from "lucide-react"
 import type { JSX } from "react"
-import { useTheme } from "../context/ThemeProvider"
-import type { Theme } from "../context/ThemeProvider"
 import { Button } from "@shadcn/components/ui/button"
+import type { Theme } from "@/context/themeContext"
+import useTheme from "@/context/useTheme"
 
 const themes: Theme[] = ["light", "dark", "auto"]
 
