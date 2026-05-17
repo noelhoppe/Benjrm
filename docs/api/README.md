@@ -14,6 +14,7 @@
 - Refer to the [Spectral documentation](https://docs.stoplight.io/docs/spectral/674b27b261c3c-overview) for more details,
 especially the [OpenAPI ruleset](https://docs.stoplight.io/docs/spectral/4dec24461f3af-open-api-rules)
 
+### Run locally
 Run Spectral against the [OpenAPI specification (OAS)](../openapispec/RestInterface.yaml) using the following command locally 
 from the root directory of the repository:
 ```bash
@@ -25,7 +26,22 @@ Ensure that you have installed the [Spectral CLI client](https://docs.stoplight.
 npm install -g @stoplight/spectral-cli
 ```
 
+### Integrated into CI-Pipeline
+Spectral - an open-source API style guide enforcer and linter - is integrated into the CI pipeline.
+It runs on every pull request and pushes to main branch modifying either the [OpenAPI specification (OAS)](../openapispec/RestInterface.yaml)
+or the [workflow file itself](../../.github/workflows/spectral.yaml).
 
+> For further details on how Spectral in integrated into the CI pipeline, please refer to
+> the [GitHub Actions workflow file](../../.github/workflows/spectral.yaml).
+
+After pushing to a pull request you can review the Spectral linting results in the "Files changed" tab, especially 
+in the file `docs/openapispec/RestInterface.yaml`
+![](assets/files-changed-01.png)
+![](assets/files-changed-02.png)
+
+or in the "Checks" tab under the "Run Spectral on Pull Requests" workflow.
+![](assets/checks-01.png)
+![](assets/checks-02.png)
 
 ## Swagger
 - Eefers to the tooling ecosystem (like Swagger UI, Swagger Editor, and Swagger Codegen)
