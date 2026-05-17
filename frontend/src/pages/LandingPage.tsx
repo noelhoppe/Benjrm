@@ -1,16 +1,14 @@
 // frontend/src/pages/LandingPage.tsx
 
-import { Input } from "@/shadcn/components/ui/input";
-import { Button } from "@/shadcn/components/ui/button";
+import type { JSX } from "react"
+import { Input } from "@/shadcn/components/ui/input"
+import { Button } from "@/shadcn/components/ui/button"
 
 export default function LandingPage(): JSX.Element {
     return (
-        <div className="flex-1 flex flex-col bg-background text-foreground min-h-[calc(100vh-5rem)]">
-
-            <div className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center relative py-12">
-
-                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 items-center relative z-10">
-
+        <div className="bg-background text-foreground flex min-h-screen flex-col overflow-x-hidden">
+            <div className="relative mx-auto flex w-full max-w-360 flex-1 items-center px-4 py-4 sm:px-6">
+                <div className="relative z-10 grid w-full grid-cols-1 items-center gap-8 md:grid-cols-2 lg:gap-24">
                     {/* Left Column */}
                     <div className="flex flex-col gap-6 md:gap-10">
                         <div className="space-y-4 md:space-y-6">
@@ -32,8 +30,8 @@ export default function LandingPage(): JSX.Element {
                             </p>
                         </div>
 
-                        {/* Game PIN */}
-                        <div className="bg-muted/50 p-4 sm:p-8 rounded-xl shadow-lg border border-border flex flex-col sm:flex-row gap-3 items-center backdrop-blur-sm">
+                        {/* Game PIN — stacks vertically on mobile, row on sm+ */}
+                        <div className="bg-muted/50 border-border flex flex-col items-center gap-3 rounded-xl border p-4 shadow-lg backdrop-blur-sm sm:flex-row sm:p-8">
                             <Input
                                 aria-label="Enter Game PIN"
                                 className="bg-background border-border placeholder:text-muted-foreground/70 h-12 w-full text-center text-lg font-bold tracking-widest transition-all focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-[#00F2FF] sm:h-14 sm:text-xl"
