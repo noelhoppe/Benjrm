@@ -16,6 +16,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: stoplightio/spectral-action@v0.8.13
+      - name: Install Spectral - An open-source API style guide enforcer and linter.
+        run: npm install -g @stoplight/spectral-cli
+      - name: Run spectral lint
+        run: spectral lint docs/openapispec/RestInterface.yaml -f sarif -o spectral-lint-results.sarif
+      - name: Upload Spectral lint results
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          file_glob: 'docs/openapispec/RestInterface.yaml'
+          sarif_file: 'spectral-lint-results.sarif'
