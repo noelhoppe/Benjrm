@@ -7,6 +7,7 @@ import ErrorPage from './pages/ErrorPage';
 import RootLayout from './layouts/RootLayout';
 import PublicLayout from './layouts/PublicLayout';
 import QuizPage from "@/pages/QuizPage.tsx";
+import QuizCreator from "@/pages/QuizCreator.tsx";
 
 function App() {
     return (
@@ -21,6 +22,7 @@ function App() {
             <Route element={<RootLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/quiz/:quizId" element={<QuizPage />} />
+                <Route path="/quizCreator" element={<QuizCreator />} />
             </Route>
         </Routes>
     );
