@@ -1,14 +1,26 @@
 openapi: 3.1.0
 info:
   title: Benjrm's Rest API
+  description: This is the REST API for Benjrm's - a quiz platform for interactive learning and live competition
+  contact:
+    name: Benjrm
+    url: 'https://www.benjrm.de'
+    email: 'support@example.com'
   version: 1.0.0
 servers:
   - url: 'http://localhost:8080'
   - url: 'http://localhost:80'
+
+tags:
+  - name: Quizzes
+    description: Operations related to quizzes.
+
 paths:
   /api/v1/quizzes:
 
     post:
+      description: Create a new quiz.
+      operationId: createQuiz
       requestBody:
         required: true
         content:
@@ -16,20 +28,24 @@ paths:
             schema:
               $ref: '#/components/schemas/NewQuiz'
       responses:
-        201:
+        '201':
           description: Created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Quiz'
-        400:
+        '400':
           description: Bad Request
-        401:
+        '401':
           description: Unauthorized
-        500:
+        '500':
           description: Internal Server Error
+      tags:
+        - Quizzes
 
     get:
+      description: Retrieve a list of quizzes, optionally filtered by hidden status.
+      operationId: listQuizzes
       parameters:
         - name: hidden
           in: query
@@ -40,7 +56,7 @@ paths:
           required: false
 
       responses:
-        200:
+        '200':
           description: Ok
           content:
             application/json:
@@ -48,16 +64,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Quiz'
-        400:
+        '400':
           description: Bad Request
-        401:
+        '401':
           description: Unauthorized
-        500:
+        '500':
           description: Internal Server Error
+      tags:
+        - Quizzes
 
   /api/v1/quizzes/{quizId}:
 
     get:
+      description: Retrieve a quiz by its unique identifier.
+      operationId: getQuizById
       parameters:
         - name: quizId
           in: path
@@ -68,22 +88,26 @@ paths:
             format: uuid
             example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
       responses:
-        200:
+        '200':
           description: Ok
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Quiz'
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
-        404:
+        '404':
           description: Not Found
-        500:
+        '500':
           description: Internal Server Error
+      tags:
+        - Quizzes
 
     patch:
+      description: Partially update a quiz by its unique identifier. Only the provided fields will be updated.
+      operationId: updateQuizPartiallyById
       parameters:
         - name: quizId
           in: path
@@ -100,24 +124,28 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdateQuiz'
       responses:
-        200:
+        '200':
           description: Ok
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Quiz'
-        400:
+        '400':
           description: Bad Request
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
-        404:
+        '404':
           description: Not Found
-        500:
+        '500':
           description: Internal Server Error
+      tags:
+        - Quizzes
 
     put:
+      description: Fully update a quiz by its unique identifier. All fields must be provided.
+      operationId: updateQuizFullyById
       parameters:
         - name: quizId
           in: path
@@ -134,24 +162,28 @@ paths:
             schema:
               $ref: '#/components/schemas/NewQuiz'
       responses:
-        200:
+        '200':
           description: Ok
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Quiz'
-        400:
+        '400':
           description: Bad Request
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
-        404:
+        '404':
           description: Not Found
-        500:
+        '500':
           description: Internal Server Error
+      tags:
+        - Quizzes
 
     delete:
+      description: Delete a quiz by its unique identifier.
+      operationId: deleteQuizById
       parameters:
         - name: quizId
           in: path
@@ -162,16 +194,18 @@ paths:
             format: uuid
             example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
       responses:
-        204:
+        '204':
           description: No Content
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
-        404:
+        '404':
           description: Not Found
-        500:
+        '500':
           description: Internal Server Error
+      tags:
+        - Quizzes
 
 components:
   schemas:
