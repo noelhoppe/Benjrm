@@ -72,6 +72,7 @@ OpenAPI or GraphQL schema and exercises the edge cases that break your API.
 
 For detailed documentation please refer to [Schemathesis' official documentation](https://schemathesis.readthedocs.io/en/stable/).
 
+### Integrated into CI-Pipeline
 1. GitHub Actions tests the API with *Schemathesis* when you create
    a *pull request* modifying *either* the [OpenAPI Specification](../openapispec), the
    [API implementation itself](../../backend) or the corresponding [workflow file](../../.github/workflows/schemathesis.yaml).
