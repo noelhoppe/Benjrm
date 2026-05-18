@@ -20,7 +20,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: benjrm-dev-frontend
+      args:
+        APP_UID: ${UID:-1000}
+        APP_GID: ${GID:-1000}
     restart: unless-stopped
     environment:
       CHOKIDAR_USEPOLLING: "true"

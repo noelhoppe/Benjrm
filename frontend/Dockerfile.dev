@@ -1,18 +1,24 @@
 ARG NODE_VERSION=24-bookworm-slim
+ARG APP_UID=1000
+ARG APP_GID=1000
 
 FROM node:${NODE_VERSION} AS dev
 
+ARG APP_UID
+ARG APP_GID
+
 WORKDIR /app
 
-COPY package*.json ./
+RUN groupmod --gid "${APP_GID}" node \
+	&& usermod --uid "${APP_UID}" --gid "${APP_GID}" node
 
-RUN --mount=type=cache,target=/root/.npm npm ci
-
-COPY . .
-
-RUN chown -R node:node /app
+COPY --chown=node:node package*.json ./
 
 USER node
+
+RUN --mount=type=cache,target=/home/node/.npm npm ci
+
+COPY --chown=node:node . .
 
 EXPOSE 5173
 
