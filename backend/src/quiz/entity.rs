@@ -5,7 +5,11 @@ pub use quiz::{
 };
 
 mod quiz {
-    use {crate::auth::entity::{UserEntity, UserColumn}, sea_orm::entity::prelude::*, serde::Serialize};
+    use {
+        crate::auth::entity::{UserColumn, UserEntity},
+        sea_orm::entity::prelude::*,
+        serde::Serialize,
+    };
 
     #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize)]
     #[sea_orm(table_name = "quiz")]
