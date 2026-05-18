@@ -6,6 +6,7 @@ use {
         fmt,
         future::{Ready, ready},
     },
+    uuid::Uuid,
 };
 
 pub mod entity;
@@ -13,7 +14,7 @@ pub mod oidc;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    sub: String,
+    id: Uuid,
     #[serde(skip)]
     id_token: Option<String>,
 }

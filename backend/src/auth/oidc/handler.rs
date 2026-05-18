@@ -1,14 +1,20 @@
 use {
     crate::{
         AppData,
-        auth::{User, oidc::error::Error},
+        auth::{
+            User,
+            entity::{ActiveUser, UserColumn, UserEntity},
+            oidc::error::Error,
+        },
     },
     actix_session::Session,
     actix_web::{HttpResponse, get, post, web},
     oauth2::{CsrfToken, PkceCodeVerifier},
     openidconnect::Nonce,
+    sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter},
     serde::{Deserialize, Serialize},
     std::time::{Duration, Instant},
+    uuid::Uuid,
 };
 
 lazy_static::lazy_static! {
@@ -97,8 +103,24 @@ async fn callback(
 
     let user = oidc_user.ok_or(Error::MissingOidcUser(Box::new(oauth_user)))?;
 
+    let db_user = UserEntity::find()
+        .filter(UserColumn::Subject.eq(&user.oauth2_user.sub))
+        .one(&data.db)
+        .await?;
+    let db_user = match db_user {
+        Some(user) => user,
+        None => {
+            ActiveUser {
+                id: Set(Uuid::new_v4()),
+                subject: Set(user.oauth2_user.sub),
+            }
+            .insert(&data.db)
+            .await?
+        }
+    };
+
     let user = User {
-        sub: user.oauth2_user.sub,
+        id: db_user.id,
         id_token: user.id_token,
     };
     session.insert("user", user).map_err(Error::SessionInsert)?;
@@ -132,8 +154,8 @@ async fn logout(data: web::Data<AppData>, session: Session) -> HttpResponse {
         .finish()
 }
 
-#[get("/session")]
-async fn get_session(user: User) -> HttpResponse {
+#[get("/user")]
+async fn get_user(user: User) -> HttpResponse {
     HttpResponse::Ok().json(user)
 }
 
@@ -141,5 +163,5 @@ pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(login);
     cfg.service(callback);
     cfg.service(logout);
-    cfg.service(get_session);
+    cfg.service(get_user);
 }

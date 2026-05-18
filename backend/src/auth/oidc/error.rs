@@ -2,6 +2,7 @@ use {
     actix_security::http::security::{OAuth2User, oauth2::OAuth2Error},
     actix_session::{SessionGetError, SessionInsertError},
     actix_web::{HttpResponse, ResponseError},
+    sea_orm::DbErr,
     std::fmt,
 };
 
@@ -16,11 +17,18 @@ pub(super) enum Error {
     InvalidIdpResponse(#[allow(dead_code)] OAuth2Error),
     MissingOidcUser(#[allow(dead_code)] Box<OAuth2User>),
     SessionInsert(#[allow(dead_code)] SessionInsertError),
+    Db(#[allow(dead_code)] DbErr),
 }
 
 impl From<OAuth2Error> for Error {
     fn from(value: OAuth2Error) -> Self {
         Self::InvalidIdpResponse(value)
+    }
+}
+
+impl From<DbErr> for Error {
+    fn from(value: DbErr) -> Self {
+        Self::Db(value)
     }
 }
 
@@ -44,7 +52,10 @@ impl ResponseError for Error {
                     .insert_header(("Location", "/auth/login"))
                     .finish()
             }
-            Error::InvalidIdpResponse(_) | Error::MissingOidcUser(_) | Error::SessionInsert(_) => {
+            Error::InvalidIdpResponse(_)
+            | Error::MissingOidcUser(_)
+            | Error::SessionInsert(_)
+            | Error::Db(_) => {
                 log::error!("Authentication error: {self:?}");
                 HttpResponse::InternalServerError()
                     .body("Error communicating with identity provider")
