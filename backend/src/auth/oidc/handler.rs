@@ -126,7 +126,10 @@ async fn callback(
     session.insert("user", user).map_err(Error::SessionInsert)?;
     session.remove("oidc_state");
 
-    let location = state.redirect_path.as_deref().unwrap_or("/dashboard");
+    let mut location = state.redirect_path.as_deref().unwrap_or("/dashboard");
+    if !location.starts_with('/') || location.starts_with("//") {
+        location = "/dashboard";
+    }
 
     Ok(HttpResponse::Found()
         .append_header(("Location", location))
