@@ -84,33 +84,16 @@ Note: This endpoint is only available when the environment variable `KC_HOSTNAME
 configuring the reverse proxy.
 
 ## Overview of the Keycloak Authentication process from user perspective:
-1. The user accesses the client-side web application (e.g. `https://www.benjrm.de`) and gets redirected to the 
-Keycloak login page after clicking the "Login" button.
-
-![Keycloak Sign-in to your Account](./assets/sign-in-page.png)
-
-2. On the Keycloak login page, the user either enters their credentials to log in or clicks the "Register" link to create a new account.
+1. The user accesses the client-side web application and gets redirected to the
+login page after clicking the corresponding button.
+2. On the login page, the user either enters their credentials to log in or clicks the "Register" link to create a new account.
 The user has the option to check the "Remember Me" checkbox to stay logged in between browser restarts until the session expires.
-
-3. In case of forgotten credentials, the user can click the "Forgot Password?" link to initiate the password reset process, 
+3. In case of forgotten credentials, the user can click the "Forgot Password?" link to initiate the password reset process,
 which will send a password reset email to the user's verified registered email address.
-
-![Keycloak Forgot Password](assets/forgot-password.png)
-
-![Keycloak Reset Password Mail](./assets/reset-password.png)
-
-![Keycloak Update Password Interface](./assets/update-password.png)
-
-4. If the user clicks the "Register" link, they will be taken to the registration page where they can create a new account
+4. If the user clicks the "Register" link, they will be taken to the registration page where they can create a new account 
 by providing the required information such as username, email, and password.
-
-![Keycloak Register interface](./assets/register-page.png)
-
 After successful registration, the user will receive a verification email to confirm their email address.
 
-![Keycloak Verify Email](./assets/verify-email-01.png)
-
-![Keycloak Verify Email Mail](./assets/verify-email-02.png)
 
 ## Realm Configuration
 1. **"realm": "benjrm"** - 
@@ -163,66 +146,3 @@ The client is configured as a confidential client, which means it requires a cli
 ![Authentication Code Flow Sequence Diegram with PKCE](assets/auth-sequence-auth-code-pkce.png)
 
 [Authorization Code Flow with Proof Key for Code Exchange (PKCE) - Further explanations](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce)
-
-1. The user clicks the **"Login"** button on the client-side web application and the client-side web application call
-`/auth/login` endpoint of the server-side application to initiate the authentication process.
-2. This step consists of the steps 2, 3 and 4 of the Authentication Code Flow with PKCE sequence diagram. 
-The server-side application generates a random `state`, `nonce`, `code_verifier` and derives a `code_challange` from the `code_verifier` using a secure transformation (e.g. SHA-256). 
-The server-side application then sends an authorization code request to Keycloak's authorization endpoint:
-
-```
-{BASE_URL}/realms/{REALM_NAME}/protocol/openid-connect/auth
-```
-
-with the following query parameters:
-- `client_id`: The registered client identifier of the application (e.g. `web`)
-- `redirect_uri`: URL where Keycloak redirects after successful authentication (e.g. `http://127.0.0.1:5173/`)
-- `response_mode`: Defines how the result is returned, typically `fragment` for SPA applications
-- `response_type`: Defines the OAuth2 flow type, must be `code` (Authorization Code Flow)
-- `scope`: Defines requested permissions, typically `openid` for OpenID Connect authentication
-- `state`: Random string used to prevent CSRF attacks and to maintain request state between redirect
-- `nonce`: Random value used to prevent token replay attacks in ID tokens
-- `code_challenge`: PKCE challenge value derived from a code verifier (used for securing public clients)
-- `code_challenge_method`: Must be `S256` for SHA-256 based PKCE transformation
-
-👉 Example:
-
-![Keycloak Authorization Request](./assets/keycloak-authorization-request.png)
-
----
-
-3. The user authenticates on the Keycloak login page by entering and submitting their credentials.
-![User logs in on Keycloak login page](./assets/keycloak-authorize.png)
-
----
-
-4. After successful authentication, Keycloak redirects the user back to the server-side application with an authorization code:
-
-```
-http://localhost:5173?code=XYZ
-```
-
----
-
-5. This step consists of the steps 7, 8, 9 of the Authentication Code Flow with PKCE sequence diagram. 
-The server-side application exchanges the authorization code for tokens by sending a **POST request** to the token endpoint:
-
-```
-{BASE_URL}/realms/{REALM_NAME}/protocol/openid-connect/token
-```
-
-with:
-- `code=XYZ` (the authorization code received in the previous step)
-- `grant_type=authorization_code` (indicates the type of OAuth2 flow being used - Authorization Code Flow)
-- `client_id=web` (the  registered client identifier of the application)
-- `redirect_uri=http://localhost:5173/` (must match the redirect URI used in the authorization request)
-- `code_verifier`(the original random string generated by the client-side application, used to verify the PKCE challenge by hashing it and comparing it to the `code_challenge` sent in the authorization request)
-
-👉 Example:
-
-![Keycloak Token Request URL](./assets/token-request-url.png)
-
-![Keycloak Token Request Query Parameters](./assets/token-request-query-param.png)
-
-6. Afterward the server-side application receives the access token and ID token from Keycloak and sends 
-a signed http-only cookie containing the ID token to the client-side web application to maintain the user's authenticated session.
