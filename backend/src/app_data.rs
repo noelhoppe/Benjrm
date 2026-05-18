@@ -25,16 +25,6 @@ impl AppData {
 
         Self { db, oidc }
     }
-
-    // TODO: remove when adding login
-    pub fn dummy_user(&self) -> uuid::Uuid {
-        use uuid::Uuid;
-        lazy_static::lazy_static! {
-            pub static ref DUMMY_USER_UUID: Uuid = Uuid::parse_str("00000000-0000-4000-b000-000000000000").unwrap();
-        }
-
-        *DUMMY_USER_UUID
-    }
 }
 
 #[cfg(test)]
@@ -58,6 +48,25 @@ impl TestAppData {
             db
         };
         TestAppData { db }
+    }
+
+    pub async fn dummy_user_id(&self) -> uuid::Uuid {
+        use {
+            crate::auth::entity::ActiveUser,
+            sea_orm::{ActiveModelTrait, ActiveValue::Set},
+            uuid::Uuid,
+        };
+
+        let id = Uuid::new_v4();
+        let user = ActiveUser {
+            id: Set(id),
+            subject: Set(id.to_string()),
+        }
+        .insert(&self.db)
+        .await
+        .unwrap();
+
+        user.id
     }
 }
 

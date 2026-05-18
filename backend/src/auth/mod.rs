@@ -14,7 +14,7 @@ pub mod oidc;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    id: Uuid,
+    pub id: Uuid,
     #[serde(skip)]
     id_token: Option<String>,
 }
