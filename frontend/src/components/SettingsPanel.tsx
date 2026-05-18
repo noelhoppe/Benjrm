@@ -2,72 +2,131 @@
 
 import type { JSX } from "react"
 import type { Question } from "../pages/QuizCreator"
+import { Label } from "@/shadcn/components/ui/label"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/shadcn/components/ui/select"
 
 interface SettingsPanelProps {
     question: Question
 }
 
 export default function SettingsPanel({ question }: SettingsPanelProps): JSX.Element {
-    const colors = ["bg-[#2d4cc9]", "bg-[#ffa602]", "bg-[#11c8d4]", "bg-[#ff4949]"]
+    const accents = ["#2d4cc9", "#ffa602", "#11c8d4", "#ff4949"]
     const icons = ["▲", "◆", "●", "■"]
 
     return (
-        <aside className="flex w-72 flex-col gap-8 border-l border-white/10 bg-[#1a2234] p-6">
+        <aside className="flex flex-col gap-8">
+            {/* Header */}
             <div>
-                <h2 className="mb-6 text-xs font-bold tracking-widest text-gray-400 uppercase">
-                    Settings & Preview
-                </h2>
-                <div className="space-y-6">
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#FF8A00]/20 bg-[#FF8A00]/10 px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-[#FF8A00] uppercase">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF8A00]" />
+                    Settings
+                </div>
+
+                {/* Controls */}
+                <div className="space-y-5">
+                    {/* Time Limit */}
                     <div className="space-y-2">
-                        <label
-                            className="mb-2 block text-[10px] font-bold text-gray-500 uppercase"
+                        <Label
+                            className="text-muted-foreground block text-[10px] font-bold tracking-widest uppercase"
                             htmlFor="timeLimit"
                         >
-                            <span>Question Time Limit</span>
-                            <select
-                                className="mt-2 w-full rounded-md border border-white/10 bg-[#121926] p-2 text-sm text-white"
+                            Question Time Limit
+                        </Label>
+
+                        <Select defaultValue="10 seconds">
+                            <SelectTrigger
+                                className="bg-background/70 border-border w-full rounded-xl backdrop-blur-sm transition-all focus:ring-2 focus:ring-[#00F2FF]/30"
                                 id="timeLimit"
                             >
-                                <option>10 seconds</option>
-                                <option>20 seconds</option>
-                                <option>30 seconds</option>
-                            </select>
-                        </label>
+                                <SelectValue placeholder="Select time limit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="10 seconds">10 seconds</SelectItem>
+                                <SelectItem value="20 seconds">20 seconds</SelectItem>
+                                <SelectItem value="30 seconds">30 seconds</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
+
+                    {/* Points */}
                     <div className="space-y-2">
-                        <label
-                            className="mb-2 block text-[10px] font-bold text-gray-500 uppercase"
+                        <Label
+                            className="text-muted-foreground block text-[10px] font-bold tracking-widest uppercase"
                             htmlFor="points"
                         >
-                            <span>Points</span>
-                            <select
-                                className="mt-2 w-full rounded-md border border-white/10 bg-[#121926] p-2 text-sm text-white"
+                            Points
+                        </Label>
+
+                        <Select defaultValue="1000">
+                            <SelectTrigger
+                                className="bg-background/70 border-border w-full rounded-xl backdrop-blur-sm transition-all focus:ring-2 focus:ring-[#00F2FF]/30"
                                 id="points"
                             >
-                                <option>1000</option>
-                                <option>2000</option>
-                            </select>
-                        </label>
+                                <SelectValue placeholder="Select points" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="1000">1000</SelectItem>
+                                <SelectItem value="2000">2000</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </div>
+
+            {/* Preview */}
             <div className="space-y-4">
-                <span className="block text-[10px] font-bold text-gray-500 uppercase">
-                    Answer Preview
-                </span>
-                <div className="flex aspect-9/12 flex-col rounded-2xl border border-white/5 bg-[#121926] p-4 shadow-inner">
-                    <div className="mb-4 flex min-h-10 items-center justify-center rounded-lg bg-[#252f44] p-3 text-center text-[10px] font-bold">
-                        {question.title || "Type your question..."}
-                    </div>
-                    <div className="grid flex-1 grid-cols-2 gap-2">
-                        {question.options.map((option, index) => (
-                            <div
-                                key={`option-${icons[index]}`}
-                                className={`${colors[index]} flex items-center justify-center rounded-md p-1 text-center text-[8px] font-medium transition-all duration-200`}
-                            >
-                                {option || icons[index]}
-                            </div>
-                        ))}
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#00F2FF]/20 bg-[#00F2FF]/10 px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-[#00F2FF] uppercase">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-[#00F2FF]" />
+                    Preview
+                </div>
+
+                {/* Phone Mockup */}
+                <div className="bg-muted/30 border-border relative overflow-hidden rounded-[2rem] border p-4 shadow-2xl backdrop-blur-sm">
+                    {/* Glow */}
+                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[#00F2FF]/10 blur-3xl" />
+
+                    <div className="relative flex aspect-9/16 flex-col rounded-[1.5rem] border border-white/5 bg-black/20 p-3 shadow-inner">
+                        {/* Question */}
+                        <div className="bg-background/60 border-border mb-3 flex min-h-14 items-center justify-center rounded-2xl border p-3 text-center text-xs font-bold backdrop-blur-sm">
+                            {question.title || "Type your question..."}
+                        </div>
+
+                        {/* Answers */}
+                        <div className="grid flex-1 grid-cols-2 gap-2">
+                            {question.options.map((option, index) => (
+                                <div
+                                    key={`option-${icons[index]}`}
+                                    className="bg-muted/40 border-border group relative flex flex-col items-center justify-center overflow-hidden rounded-xl border p-2 text-center shadow-lg transition-transform hover:scale-[1.02]"
+                                >
+                                    {/* Background Glow */}
+                                    <div
+                                        className="absolute inset-0 opacity-20 blur-xl transition-opacity duration-300 group-hover:opacity-40"
+                                        style={{
+                                            background: `radial-gradient(circle, ${accents[index]} 0%, transparent 70%)`,
+                                        }}
+                                    />
+
+                                    <span
+                                        className="relative z-10 mb-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-black text-white shadow-lg"
+                                        style={{
+                                            background: accents[index],
+                                        }}
+                                    >
+                                        {icons[index]}
+                                    </span>
+
+                                    <span className="relative z-10 line-clamp-2 text-[9px] font-semibold text-white">
+                                        {option || "Answer"}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

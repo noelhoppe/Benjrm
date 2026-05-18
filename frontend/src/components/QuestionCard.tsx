@@ -64,9 +64,9 @@ export default function QuestionCard({
         <div
             ref={setNodeRef}
             style={style}
-            className={`group bg-muted/30 border-border/50 rounded-xl border border-l-4 border-l-[#00F2FF] p-4 transition-all sm:p-6 ${
-                isDragging ? "scale-[1.02] border-[#00F2FF] shadow-lg" : ""
-            } ${isEditing ? "bg-muted/60 ring-1 ring-[#00F2FF]/30" : "hover:bg-muted/50"}`}
+            className={`group bg-card rounded-xl border border-l-4 border-l-[#00F2FF] p-4 transition-all sm:p-6 ${
+                isDragging ? "scale-[1.02] border-[#00F2FF] shadow-2xl" : "border-border/50"
+            } ${isEditing ? "ring-1 ring-[#00F2FF]/30" : "hover:border-border"}`}
         >
             <div className="flex items-start gap-3 sm:gap-4">
                 {!isEditing && (
@@ -74,19 +74,19 @@ export default function QuestionCard({
                         {...attributes}
                         {...listeners}
                         aria-label="Drag Handle"
-                        className="text-muted-foreground/50 hover:text-foreground flex cursor-grab items-center self-stretch pr-1 transition-colors active:cursor-grabbing"
+                        className="text-muted-foreground/40 hover:text-foreground flex cursor-grab items-center self-stretch pr-1 transition-colors active:cursor-grabbing"
                     >
                         <GripVertical className="h-5 w-5" />
                     </div>
                 )}
 
-                <div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-lg sm:h-12 sm:w-12">
+                <div className="bg-muted/50 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg sm:h-12 sm:w-12">
                     <IconComponent
                         className={`h-5 w-5 sm:h-6 sm:w-6 ${iconColors[question.icon]}`}
                     />
                 </div>
 
-                <div className="min-w-0 flex-1">
+                <div className="text-foreground min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-2">
                         <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
                             QUESTION {String(question.number).padStart(2, "0")}
@@ -96,7 +96,7 @@ export default function QuestionCard({
                     {isEditing ? (
                         <div className="animate-in fade-in slide-in-from-top-1 mt-2 space-y-3">
                             <input
-                                className="bg-background border-border w-full rounded border px-3 py-1.5 font-bold focus:ring-1 focus:ring-[#00F2FF] focus:outline-none"
+                                className="border-input text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-transparent px-3 py-1.5 font-bold focus:ring-1 focus:ring-[#00F2FF] focus:outline-none"
                                 placeholder="Question Title"
                                 type="text"
                                 value={editData.title}
@@ -105,7 +105,7 @@ export default function QuestionCard({
                                 }
                             />
                             <textarea
-                                className="bg-background border-border w-full rounded border px-3 py-1.5 text-sm focus:ring-1 focus:ring-[#00F2FF] focus:outline-none"
+                                className="border-input text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-transparent px-3 py-1.5 text-sm focus:ring-1 focus:ring-[#00F2FF] focus:outline-none"
                                 placeholder="Question Description"
                                 rows={2}
                                 value={editData.description}
@@ -114,14 +114,14 @@ export default function QuestionCard({
                                 }
                             />
 
-                            <div className="border-border/50 border-t pt-2">
+                            <div className="border-border/50 mt-3 border-t pt-3">
                                 <p className="text-muted-foreground mb-2 text-[10px] font-bold uppercase">
                                     Answer Options
                                 </p>
                                 <div className="grid grid-cols-1 gap-2">
                                     {[1, 2].map((i) => (
                                         <div key={i} className="flex items-center gap-2">
-                                            <div className="border-border h-4 w-4 shrink-0 rounded-full border" />
+                                            <div className="border-muted-foreground/50 h-4 w-4 shrink-0 rounded-full border" />
                                             <input
                                                 disabled
                                                 className="text-muted-foreground w-full bg-transparent text-sm italic outline-none"
@@ -146,12 +146,14 @@ export default function QuestionCard({
                 </div>
 
                 <div
-                    className={`flex shrink-0 flex-col items-center gap-1 transition-opacity sm:flex-row sm:gap-2 ${isEditing ? "opacity-100" : "sm:opacity-0 sm:group-hover:opacity-100"}`}
+                    className={`flex shrink-0 flex-col items-center gap-1 transition-opacity sm:flex-row sm:gap-2 ${
+                        isEditing ? "opacity-100" : "sm:opacity-0 sm:group-hover:opacity-100"
+                    }`}
                 >
                     {isEditing ? (
                         <>
                             <button
-                                className="rounded-lg p-2 text-[#00F2FF] transition-colors hover:bg-[#00F2FF]/10"
+                                className="rounded-md p-2 text-[#00F2FF] transition-colors hover:bg-[#00F2FF]/10"
                                 onClick={handleToggleEdit}
                                 title="Save changes"
                                 type="button"
@@ -159,7 +161,7 @@ export default function QuestionCard({
                                 <Check className="h-4 w-4" />
                             </button>
                             <button
-                                className="hover:bg-background text-muted-foreground rounded-lg p-2 transition-colors"
+                                className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-2 transition-colors"
                                 onClick={handleToggleEdit}
                                 title="Cancel"
                                 type="button"
@@ -170,7 +172,7 @@ export default function QuestionCard({
                     ) : (
                         <>
                             <button
-                                className="hover:bg-background text-muted-foreground hover:text-foreground rounded-lg p-2 transition-colors"
+                                className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-2 transition-colors"
                                 onClick={handleToggleEdit}
                                 title="Edit question"
                                 type="button"
@@ -178,7 +180,7 @@ export default function QuestionCard({
                                 <Edit2 className="h-4 w-4" />
                             </button>
                             <button
-                                className="hover:bg-background text-muted-foreground hover:text-destructive rounded-lg p-2 transition-colors"
+                                className="text-muted-foreground rounded-md p-2 transition-colors hover:bg-[#ff4949]/10 hover:text-[#ff4949]"
                                 onClick={() => onDelete(question.id)}
                                 title="Delete question"
                                 type="button"

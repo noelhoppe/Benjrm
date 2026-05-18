@@ -1,6 +1,10 @@
+// frontend/src/components/QuestionSidebar.tsx
+
 import { Plus, Trash2 } from "lucide-react"
 import type { JSX } from "react"
+
 import type { Question } from "../pages/QuizCreator"
+
 import { Button } from "@/shadcn/components/ui/button"
 
 interface QuestionSidebarProps {
@@ -17,59 +21,93 @@ export default function QuestionSidebar({
     questions,
 }: QuestionSidebarProps): JSX.Element {
     return (
-        <aside className="flex w-64 flex-col border-r border-white/10 bg-[#1a2234] p-4">
-            <h2 className="text-muted-foreground mb-4 text-[10px] font-bold tracking-[0.2em] uppercase">
-                Questions List
-            </h2>
-            <div className="flex-1 space-y-4 overflow-y-auto">
-                {questions.map((q, i) => (
-                    <button
-                        key={q.id}
-                        onClick={() => onSelect(i)}
-                        type="button"
-                        className={`relative w-full cursor-pointer rounded-lg border-2 p-3 text-left transition-all ${
-                            activeIndex === i
-                                ? "border-[#00F2FF] bg-[#252f44]"
-                                : "border-transparent bg-[#121926] hover:bg-[#252f44]"
-                        }`}
-                    >
-                        <div className="mb-2 flex items-start justify-between">
-                            <span className="text-[10px] font-bold text-gray-400">Q{i + 1}</span>
-                            <div
-                                className="text-gray-500 hover:text-red-400"
-                                role="button"
-                                tabIndex={0}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    // Add delete logic here later
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                        e.stopPropagation()
-                                        // Add delete logic here later
-                                    }
-                                }}
-                            >
-                                <Trash2 className="h-3 w-3" />
-                            </div>
-                        </div>
-                        <p className="mb-2 line-clamp-1 text-[10px] text-gray-400">
-                            {q.title || "Untitled question"}
-                        </p>
-                        <div className="grid grid-cols-2 gap-1 opacity-60">
-                            <div className="h-2 rounded-sm bg-[#2d4cc9]" />
-                            <div className="h-2 rounded-sm bg-[#ffa602]" />
-                            <div className="h-2 rounded-sm bg-[#11c8d4]" />
-                            <div className="h-2 rounded-sm bg-[#ff4949]" />
-                        </div>
-                    </button>
-                ))}
+        <aside className="flex flex-col">
+            {/* Header */}
+            <div className="mb-5">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#FF8A00]/20 bg-[#FF8A00]/10 px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-[#FF8A00] uppercase">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF8A00]" />
+                    Questions
+                </div>
             </div>
+
+            {/* Question List */}
+            <div className="flex-1 space-y-3 overflow-y-auto">
+                {questions.map((q, i) => {
+                    const active = activeIndex === i
+
+                    return (
+                        <Button
+                            key={q.id}
+                            onClick={() => onSelect(i)}
+                            variant="ghost"
+                            className={`group border-border bg-muted/30 relative h-auto w-full flex-col items-stretch justify-start overflow-hidden rounded-2xl border p-4 text-left whitespace-normal shadow-lg backdrop-blur-sm transition-all duration-200 ${
+                                active
+                                    ? "border-[#00F2FF]/40 bg-[#00F2FF]/5 shadow-[0_0_30px_rgba(0,242,255,0.08)] hover:bg-[#00F2FF]/5"
+                                    : "hover:bg-muted/50 hover:border-[#00F2FF]/20"
+                            }`}
+                        >
+                            {/* Glow */}
+                            {active ? (
+                                <div className="absolute inset-0 bg-linear-to-br from-[#00F2FF]/10 to-transparent" />
+                            ) : null}
+
+                            <div className="relative">
+                                {/* Top */}
+                                <div className="mb-3 flex items-start justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div
+                                            className={`h-2.5 w-2.5 rounded-full ${
+                                                active ? "bg-[#00F2FF]" : "bg-muted-foreground/40"
+                                            }`}
+                                        />
+
+                                        <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                                            Question {i + 1}
+                                        </span>
+                                    </div>
+
+                                    <div
+                                        className="text-muted-foreground transition-colors hover:text-red-400"
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                e.stopPropagation()
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </div>
+                                </div>
+
+                                {/* Title */}
+                                <p className="mb-4 line-clamp-2 min-h-10 text-sm font-semibold">
+                                    {q.title || "Untitled question"}
+                                </p>
+
+                                {/* Preview */}
+                                <div className="grid grid-cols-2 gap-1.5 opacity-80">
+                                    <div className="h-2 rounded-full bg-[#2d4cc9]" />
+                                    <div className="h-2 rounded-full bg-[#ffa602]" />
+                                    <div className="h-2 rounded-full bg-[#11c8d4]" />
+                                    <div className="h-2 rounded-full bg-[#ff4949]" />
+                                </div>
+                            </div>
+                        </Button>
+                    )
+                })}
+            </div>
+
+            {/* Add Button */}
             <Button
-                className="mt-4 w-full gap-2 bg-[#00F2FF] font-bold text-black hover:bg-[#00d8e4]"
+                className="mt-5 h-12 gap-2 rounded-2xl bg-[#00F2FF] font-bold text-black shadow-lg transition-all hover:scale-[1.01] hover:bg-[#00d8e4]"
                 onClick={onAdd}
             >
-                <Plus className="h-4 w-4" /> Add New Question
+                <Plus className="h-4 w-4" />
+                Add Question
             </Button>
         </aside>
     )

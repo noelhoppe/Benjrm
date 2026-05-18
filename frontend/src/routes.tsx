@@ -6,7 +6,7 @@ import Dashboard from "./pages/Dashboard"
 import ErrorPage from "./pages/ErrorPage"
 import RootLayout from "./layouts/RootLayout"
 import PublicLayout from "./layouts/PublicLayout"
-import QuizCreatorPage from "./pages/QuizCreator.tsx"
+import QuizCreator from "./pages/QuizCreator.tsx"
 import QuizPage from "./pages/QuizPage.tsx"
 
 const routes: RouteObject[] = [
@@ -34,10 +34,10 @@ const routes: RouteObject[] = [
             },
             {
                 path: "/createQuiz",
-                element: <QuizCreatorPage />,
+                element: <QuizCreator />,
             },
             {
-                path: "/quizDiscovery",
+                path: "/quiz/:quizId",
                 element: <QuizPage />,
             },
         ],
