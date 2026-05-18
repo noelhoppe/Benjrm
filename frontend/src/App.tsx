@@ -1,14 +1,13 @@
-import { Button } from "@/shadcn/components/ui/button";
+// frontend/src/App.tsx
 
-function App() {
-    return (
-        <>
-            <h1 className="text-red-600">
-                Hello React + TypeScript + React Router + TanStack Query + TailwindCSS + shadcn/ui!
-            </h1>
-            <Button variant="default">Click me</Button>
-        </>
-    )
+import type { JSX } from "react"
+import { useRoutes } from "react-router"
+import routes from "./routes"
+
+function App(): JSX.Element {
+    const routing = useRoutes(routes)
+
+    return <>{routing}</>
 }
 
 export default App

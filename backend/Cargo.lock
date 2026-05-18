@@ -583,6 +583,7 @@ dependencies = [
  "actix-session",
  "actix-web",
  "awc",
+ "chrono",
  "dotenvy",
  "env_logger",
  "lazy_static",
@@ -590,11 +591,14 @@ dependencies = [
  "migration",
  "oauth2",
  "openidconnect",
+ "paste",
  "sea-orm",
  "serde",
  "static-files",
+ "thiserror 2.0.18",
  "url",
  "urlencoding",
+ "uuid",
 ]
 
 [[package]]
@@ -2655,6 +2659,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "paste"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+
+[[package]]
 name = "path-matchers"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4620,6 +4630,7 @@ version = "1.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ddd74a9687298c6858e9b88ec8935ec45d22e8fd5e6394fa1bd4e99a87789c76"
 dependencies = [
+ "getrandom 0.4.2",
  "js-sys",
  "serde_core",
  "wasm-bindgen",
