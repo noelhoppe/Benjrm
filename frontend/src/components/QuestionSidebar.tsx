@@ -10,6 +10,7 @@ import { Button } from "@/shadcn/components/ui/button"
 interface QuestionSidebarProps {
     activeIndex: number
     onAdd: () => void
+    onDelete: (index: number) => void
     onSelect: (index: number) => void
     questions: Question[]
 }
@@ -17,11 +18,12 @@ interface QuestionSidebarProps {
 export default function QuestionSidebar({
     activeIndex,
     onAdd,
+    onDelete,
     onSelect,
     questions,
 }: QuestionSidebarProps): JSX.Element {
     return (
-        <aside className="flex flex-col">
+        <aside className="flex h-full max-h-[calc(100vh-180px)] flex-col">
             {/* Header */}
             <div className="mb-5">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#FF8A00]/20 bg-[#FF8A00]/10 px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-[#FF8A00] uppercase">
@@ -31,7 +33,7 @@ export default function QuestionSidebar({
             </div>
 
             {/* Question List */}
-            <div className="flex-1 space-y-3 overflow-y-auto">
+            <div className="flex-1 space-y-3 overflow-y-auto pr-2">
                 {questions.map((q, i) => {
                     const active = activeIndex === i
 
@@ -66,16 +68,19 @@ export default function QuestionSidebar({
                                         </span>
                                     </div>
 
+                                    {/* Delete Button */}
                                     <div
                                         className="text-muted-foreground transition-colors hover:text-red-400"
                                         role="button"
                                         tabIndex={0}
                                         onClick={(e) => {
                                             e.stopPropagation()
+                                            onDelete(i)
                                         }}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter" || e.key === " ") {
                                                 e.stopPropagation()
+                                                onDelete(i)
                                             }
                                         }}
                                     >
@@ -85,7 +90,7 @@ export default function QuestionSidebar({
 
                                 {/* Title */}
                                 <p className="mb-4 line-clamp-2 min-h-10 text-sm font-semibold">
-                                    {q.title ?? "Untitled question"}
+                                    {q.title || "Untitled question"}
                                 </p>
 
                                 {/* Preview */}
@@ -103,7 +108,7 @@ export default function QuestionSidebar({
 
             {/* Add Button */}
             <Button
-                className="mt-5 h-12 gap-2 rounded-2xl bg-[#00F2FF] font-bold text-black shadow-lg transition-all hover:scale-[1.01] hover:bg-[#00d8e4]"
+                className="mt-5 h-12 shrink-0 gap-2 rounded-2xl bg-[#00F2FF] font-bold text-black shadow-lg transition-all hover:scale-[1.01] hover:bg-[#00d8e4]"
                 onClick={onAdd}
             >
                 <Plus className="h-4 w-4" />

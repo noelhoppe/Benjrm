@@ -9,7 +9,6 @@ import SettingsPanel from "../components/SettingsPanel"
 import AnswerCard from "../components/AnswerCard"
 import type { Question } from "../types/quiz"
 
-import { Input } from "@/shadcn/components/ui/input"
 import { Button } from "@/shadcn/components/ui/button"
 import { Textarea } from "@/shadcn/components/ui/textarea"
 import {
@@ -59,19 +58,26 @@ export default function QuizCreator(): JSX.Element {
         updateQuestion({ options: newOptions })
     }
 
+    const deleteQuestion = (indexToDelete: number) => {
+        if (questions.length <= 1) return
+
+        setQuestions((prevQuestions) => prevQuestions.filter((_, index) => index !== indexToDelete))
+
+        if (currentQuestionIndex >= indexToDelete && currentQuestionIndex > 0) {
+            setCurrentQuestionIndex((prev) => prev - 1)
+        }
+    }
+
     return (
         <div className="bg-background text-foreground min-h-screen overflow-x-hidden">
-            <div className="mx-auto flex flex-col px-4 py-8 sm:px-6">
+            {/* Removed max-w to let the layout span the full page */}
+            <div className="flex w-full flex-col px-4 py-8 sm:px-8">
                 {/* Header */}
                 <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div className="space-y-2">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#FF8A00]/20 bg-[#FF8A00]/10 px-3 py-1 text-xs font-bold tracking-widest text-[#FF8A00] uppercase">
-                            <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF8A00]" />
-                            Quiz Creator
-                        </div>
-
-                        <Input
-                            className="h-auto border-none bg-transparent p-0 text-4xl font-extrabold tracking-tight shadow-none focus-visible:ring-0 md:text-5xl"
+                    <div className="flex-1 space-y-2">
+                        {/* Native input for true transparency */}
+                        <input
+                            className="text-foreground placeholder:text-foreground/40 w-full max-w-2xl appearance-none border-none bg-transparent p-0 text-4xl font-extrabold tracking-tight outline-none focus:ring-0 md:text-5xl"
                             onChange={(e) => setQuizTitle(e.target.value)}
                             placeholder="Untitled Quiz"
                             value={quizTitle}
@@ -93,12 +99,13 @@ export default function QuizCreator(): JSX.Element {
                     </div>
                 </header>
 
-                {/* Layout */}
+                {/* Layout: Sidebars are pushed to the edges, center content is handled inside */}
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-[280px_1fr_320px]">
                     {/* Sidebar */}
                     <div className="bg-muted/30 border-border rounded-3xl border p-4 shadow-xl backdrop-blur-sm">
                         <QuestionSidebar
                             activeIndex={currentQuestionIndex}
+                            onDelete={deleteQuestion}
                             onSelect={setCurrentQuestionIndex}
                             questions={questions}
                             onAdd={() =>
@@ -116,7 +123,7 @@ export default function QuizCreator(): JSX.Element {
                     </div>
 
                     {/* Main Editor */}
-                    <main className="flex flex-col gap-6">
+                    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6">
                         {/* Question Card */}
                         <div className="bg-muted/30 border-border relative overflow-hidden rounded-3xl border p-6 shadow-xl backdrop-blur-sm md:p-8">
                             {/* Gradient Glow */}
