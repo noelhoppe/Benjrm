@@ -7,7 +7,6 @@ import ErrorPage from "./pages/ErrorPage"
 import RootLayout from "./layouts/RootLayout"
 import PublicLayout from "./layouts/PublicLayout"
 import QuizCreator from "./pages/QuizCreator.tsx"
-import QuizPage from "./pages/QuizPage.tsx"
 
 const routes: RouteObject[] = [
     {
@@ -35,10 +34,6 @@ const routes: RouteObject[] = [
             {
                 path: "/createQuiz",
                 element: <QuizCreator />,
-            },
-            {
-                path: "/quiz/:quizId",
-                element: <QuizPage />,
             },
         ],
     },

@@ -3,6 +3,7 @@
 import type { JSX } from "react"
 import { NavLink } from "react-router"
 import { Button } from "@/shadcn/components/ui/button"
+import ThemeToggle from "@/components/ThemeToggle.tsx"
 
 export default function Navbar(): JSX.Element {
     return (
@@ -27,6 +28,7 @@ export default function Navbar(): JSX.Element {
                     >
                         SIGN IN
                     </Button>
+                    <ThemeToggle />
                 </div>
             </div>
         </header>

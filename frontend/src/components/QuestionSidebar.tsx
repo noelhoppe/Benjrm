@@ -3,7 +3,7 @@
 import { Plus, Trash2 } from "lucide-react"
 import type { JSX } from "react"
 
-import type { Question } from "../pages/QuizCreator"
+import type { Question } from "../types/quiz"
 
 import { Button } from "@/shadcn/components/ui/button"
 
@@ -85,7 +85,7 @@ export default function QuestionSidebar({
 
                                 {/* Title */}
                                 <p className="mb-4 line-clamp-2 min-h-10 text-sm font-semibold">
-                                    {q.title || "Untitled question"}
+                                    {q.title ?? "Untitled question"}
                                 </p>
 
                                 {/* Preview */}

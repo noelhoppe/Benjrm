@@ -1,7 +1,7 @@
 // frontend/src/components/SettingsPanel.tsx
 
 import type { JSX } from "react"
-import type { Question } from "../pages/QuizCreator"
+import type { Question } from "../types/quiz"
 import { Label } from "@/shadcn/components/ui/label"
 import {
     Select,
@@ -94,7 +94,7 @@ export default function SettingsPanel({ question }: SettingsPanelProps): JSX.Ele
                     <div className="relative flex aspect-9/16 flex-col rounded-[1.5rem] border border-white/5 bg-black/20 p-3 shadow-inner">
                         {/* Question */}
                         <div className="bg-background/60 border-border mb-3 flex min-h-14 items-center justify-center rounded-2xl border p-3 text-center text-xs font-bold backdrop-blur-sm">
-                            {question.title || "Type your question..."}
+                            {question.title ?? "Type your question..."}
                         </div>
 
                         {/* Answers */}

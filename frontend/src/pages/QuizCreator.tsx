@@ -6,6 +6,8 @@ import { HelpCircle, Settings } from "lucide-react"
 
 import QuestionSidebar from "../components/QuestionSidebar"
 import SettingsPanel from "../components/SettingsPanel"
+import AnswerCard from "../components/AnswerCard"
+import type { Question } from "../types/quiz"
 
 import { Input } from "@/shadcn/components/ui/input"
 import { Button } from "@/shadcn/components/ui/button"
@@ -17,71 +19,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/shadcn/components/ui/select"
-
-// --- Types ---
-
-export interface Question {
-    id: number
-    title: string
-    type: "Multiple Choice" | "True/False"
-    options: string[]
-}
-
-// --- Answer Card ---
-
-interface AnswerCardProps {
-    icon: string
-    placeholder: string
-    value: string
-    onChange: (val: string) => void
-    accent: string
-    glow: string
-}
-
-function AnswerCard({
-    icon,
-    placeholder,
-    value,
-    onChange,
-    accent,
-    glow,
-}: AnswerCardProps): JSX.Element {
-    return (
-        <div
-            className="bg-muted/40 border-border group relative overflow-hidden rounded-2xl border p-5 shadow-lg backdrop-blur-sm transition-all hover:scale-[1.01]"
-            style={{
-                boxShadow: `0 0 0 rgba(0,0,0,0)`,
-            }}
-        >
-            {/* Hover Glow */}
-            <div
-                className="absolute inset-0 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-20"
-                style={{
-                    background: glow,
-                }}
-            />
-
-            <div className="relative flex items-center gap-4">
-                <div
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg font-black text-white shadow-lg"
-                    style={{
-                        background: accent,
-                    }}
-                >
-                    {icon}
-                </div>
-
-                <Input
-                    className="placeholder:text-muted-foreground/60 h-auto border-none bg-transparent p-0 text-lg font-semibold shadow-none focus-visible:ring-0"
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder={placeholder}
-                    type="text"
-                    value={value}
-                />
-            </div>
-        </div>
-    )
-}
 
 // --- Main Page ---
 
@@ -124,7 +61,7 @@ export default function QuizCreator(): JSX.Element {
 
     return (
         <div className="bg-background text-foreground min-h-screen overflow-x-hidden">
-            <div className="mx-auto flex max-w-7xl flex-col px-4 py-8 sm:px-6">
+            <div className="mx-auto flex flex-col px-4 py-8 sm:px-6">
                 {/* Header */}
                 <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="space-y-2">
