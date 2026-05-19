@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react"
-import type { JSX, ReactNode } from "react"
-import { ThemeProviderContext } from "./themeContext"
-import type { Theme } from "./themeContext"
+// frontend/src/context/ThemeProvider.tsx
+
+import type { JSX } from "react"
+import { useEffect, useState, useMemo } from "react"
+import { ThemeProviderContext } from "./ThemeContext"
+import type { Theme } from "./ThemeContext"
 
 interface ThemeProviderProps {
-    children: ReactNode
+    children: React.ReactNode
     defaultTheme?: Theme
     storageKey?: string
 }
@@ -34,7 +36,6 @@ export default function ThemeProvider({
         }
 
         applyTheme()
-
         media.addEventListener("change", applyTheme)
         return () => media.removeEventListener("change", applyTheme)
     }, [theme])
