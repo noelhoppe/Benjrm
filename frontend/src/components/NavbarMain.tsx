@@ -12,8 +12,7 @@ export default function NavbarMain(): JSX.Element {
 
     return (
         <header className="border-border bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-50 border-b backdrop-blur">
-            <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
-                {/* Left side */}
+            <div className="mx-auto flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">                {/* Left side */}
                 <div className="flex items-center gap-8">
                     {/* Logo */}
                     <NavLink
