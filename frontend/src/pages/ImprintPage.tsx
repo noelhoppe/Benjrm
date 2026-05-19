@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Loader2 } from "lucide-react"
-import type { JSX } from "react"
+import { useEffect, type JSX } from "react"
+import { useNavigate } from "react-router"
 import MarkdownPageComponent from "@/components/markdown/MarkdownPageComponent"
 import Navbar from "@/components/Navbar"
 
@@ -10,13 +11,13 @@ const fetchImprintContent = async (): Promise<string> => {
 
     // Check if response is not a html page
     if (!response.ok || contentType?.includes("text/html")) {
-        // TODO: Redirect to 404 Page
         throw Error("Imprint content not found")
     }
     return response.text()
 }
 
-export default function ImprintPage(): JSX.Element {
+export default function ImprintPage(): JSX.Element | null {
+    const navigate = useNavigate()
     const {
         data: imprintContent,
         isLoading,
@@ -26,10 +27,17 @@ export default function ImprintPage(): JSX.Element {
         queryFn: fetchImprintContent,
     })
 
+    useEffect(() => {
+        //Redirect on error to 404 page
+        if (error) {
+            navigate("/404", { replace: true })
+        }
+    }, [error, navigate])
+
+    /** Loading Screen */
     if (isLoading) {
         return (
             <div className="bg-background text-foreground min-h-full overflow-x-hidden">
-                <Navbar />
                 <div className="flex min-h-100 flex-col items-center justify-center gap-4">
                     <Loader2 className="text-primary h-10 w-10 animate-spin" />
                     <p className="text-muted-foreground animate-pulse">Loading Imprint...</p>
@@ -39,22 +47,13 @@ export default function ImprintPage(): JSX.Element {
     }
 
     if (error) {
-        return (
-            <div className="bg-background text-foreground min-h-full overflow-x-hidden">
-                <Navbar />
-                <div className="text-destructive bg-muted/20 flex min-h-100 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                    <p className="mb-2 text-lg font-semibold">Error loading imprint</p>
-                    <p className="text-sm opacity-70">
-                        {error instanceof Error ? error.message : "Unknown error"}
-                    </p>
-                </div>
-            </div>
-        )
+        // We redirect to 404 page in case of an error.
+        return null
     }
 
+    /** Imprint Page */
     return (
         <div className="bg-background text-foreground min-h-full overflow-x-hidden">
-            <Navbar />
             <MarkdownPageComponent content={imprintContent ?? ""} />
         </div>
     )
