@@ -1,7 +1,5 @@
 # API-related documentation
 
-[Go back to documentation overview](../../README.md)
-
 ## OpenAPI Specification (OAS)
 - Industry-standard format (a YAML or JSON file) for describing RESTFUL APIs.
 - Defines your API's endpoints, parameters, request/response formats, and more.
