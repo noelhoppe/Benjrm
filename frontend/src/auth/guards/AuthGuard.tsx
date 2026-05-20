@@ -11,7 +11,9 @@ export default function AuthGuard({ children }: AuthGuardProps): ReactNode {
 
     useEffect(() => {
         if (isError) {
-            window.location.replace("/auth/login")
+            const baseUrl = new URL(`${window.location.origin}/auth/login`)
+            baseUrl.searchParams.set("path", window.location.pathname)
+            window.location.replace(baseUrl)
         }
     }, [isError])
 
