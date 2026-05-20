@@ -33,7 +33,7 @@ mod quiz {
             from = "Column::User",
             to = "UserColumn::Id",
             on_update = "Restrict",
-            on_delete = "Cascade"
+            on_delete = "Restrict"
         )]
         User,
     }
