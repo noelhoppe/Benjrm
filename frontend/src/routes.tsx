@@ -8,6 +8,7 @@ import RootLayout from "./layouts/RootLayout"
 import PublicLayout from "./layouts/PublicLayout"
 import LoginRedirect from "@/auth/utils/LoginRedirect.tsx"
 import AuthGuard from "@/auth/guards/AuthGuard.tsx"
+import QuizCreator from "./pages/QuizCreator.tsx"
 
 const routes: RouteObject[] = [
     {
@@ -41,6 +42,19 @@ const routes: RouteObject[] = [
             {
                 path: "/dashboard",
                 element: <Dashboard />,
+            },
+            {
+                path: "/quiz",
+                children: [
+                    {
+                        path: "new", // Maps to /quiz/new
+                        element: <QuizCreator />,
+                    },
+                    // Future routes can easily be added here:
+                    // { path: "edit/:id", element: <QuizEditor /> },
+                    // { path: "play/:id", element: <QuizLobby /> },
+                    // { index: true, element: <QuizList /> },
+                ],
             },
         ],
     },
