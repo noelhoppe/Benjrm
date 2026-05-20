@@ -32,8 +32,17 @@ const routes: RouteObject[] = [
                 element: <Dashboard />,
             },
             {
-                path: "/createQuiz",
-                element: <QuizCreator />,
+                path: "/quiz",
+                children: [
+                    {
+                        path: "new", // Maps to /quiz/new
+                        element: <QuizCreator />,
+                    },
+                    // Future routes can easily be added here:
+                    // { path: "edit/:id", element: <QuizEditor /> },
+                    // { path: "play/:id", element: <QuizLobby /> },
+                    // { index: true, element: <QuizList /> },
+                ],
             },
         ],
     },
