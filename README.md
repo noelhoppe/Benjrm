@@ -5,17 +5,29 @@
 We're currently building this project. Stay tuned for updates in the coming days.
 
 ## Development environment
-First, set up the database by creating an `.env` file based on `.env.example` and running `docker compose up`.
-Or, for faster development, run the respective development Docker Compose file using: `docker compose -f compose.dev.yaml up`
-On Linux hosts, the development image can be built with the local user UID/GID so bind-mounted files stay writable inside the container:
 
-```shell
-UID=$(id -u) GID=$(id -g) docker compose -f compose.dev.yaml up --build
-```
+For a complete development environment with hot reload for the frontend and test users, create an `.env` file based on `.env.example` and run `docker compose -f compose.dev.yaml up --build`.
 
-Next, follow the instructions in the [backend README](backend/README.md) and the [frontend README](frontend/README.md).
+> On Linux hosts, the development image can be built with the local user UID/GID so bind-mounted files stay writable inside the container:
+> 
+> ```shell
+> UID=$(id -u) GID=$(id -g) docker compose -f compose.dev.yaml up --build
+> ```
+
+### Test users
+
+| Username   | Password |
+| ---------- | -------- |
+| demo-admin | password |
+| admin      | admin    |
+| user       | password |
+| simon      | password |
 
 ## Setup
+
+Create an `.env` file based on `.env.example` and run `docker compose up --build`.
+
+Keycloak admin user: admin, password: admin
 
 ### Use other identity provider than the one shipped in `compose.yaml`
 
