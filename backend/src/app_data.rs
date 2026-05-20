@@ -1,12 +1,17 @@
-use crate::auth::oidc::Oidc;
+use {
+    crate::{auth::oidc::Oidc, static_file::StaticFile},
+    std::path::PathBuf,
+};
 
 pub struct AppData {
     pub db: sea_orm::DbConn,
+    pub imprint: StaticFile,
     pub oidc: Oidc,
 }
 
 impl AppData {
     pub async fn from_env() -> Self {
+        let config_dir = PathBuf::from(std::env::var("CONFIG_DIR").unwrap_or(String::from(".")));
         // Setup the database and run the migrator
         let db = {
             use migration::{Migrator, MigratorTrait};
@@ -21,9 +26,11 @@ impl AppData {
             db
         };
 
+        let imprint = StaticFile::new(&config_dir, "imprint.md", "text/markdown").await;
+
         let oidc = Oidc::from_env().await;
 
-        Self { db, oidc }
+        Self { db, imprint, oidc }
     }
 }
 
@@ -47,6 +54,7 @@ impl TestAppData {
                 .expect("Failed to run migrations");
             db
         };
+
         TestAppData { db }
     }
 
