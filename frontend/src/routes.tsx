@@ -38,10 +38,10 @@ const routes: RouteObject[] = [
                         path: "new", // Maps to /quiz/new
                         element: <QuizCreator />,
                     },
-                    // Future routes can easily be added here:
-                    // { path: "edit/:id", element: <QuizEditor /> },
-                    // { path: "play/:id", element: <QuizLobby /> },
-                    // { index: true, element: <QuizList /> },
+                    {
+                        path: ":quizId",
+                        element: <QuizCreator />,
+                    },
                 ],
             },
         ],
