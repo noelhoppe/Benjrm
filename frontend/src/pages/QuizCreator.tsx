@@ -10,8 +10,7 @@ import CreateQuizModal from "../components/CreateQuizModal"
 import QuestionSidebar from "../components/QuestionSidebar"
 import SettingsPanel from "../components/SettingsPanel"
 import type { Question } from "../types/quiz"
-import { getQuiz } from "@/api/Quiz"
-import { apiDelete } from "@/api/Client.tsx"
+import { deleteQuiz, getQuiz } from "@/api/Quiz.tsx"
 
 import { Button } from "@/shadcn/components/ui/button"
 import { Textarea } from "@/shadcn/components/ui/textarea"
@@ -35,6 +34,7 @@ import {
 
 export default function QuizCreator(): JSX.Element {
     const { quizId } = useParams()
+    const modalMode = quizId ? "edit" : "create"
     const [quizTitle, setQuizTitle] = useState<string>("Untitled")
     const [quizDescription, setQuizDescription] = useState<string>("")
     const [loadingQuiz, setLoadingQuiz] = useState(false)
@@ -110,7 +110,7 @@ export default function QuizCreator(): JSX.Element {
         if (!quizId) return
 
         try {
-            await apiDelete(`/quizzes/${quizId}`)
+            await deleteQuiz(quizId)
             setIsConfirmOpen(false)
             navigate("/dashboard")
         } catch {
@@ -368,7 +368,7 @@ export default function QuizCreator(): JSX.Element {
                 initialDescription={quizDescription}
                 initialTitle={quizTitle}
                 isOpen={isEditModalOpen}
-                mode="edit"
+                mode={modalMode}
                 onClose={() => setIsEditModalOpen(false)}
                 quizId={quizId}
                 onSuccess={(id) => {

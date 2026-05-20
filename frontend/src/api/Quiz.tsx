@@ -29,14 +29,14 @@ export async function updateQuiz(quizId: string, data: CreateQuizInput): Promise
     return apiPatch<Quiz>(`/quizzes/${quizId}`, data)
 }
 
-export async function deleteQuiz(quizId: string): Promise<void> {
-    return apiDelete(`/quizzes/${quizId}`)
-}
-
 export async function getQuizzes(): Promise<Quiz[]> {
     return apiGet<Quiz[]>("/quizzes")
 }
 
 export async function getQuiz(quizId: string): Promise<Quiz> {
     return apiGet<Quiz>(`/quizzes/${quizId}`)
+}
+
+export async function deleteQuiz(quizId: string): Promise<void> {
+    return apiDelete(`/quizzes/${quizId}`)
 }

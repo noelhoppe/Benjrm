@@ -3,7 +3,7 @@
 import type { JSX } from "react"
 import QuizCard from "@/components/QuizCard"
 import CategoryHeader from "@/components/CategoryHeader"
-import type { Quiz } from "@/api/Quiz"
+import type { Quiz } from "@/api/Quiz.tsx"
 
 interface DiscoverSectionProps {
     quizzes: Quiz[]
@@ -30,7 +30,7 @@ export default function DiscoverSection({
             <CategoryHeader
                 description="All quizzes for you to discover"
                 title="All Quizzes"
-                to="/quizzes"
+                to="/quiz"
             />
 
             {error ? <p className="text-sm text-red-500">{error}</p> : null}

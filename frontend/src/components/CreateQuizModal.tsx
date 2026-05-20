@@ -13,7 +13,7 @@ import {
 } from "@/shadcn/components/ui/dialog"
 import { Button } from "@/shadcn/components/ui/button"
 import { Label } from "@/shadcn/components/ui/label"
-import { createQuiz } from "@/api/Quiz"
+import { createQuiz } from "@/api/Quiz.tsx"
 
 interface CreateQuizModalProps {
     isOpen: boolean
@@ -39,20 +39,6 @@ const CreateQuizModal: FC<CreateQuizModalProps> = ({
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
 
-    // Track the last seen props to reset state during render when they change
-    const [prevProps, setPrevProps] = useState({ isOpen, initialTitle, initialDescription })
-
-    if (
-        isOpen !== prevProps.isOpen ||
-        initialTitle !== prevProps.initialTitle ||
-        initialDescription !== prevProps.initialDescription
-    ) {
-        setPrevProps({ isOpen, initialTitle, initialDescription })
-        setTitle(isOpen ? initialTitle : "")
-        setDescription(isOpen ? initialDescription : "")
-        setError(null)
-    }
-
     async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
         e.preventDefault()
         setError(null)
@@ -75,7 +61,7 @@ const CreateQuizModal: FC<CreateQuizModalProps> = ({
                 if (!quizId) throw new Error("Missing quiz id for edit")
 
                 // lazy import to avoid circular deps
-                const { updateQuiz } = await import("@/api/Quiz")
+                const { updateQuiz } = await import("@/api/Quiz.tsx")
 
                 const updated = await updateQuiz(quizId, {
                     title,
@@ -105,12 +91,30 @@ const CreateQuizModal: FC<CreateQuizModalProps> = ({
         buttonText = "Save changes"
     }
 
+    const dialogTitle = mode === "edit" ? "Edit quiz" : "Create a new Quiz"
+    const dialogDescription =
+        mode === "edit"
+            ? "Update title and description."
+            : "Enter a title and optional description."
+
     return (
-        <Dialog onOpenChange={onClose} open={isOpen}>
+        <Dialog
+            open={isOpen}
+            onOpenChange={(open) => {
+                if (open) {
+                    setTitle(initialTitle)
+                    setDescription(initialDescription)
+                    setError(null)
+                    return
+                }
+
+                onClose()
+            }}
+        >
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create a new Quiz</DialogTitle>
-                    <DialogDescription>Enter a title and optional description.</DialogDescription>
+                    <DialogTitle>{dialogTitle}</DialogTitle>
+                    <DialogDescription>{dialogDescription}</DialogDescription>
                 </DialogHeader>
 
                 <form className="space-y-4" onSubmit={handleSubmit}>

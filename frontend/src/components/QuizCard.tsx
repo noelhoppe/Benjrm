@@ -2,7 +2,7 @@
 
 import type { JSX } from "react"
 import { Link } from "react-router"
-import type { Quiz } from "@/api/Quiz"
+import type { Quiz } from "@/api/Quiz.tsx"
 
 interface QuizCardProps {
     quiz: Quiz
