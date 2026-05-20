@@ -1,4 +1,21 @@
 services:
+  benjrm:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev.backend
+    depends_on:
+      database:
+        condition: service_healthy
+      identity-provider:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      - FRONTEND_HOST=frontend
+    volumes:
+      - ./config:/config
+    ports:
+      - 8080:80
+  
   identity-provider:
     # note: in the deployment stage, we will use image: <keycloak-image-from-github-container-registry>
     build:

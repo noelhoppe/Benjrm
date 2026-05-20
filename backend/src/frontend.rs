@@ -40,7 +40,11 @@ mod serve_frontend {
         let client = req.app_data::<awc::Client>().unwrap();
         let path = req.path();
 
-        let mut dev_req = client.get(format!("http://localhost:5173{path}"));
+        lazy_static::lazy_static! {
+            static ref FRONTEND_HOST: String = std::env::var("FRONTEND_HOST").unwrap_or_else(|_| String::from("localhost"));
+        }
+
+        let mut dev_req = client.get(format!("http://{}:5173{path}", *FRONTEND_HOST));
         for header in req.headers() {
             dev_req = dev_req.insert_header(header);
         }

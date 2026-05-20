@@ -1,0 +1,29 @@
+FROM rust:1.95.0
+WORKDIR /app
+
+RUN apt update && apt install -y libssl-dev
+
+RUN --mount=type=bind,source=backend/src,target=backend/src \
+    --mount=type=bind,source=backend/build.rs,target=backend/build.rs \
+    --mount=type=bind,source=backend/Cargo.toml,target=backend/Cargo.toml \
+    --mount=type=bind,source=backend/Cargo.lock,target=backend/Cargo.lock \
+    --mount=type=bind,source=backend/.cargo,target=backend/.cargo \
+    --mount=type=bind,source=database-migrator,target=database-migrator \
+    --mount=type=cache,target=/app/backend/target/ \
+    --mount=type=cache,target=/usr/local/cargo/git/db \
+    --mount=type=cache,target=/usr/local/cargo/registry/ \
+    dpkgArch="$(dpkg --print-architecture)"; \
+    case "${dpkgArch##*-}" in \
+        i386) target="i686-unknown-linux-gnu";; \
+        amd64) target="x86_64-unknown-linux-gnu";; \
+        armhf) target="armv7-unknown-linux-gnueabihf";; \
+        arm64) target="aarch64-unknown-linux-gnu";; \
+        *) echo >&2 "unsupported architecture: ${dpkgArch}"; exit 1 ;; \
+    esac; \
+    rustup target add $target; \
+    cd backend; \
+    cargo build --target $target; \
+    cp "./target/$target/debug/benjrm" /bin/benjrm
+
+EXPOSE 80
+ENTRYPOINT ["/bin/benjrm"]
