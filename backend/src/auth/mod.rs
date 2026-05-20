@@ -1,16 +1,25 @@
 use {
+    crate::error::{Error, impl_err},
     actix_session::Session,
-    actix_web::{FromRequest, HttpRequest, HttpResponse, ResponseError, dev::Payload, web},
+    actix_web::{FromRequest, HttpRequest, dev::Payload, web},
     serde::{Deserialize, Serialize},
-    std::{
-        fmt,
-        future::{Ready, ready},
-    },
+    std::future::{Ready, ready},
     uuid::Uuid,
 };
 
 pub mod entity;
 pub mod oidc;
+
+impl_err! {
+    enum AuthError {
+        #[error("Unauthenticated")]
+        Unauthenticated = UNAUTHORIZED,
+        #[error("Error extracting sesion")]
+        SessionExtract(#[from] actix_web::Error) = INTERNAL_SERVER_ERROR,
+        #[error("Error reading authentication from session")]
+        SessionGet(#[from] actix_session::SessionGetError) = INTERNAL_SERVER_ERROR,
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct SessionUser {
@@ -28,41 +37,15 @@ impl FromRequest for User {
     type Future = Ready<Result<Self, Self::Error>>;
 
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
-        fn get_user(req: &HttpRequest) -> Result<User, actix_web::Error> {
+        fn get_user(req: &HttpRequest) -> Result<User, AuthError> {
             let session = Session::extract(req).into_inner()?;
             let user: Option<SessionUser> = session.get("user")?;
             match user {
                 Some(user) => Ok(User { id: user.id }),
-                None => Err(RequireLogin {
-                    path: req.path().to_owned(),
-                }
-                .into()),
+                None => Err(AuthError::Unauthenticated),
             }
         }
-        ready(get_user(req))
-    }
-}
-
-#[derive(Debug)]
-struct RequireLogin {
-    path: String,
-}
-
-impl fmt::Display for RequireLogin {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(self, f)
-    }
-}
-
-impl ResponseError for RequireLogin {
-    fn error_response(&self) -> HttpResponse {
-        let location = format!(
-            "/auth/login?path={}",
-            urlencoding::encode(&self.path).as_ref()
-        );
-        HttpResponse::Found()
-            .append_header(("Location", location))
-            .finish()
+        ready(get_user(req).map_err(|e| Error::from(e).into()))
     }
 }
 
