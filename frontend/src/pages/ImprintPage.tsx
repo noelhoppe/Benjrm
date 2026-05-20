@@ -1,8 +1,9 @@
-import { Loader2 } from "lucide-react"
+import { Loader2, Download } from "lucide-react"
 import type { JSX } from "react"
 import { Navigate } from "react-router"
 import MarkdownPageComponent from "@/components/markdown/MarkdownPageComponent"
 import useImprint from "@/hooks/useImprint"
+import { Button } from "@/shadcn/components/ui/button"
 
 export default function ImprintPage(): JSX.Element | null {
     const { data: imprintContent, isLoading, error } = useImprint()
@@ -27,6 +28,13 @@ export default function ImprintPage(): JSX.Element | null {
     /** Imprint Page */
     return (
         <div className="bg-background text-foreground min-h-full overflow-x-hidden">
+            <div className="flex justify-end p-4">
+                <Button asChild disabled={!imprintContent}>
+                    <a download href="/imprint.md">
+                        Download Imprint <Download className="ml-2 h-4 w-4" />
+                    </a>
+                </Button>
+            </div>
             <MarkdownPageComponent content={imprintContent ?? ""} />
         </div>
     )
