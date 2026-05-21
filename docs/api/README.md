@@ -7,6 +7,28 @@
 - Because it is machine-readable, it can be used to automatically generate
   documentation (like *Swagger UI*), client and server code (like *Swagger Codegen*) and even test cases (like *Dredd*).
 
+## Swagger
+- Refers to the tooling ecosystem (like Swagger UI, Swagger Editor, and Swagger Codegen)
+  that helps you design, visualize, and interact with APIs based on that spec.
+
+### API documentation with *Swagger UI*
+
+1. Every API endpoint is documented within the [OpenAPI Specification (OAS)](../openapispec/RestInterface.yaml)
+
+2. OpenAPI Specification (OAS) can be previewed in IDEs either by using a plugin to visualize the
+   OAS in an interactive format directly or by previewing the `index.html` file in the `docs/openapispec/` directory,
+   which is generated using Swagger UI and references the OAS file.
+
+3. Swagger UI displays the OpenAPI Specification (OAS) in an interactive format
+   and gets automatically deployed to GitHub Pages when the `main` branch is updated *and* files *either*
+   in the `docs/openapispec/**` directory *or* the workflow file `.github/workflows/openapispec.yaml` are changed.
+
+You can find the currently deployed version of the OpenAPI Specification (OAS) in an interactive format using Swagger UI [here](https://benjrm.github.io/Benjrm)
+
+> For further details on how the OpenAPI Specification (OAS) is deployed to GitHub Pages in an interactive format using
+> Swagger UI, please refer to the [GitHub Actions workflow file](../../.github/workflows/openapispec.yaml).
+
+
 ## Spectral
 - A JSON/YAML linter with out of the box support for OpenAPI 3.x & 2.0 specifications
 - Refer to the [Spectral documentation](https://docs.stoplight.io/docs/spectral/674b27b261c3c-overview) for more details,
@@ -35,25 +57,3 @@ or the [workflow file itself](../../.github/workflows/spectral.yaml).
 After pushing to a pull request you can review the Spectral linting results in the "Files changed" tab, especially 
 in the file `docs/openapispec/RestInterface.yaml`
 or in the "Checks" tab under the "Run Spectral on Pull Requests" workflow.
-
-## Swagger
-- Refers to the tooling ecosystem (like Swagger UI, Swagger Editor, and Swagger Codegen)
-  that helps you design, visualize, and interact with APIs based on that spec.
-
-
-### API documentation with *Swagger UI*
-
-1. Every API endpoint is documented within the [OpenAPI Specification (OAS)](../openapispec/RestInterface.yaml)
-
-2. OpenAPI Specification (OAS) can be previewed in IDEs either by using a plugin to visualize the 
-OAS in an interactive format directly or by previewing the `index.html` file in the `docs/openapispec/` directory, 
-which is generated using Swagger UI and references the OAS file.
-
-3. Swagger UI displays the OpenAPI Specification (OAS) in an interactive format
-and gets automatically deployed to GitHub Pages when the `main` branch is updated *and* files *either*
-in the `docs/openapispec/**` directory *or* the workflow file `.github/workflows/openapispec.yaml` are changed.
-
-You can find the currently deployed version of the OpenAPI Specification (OAS) in an interactive format using Swagger UI [here](https://benjrm.github.io/Benjrm)
-
-> For further details on how the OpenAPI Specification (OAS) is deployed to GitHub Pages in an interactive format using
-> Swagger UI, please refer to the [GitHub Actions workflow file](../../.github/workflows/openapispec.yaml).
