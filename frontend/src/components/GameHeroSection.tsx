@@ -1,19 +1,14 @@
 // frontend/src/components/GameHeroSection.tsx
-
 import type { JSX } from "react"
-import { PlusSquare } from "lucide-react"
 import { Input } from "@/shadcn/components/ui/input"
 import { Button } from "@/shadcn/components/ui/button"
 
-interface GameHeroSectionProps {
-    onAddQuiz: () => void
-}
-
-export default function GameHeroSection({ onAddQuiz }: GameHeroSectionProps): JSX.Element {
+// Die Props können wir jetzt komplett löschen, da die Komponente nichts mehr triggern muss
+export default function GameHeroSection(): JSX.Element {
     return (
-        <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+        <section className="w-full">
             {/* Container */}
-            <div className="dark:text-foreground flex min-h-80 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl lg:flex-row dark:border-white/8 dark:bg-[#111318]">
+            <div className="dark:text-foreground flex min-h-80 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl lg:flex-row dark:border-white/10 dark:bg-[#111318]">
                 {/* Left Side: Controls */}
                 <div className="z-10 flex flex-1 flex-col justify-center gap-8 p-8 lg:p-10">
                     {/* Code Input */}
@@ -29,22 +24,13 @@ export default function GameHeroSection({ onAddQuiz }: GameHeroSectionProps): JS
                         </p>
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Action Buttons - Hier ist nur noch der START GAME Button */}
                     <div className="flex flex-wrap items-center gap-3">
                         <Button className="flex items-center gap-2 rounded-xl border-0 bg-[#00D4E8] px-6 py-5 text-sm font-bold tracking-wide text-black uppercase shadow-[0_0_20px_-5px_rgba(0,212,232,0.5)] transition-all hover:bg-[#00BDD0]">
                             START GAME
                             <svg fill="currentColor" height="10" viewBox="0 0 24 24" width="10">
                                 <path d="M5 3L19 12L5 21V3Z" />
                             </svg>
-                        </Button>
-
-                        <Button
-                            className="dark:text-foreground flex items-center gap-2 rounded-xl border-slate-200 bg-transparent px-5 py-5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5"
-                            onClick={onAddQuiz}
-                            variant="outline"
-                        >
-                            Add Quiz
-                            <PlusSquare className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
@@ -56,7 +42,7 @@ export default function GameHeroSection({ onAddQuiz }: GameHeroSectionProps): JS
                         className="absolute inset-0 h-full w-full object-cover"
                         src="/pictures/happy_people.jpg"
                     />
-                    <div className="absolute inset-0 w-full bg-linear-to-r from-white via-white/70 to-transparent md:w-1/3 dark:from-[#111318] dark:via-[#111318]/40" />
+                    <div className="absolute inset-0 w-full bg-gradient-to-r from-white via-white/70 to-transparent md:w-1/3 dark:from-[#111318] dark:via-[#111318]/40" />
                 </div>
             </div>
         </section>

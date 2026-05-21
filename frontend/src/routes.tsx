@@ -8,6 +8,7 @@ import RootLayout from "./layouts/RootLayout"
 import PublicLayout from "./layouts/PublicLayout"
 import ImprintPage from "./pages/ImprintPage"
 import QuizCreator from "./pages/QuizCreator.tsx"
+import Quizzes from "./pages/Quizzes.tsx"
 
 const routes: RouteObject[] = [
     {
@@ -48,6 +49,10 @@ const routes: RouteObject[] = [
                         element: <QuizCreator />,
                     },
                 ],
+            },
+            {
+                path: "/quizzes",
+                element: <Quizzes />,
             },
         ],
     },

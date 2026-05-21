@@ -30,7 +30,7 @@ export default function DiscoverSection({
             <CategoryHeader
                 description="All quizzes for you to discover"
                 title="All Quizzes"
-                to="/quiz"
+                to="/quizzes"
             />
 
             {error ? <p className="text-sm text-red-500">{error}</p> : null}
