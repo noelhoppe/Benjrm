@@ -1,0 +1,265 @@
+openapi: 3.1.0
+info:
+  title: Benjrm's Rest API
+  description: This is the REST API for Benjrm - a quiz platform for interactive learning and live competition
+  contact:
+    name: Benjrm
+    url: 'https://benjrm.de'
+    email: 'info@benjrm.de'
+  version: 1.0.0
+externalDocs:
+  description: https://github.com/Benjrm/Benjrm
+  url: https://github.com/Benjrm/Benjrm
+servers:
+  - url: 'http://localhost:8080'
+  - url: 'http://localhost:80'
+
+tags:
+  - name: Quizzes
+    description: Operations related to quizzes.
+
+paths:
+  /api/v1/quizzes:
+
+    post:
+      description: Create a new quiz.
+      operationId: createQuiz
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewQuiz'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      tags:
+        - Quizzes
+
+    get:
+      description: Retrieve a list of quizzes, optionally filtered by hidden status.
+      operationId: listQuizzes
+      parameters:
+        - name: hidden
+          in: query
+          schema:
+            type: boolean
+            example: false
+          description: Filter quizzes by hidden status
+          required: false
+
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quiz'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      tags:
+        - Quizzes
+
+  /api/v1/quizzes/{quizId}:
+
+    get:
+      description: Retrieve a quiz by its unique identifier.
+      operationId: getQuizById
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          description: The unique identifier of the quiz
+          schema:
+            type: string
+            format: uuid
+            example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+      tags:
+        - Quizzes
+
+    patch:
+      description: Partially update a quiz by its unique identifier. Only the provided fields will be updated.
+      operationId: updateQuizPartiallyById
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          description: The unique identifier of the quiz
+          schema:
+            type: string
+            format: uuid
+            example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateQuiz'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+      tags:
+        - Quizzes
+
+    put:
+      description: Fully update a quiz by its unique identifier. All fields must be provided.
+      operationId: updateQuizFullyById
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          description: The unique identifier of the quiz
+          schema:
+            type: string
+            format: uuid
+            example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewQuiz'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+      tags:
+        - Quizzes
+
+    delete:
+      description: Delete a quiz by its unique identifier.
+      operationId: deleteQuizById
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          description: The unique identifier of the quiz
+          schema:
+            type: string
+            format: uuid
+            example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
+      responses:
+        '204':
+          description: No Content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+      tags:
+        - Quizzes
+
+components:
+  schemas:
+
+    NewQuiz:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          oneOf:
+            - type: string
+            - type: 'null'
+        hidden:
+          type: boolean
+          default: false
+
+    UpdateQuiz:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          oneOf:
+            - type: string
+            - type: 'null'
+        hidden:
+          type: boolean
+
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
+        title:
+          type: string
+        description:
+          oneOf:
+            - type: string
+            - type: 'null'
+        hidden:
+          type: boolean
+        created:
+          type: string
+          format: 'date-time'
+          example: '2024-01-01T12:00:00.000000Z'
+        modified:
+          type: string
+          format: 'date-time'
+          example: '2024-01-01T12:00:00.000000Z'
