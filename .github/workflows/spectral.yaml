@@ -1,0 +1,28 @@
+name: Run Spectral on Pull Requests
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'docs/openapispec/RestInterface.yaml'
+      - '.github/workflows/spectral.yaml'
+  pull_request:
+    paths:
+      - 'docs/openapispec/RestInterface.yaml'
+      - '.github/workflows/spectral.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  build:
+    name: Run Spectral
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Spectral - An open-source API style guide enforcer and linter.
+        run: npm install -g @stoplight/spectral-cli
+      - name: Run spectral lint
+        run: spectral lint docs/openapispec/RestInterface.yaml -f github-actions --fail-severity warn

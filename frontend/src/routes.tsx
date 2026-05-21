@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard"
 import ErrorPage from "./pages/ErrorPage"
 import RootLayout from "./layouts/RootLayout"
 import PublicLayout from "./layouts/PublicLayout"
+import ImprintPage from "./pages/ImprintPage"
 import QuizCreator from "./pages/QuizCreator.tsx"
 import LoginRedirect from "@/auth/utils/LoginRedirect.tsx"
 import AuthGuard from "@/auth/guards/AuthGuard.tsx"
@@ -18,6 +19,10 @@ const routes: RouteObject[] = [
             {
                 path: "/",
                 element: <LandingPage />,
+            },
+            {
+                path: "/imprint",
+                element: <ImprintPage />,
             },
             {
                 path: "*",
