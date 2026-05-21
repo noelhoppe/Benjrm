@@ -84,8 +84,8 @@ impl WellKnown {
             Ok(mut segments) => {
                 segments.extend([".well-known", "openid-configuration"]);
             }
-            Err(e) => {
-                log::error!("Error parsing OIDC_ISSUER_URL: {e:?}");
+            Err(_) => {
+                log::error!("Error parsing OIDC_ISSUER_URL");
                 return None;
             }
         }
