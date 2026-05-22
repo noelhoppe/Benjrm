@@ -6,18 +6,22 @@ import { useQuizzes } from "@/api/queries"
 
 export default function Quizzes(): JSX.Element {
     const { data: quizzes = [], isLoading, error } = useQuizzes()
+    const sortedQuizzes = [...quizzes].sort(
+        (firstQuiz, secondQuiz) =>
+            new Date(secondQuiz.created).getTime() - new Date(firstQuiz.created).getTime()
+    )
 
     const errMessage = (error as Error | null | undefined)?.message ?? null
     let content: JSX.Element
 
     if (isLoading) {
         content = <p className="text-muted-foreground mt-4 text-sm">Loading quizzes...</p>
-    } else if (quizzes.length === 0) {
+    } else if (sortedQuizzes.length === 0) {
         content = <p className="text-muted-foreground mt-4 text-sm">No quizzes available.</p>
     } else {
         content = (
             <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {quizzes.map((quiz) => (
+                {sortedQuizzes.map((quiz) => (
                     <QuizCard key={quiz.id} quiz={quiz} />
                 ))}
             </div>
