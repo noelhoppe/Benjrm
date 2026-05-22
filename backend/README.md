@@ -36,7 +36,7 @@ If you want to run the backend directly using `cargo run` but still want to use 
   ```
   PORT="<your port>"
   DATABASE_URL="postgres://benjrm:<password>@localhost:5432/benjrm"
-  KC_URL="http://localhost:8088"
+  OIDC_ISSUER_URL="http://localhost:8088/realms/benjrm"
   ```
 
 

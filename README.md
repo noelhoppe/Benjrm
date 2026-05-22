@@ -38,3 +38,6 @@ If you don't want to use the identity provider shipped with this project, you ca
 ## Why Benjrm
 
 Each letter represents one of the creators. Together, it forms a name that is pronounced like "Benjamin". Represented using the Internationales Phonetisches Alphabet as /ˈbɛndʒəmɪn/
+
+## API
+Please refer to the [API-related documentation](docs/api/README.md).

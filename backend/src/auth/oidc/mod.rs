@@ -1,8 +1,9 @@
 use {
     crate::app_data::{env_var, env_var_default},
     actix_security::http::security::{OAuth2Client, OAuth2Config, OAuth2Provider},
-    std::env,
+    serde::Deserialize,
     url::Url,
+    std::env,
 };
 
 mod error;
@@ -20,42 +21,33 @@ pub struct Oidc {
 
 impl Oidc {
     pub async fn from_env() -> Self {
-        const DEFAULT_NAME: &str = "KC_URL and KC_REALM_ID";
-        let keycloak = env::var("KC_URL")
-            .ok()
-            .map(|x| Url::parse(&x).expect("KC_URL"))
-            .zip(env::var("KC_REALM_ID").ok());
-        let keycloak = keycloak.as_ref();
+        let issuer_url = Url::parse(&env_var("OIDC_ISSUER_URL")).expect("Parse OIDC_ISSUER_URL");
+
+        let well_known = WellKnown::get(issuer_url.clone()).await;
+        let well_known = well_known.as_ref();
 
         let public_idp_url = env::var("OIDC_PUBLIC_IDP_URL")
             .ok()
-            .map(|x| Url::parse(&x).expect("OIDC_PUBLIC_IDP_URL"));
+            .map(|x| Url::parse(&x).expect("Parse OIDC_PUBLIC_IDP_URL"));
 
         let public_url = Url::parse(&env_var("PUBLIC_URL")).expect("PUBLIC_URL");
-
-        let authorization_url = env_var_default("OIDC_AUTHORIZATION_URL", DEFAULT_NAME, || {
-            keycloak.map(|(url, realm)| format!("{url}realms/{realm}/protocol/openid-connect/auth"))
-        });
-
-        let token_url = env_var_default("OIDC_TOKEN_URL", DEFAULT_NAME, || {
-            keycloak
-                .map(|(url, realm)| format!("{url}realms/{realm}/protocol/openid-connect/token"))
-        });
-
-        let userinfo_url = env_var_default("OIDC_USERINFO_URL", DEFAULT_NAME, || {
-            keycloak
-                .map(|(url, realm)| format!("{url}realms/{realm}/protocol/openid-connect/token"))
-        });
-
-        let issuer_url = env_var_default("OIDC_ISSUER_URL", DEFAULT_NAME, || {
-            keycloak.map(|(url, realm)| format!("{url}realms/{realm}"))
-        });
-        let issuer_url = Url::parse(&issuer_url).expect("OIDC_ISSUER_URL");
         let public_issuer_url = Self::to_public_idp_url_inner(issuer_url.clone(), &public_idp_url);
 
-        let logout_url = env_var_default("OIDC_LOGOUT_URL", DEFAULT_NAME, || {
-            keycloak
-                .map(|(url, realm)| format!("{url}realms/{realm}/protocol/openid-connect/logout"))
+        let authorization_url =
+            env_var_default("OIDC_AUTHORIZATION_URL", "OIDC_ISSUER_URL", || {
+                well_known.map(|well_known| well_known.authorization_endpoint.clone().into())
+            });
+
+        let token_url = env_var_default("OIDC_TOKEN_URL", "OIDC_ISSUER_URL", || {
+            well_known.map(|well_known| well_known.token_endpoint.clone().into())
+        });
+
+        let userinfo_url = env_var_default("OIDC_USERINFO_URL", "OIDC_ISSUER_URL", || {
+            well_known.map(|well_known| well_known.userinfo_endpoint.clone().into())
+        });        
+
+        let logout_url = env_var_default("OIDC_LOGOUT_URL", "OIDC_ISSUER_URL", || {
+            well_known.map(|well_known| well_known.end_session_endpoint.clone().into())
         });
         let logout_url = Url::parse(&logout_url).expect("LOGOUT_URL");
         let logout_url = Self::to_public_idp_url_inner(logout_url, &public_idp_url);
@@ -98,5 +90,46 @@ impl Oidc {
 
     fn to_public_idp_url(&self, url: Url) -> Url {
         Self::to_public_idp_url_inner(url, &self.public_idp_url)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct WellKnown {
+    authorization_endpoint: Url,
+    token_endpoint: Url,
+    userinfo_endpoint: Url,
+    end_session_endpoint: Url,
+}
+
+impl WellKnown {
+    async fn get(issuer_url: Url) -> Option<Self> {
+        let mut well_known_url = issuer_url;
+
+        match well_known_url.path_segments_mut() {
+            Ok(mut segments) => {
+                segments.extend([".well-known", "openid-configuration"]);
+            }
+            Err(_) => {
+                log::error!("Error parsing OIDC_ISSUER_URL");
+                return None;
+            }
+        }
+
+        let response = awc::Client::new().get(well_known_url.as_str()).send().await;
+        let mut response = match response {
+            Ok(response) => response,
+            Err(e) => {
+                log::warn!("Error requesting OIDC well-known (url: {well_known_url}): {e:?}");
+                return None;
+            }
+        };
+
+        match response.json().await {
+            Ok(well_known) => Some(well_known),
+            Err(e) => {
+                log::error!("Error parsing OIDC well-known (url: {well_known_url}): {e:?}");
+                None
+            }
+        }
     }
 }

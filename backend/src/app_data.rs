@@ -61,14 +61,18 @@ impl TestAppData {
     pub async fn dummy_user_id(&self) -> uuid::Uuid {
         use {
             crate::auth::entity::ActiveUser,
+            chrono::Utc,
             sea_orm::{ActiveModelTrait, ActiveValue::Set},
             uuid::Uuid,
         };
 
         let id = Uuid::new_v4();
+        let now = Utc::now();
         let user = ActiveUser {
             id: Set(id),
             subject: Set(id.to_string()),
+            registered: Set(now),
+            last_login: Set(now),
         }
         .insert(&self.db)
         .await
@@ -78,6 +82,7 @@ impl TestAppData {
     }
 }
 
+/// Get an environment variable and display a readable error if variable is not set
 pub fn env_var(key: &str) -> String {
     match std::env::var(key) {
         Ok(x) => x,
@@ -87,6 +92,15 @@ pub fn env_var(key: &str) -> String {
     }
 }
 
+/// Get an environment variable and use a generated default if variable is not set.
+/// If the default is also unavailable, display a readable error containing which
+/// variable is missing and which variable can be set to use the generated default.
+///
+/// # Arguments
+///
+/// * `key` - Name of the environment variable
+/// * `default_name` - Name of the environment variable required to generate a default value. Can also be "FIRST_VAR and SECOND_VAR".
+/// * `default` - Function to generate the default value
 pub fn env_var_default(
     key: &str,
     default_name: &str,
@@ -97,7 +111,9 @@ pub fn env_var_default(
         Err(_) => match r#default() {
             Some(x) => x,
             None => {
-                panic!("Missing environement variable: {key} (set {default_name} to use default)")
+                panic!(
+                    "Missing environement variable: {key} (set {default_name} to use a generated default)"
+                )
             }
         },
     }
