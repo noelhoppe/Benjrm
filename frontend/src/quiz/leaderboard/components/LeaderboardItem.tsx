@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Avatar, AvatarImage, AvatarFallback } from "@shadcn/components/ui/avatar.tsx"
+import { Avatar, AvatarImage, AvatarFallback } from "@shadcn/components/ui/avatar"
 import getRankingClassName from "@/quiz/leaderboard/utils/getRankingClassName.ts"
 
 export interface LeaderboardItemProps {
