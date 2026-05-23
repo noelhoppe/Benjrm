@@ -6,7 +6,7 @@ import mockLeaderboardItems from "@/quiz/leaderboard/api/mock.ts"
 export default function Leaderboard(): ReactNode {
     const leaderboardItemPropsList = getLeaderboardItemPropsList(mockLeaderboardItems)
     return (
-        <div className="bg-muted/30 flex flex-col gap-4 rounded-xl p-6">
+        <div className="bg-muted/30 mx-auto flex w-full max-w-xl flex-col gap-4 rounded-xl p-6">
             <h1 className="text-center text-3xl font-extrabold uppercase sm:text-4xl lg:text-5xl">
                 Leaderboard
             </h1>
