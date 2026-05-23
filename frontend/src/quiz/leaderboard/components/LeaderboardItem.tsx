@@ -12,6 +12,7 @@ export interface LeaderboardItemProps {
 export default function LeaderboardItem(leaderboardItemProps: LeaderboardItemProps): ReactNode {
     const { ranking, avatar, name, points } = leaderboardItemProps
     const rankingClassName = getRankingClassName(ranking)
+    const initials = name.substring(0, 2).toUpperCase()
 
     return (
         <div
@@ -21,7 +22,7 @@ export default function LeaderboardItem(leaderboardItemProps: LeaderboardItemPro
             <div className="flex items-center gap-3">
                 <Avatar>
                     <AvatarImage alt={name} src={avatar} />
-                    <AvatarFallback>CN</AvatarFallback>
+                    <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <span className="font-medium">{name}</span>
             </div>
