@@ -1,3 +1,5 @@
+// frontend/src/hooks/useGameSession.ts
+
 import { useContext } from "react"
 import { GameSessionContext } from "@/context/GameSessionContext"
 import type { GameSessionContextType } from "@/context/GameSessionContext"

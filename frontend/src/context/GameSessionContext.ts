@@ -1,4 +1,7 @@
+// frontend/src/context/GameSessionContext.ts
+
 import { createContext } from "react"
+import type GameSocketService from "@/services/GameSocketService"
 
 // --- TYPES ---
 export interface QuestionOption {
@@ -20,10 +23,7 @@ export interface DisplayQuestionMessage {
 }
 
 export interface GameSessionContextType {
-    question: Question | null
-    remainingTime: number | null
-    selectedAnswer: string | null
-    sendAnswer: (answerId: string) => void
+    socketService: GameSocketService | null
     isConnected: boolean
 }
 
