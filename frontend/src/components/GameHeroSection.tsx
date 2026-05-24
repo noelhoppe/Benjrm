@@ -1,5 +1,6 @@
 // frontend/src/components/GameHeroSection.tsx
 import type { JSX } from "react"
+import { PlusSquare } from "lucide-react"
 import { Input } from "@/shadcn/components/ui/input"
 import { Button } from "@/shadcn/components/ui/button"
 
@@ -37,11 +38,12 @@ export default function GameHeroSection({ onAddQuizClick }: GameHeroSectionProps
                         </Button>
 
                         <Button
-                            className="rounded-xl border border-slate-200 bg-white px-6 py-5 text-sm font-bold tracking-wide text-slate-900 uppercase transition-all hover:bg-slate-100 dark:border-white/10 dark:bg-[#1C2028] dark:text-white dark:hover:bg-[#252a33]"
+                            className="flex items-center gap-2 rounded-xl border border-slate-700 bg-[#242424] px-5 py-3 text-sm font-bold tracking-wide text-white shadow-sm transition-colors hover:bg-[#2f2f2f] dark:border-white/10 dark:bg-[#242424] dark:hover:bg-[#2f2f2f]"
                             onClick={onAddQuizClick}
                             type="button"
                         >
-                            Add Quiz
+                            <span>Add Quiz</span>
+                            <PlusSquare className="h-4 w-4 shrink-0 text-white/85" />
                         </Button>
                     </div>
                 </div>

@@ -4,6 +4,12 @@ import type { JSX } from "react"
 import QuizCard from "@/components/QuizCard"
 import { useQuizzes } from "@/api/queries"
 
+function getReadableErrorMessage(error: Error | null | undefined): string | null {
+    if (!error) return null
+
+    return "Quizzes could not be loaded right now."
+}
+
 export default function Quizzes(): JSX.Element {
     const { data: quizzes = [], isLoading, error } = useQuizzes()
     const sortedQuizzes = [...quizzes].sort(
@@ -11,7 +17,7 @@ export default function Quizzes(): JSX.Element {
             new Date(secondQuiz.created).getTime() - new Date(firstQuiz.created).getTime()
     )
 
-    const errMessage = (error as Error | null | undefined)?.message ?? null
+    const errMessage = getReadableErrorMessage(error)
     let content: JSX.Element
 
     if (isLoading) {

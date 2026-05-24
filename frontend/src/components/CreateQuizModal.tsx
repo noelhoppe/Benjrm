@@ -16,6 +16,10 @@ import { Button } from "@/shadcn/components/ui/button"
 import { Label } from "@/shadcn/components/ui/label"
 import { useCreateQuiz, useUpdateQuiz } from "@/api/queries"
 
+function getReadableQuizMutationError(): string {
+    return "The quiz could not be saved right now. Please try again later."
+}
+
 interface CreateQuizModalProps {
     isOpen: boolean
     onClose: () => void
@@ -85,12 +89,8 @@ const QuizForm: FC<QuizFormProps> = ({
                 onClose()
                 onSuccess(updated.id)
             }
-        } catch (caughtError) {
-            setError(
-                caughtError instanceof Error
-                    ? caughtError.message
-                    : "Quiz konnte nicht erstellt werden."
-            )
+        } catch {
+            setError(getReadableQuizMutationError())
         }
     }
 

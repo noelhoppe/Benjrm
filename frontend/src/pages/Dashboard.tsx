@@ -10,10 +10,10 @@ function getQuizLoadErrorMessage(error: Error | null | undefined): string | null
     if (!error) return null
 
     if (/did not match the expected pattern/i.test(error.message)) {
-        return "Quizzes could not be loaded."
+        return "Quizzes could not be loaded right now."
     }
 
-    return error.message
+    return "Quizzes could not be loaded right now."
 }
 
 export default function Dashboard(): JSX.Element {
