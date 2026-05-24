@@ -3,11 +3,30 @@
 import type { JSX } from "react"
 import QuizCard from "@/components/QuizCard"
 import { useQuizzes } from "@/api/queries"
+import type { Quiz } from "@/api/quiz"
 
 function getReadableErrorMessage(error: Error | null | undefined): string | null {
     if (!error) return null
 
     return "Quizzes could not be loaded right now."
+}
+
+function renderQuizzesContent(sortedQuizzes: Quiz[], isLoading: boolean): JSX.Element {
+    if (isLoading) {
+        return <p className="text-muted-foreground mt-4 text-sm">Loading quizzes...</p>
+    }
+
+    if (sortedQuizzes.length === 0) {
+        return <p className="text-muted-foreground mt-4 text-sm">No quizzes available.</p>
+    }
+
+    return (
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {sortedQuizzes.map((quiz) => (
+                <QuizCard key={quiz.id} quiz={quiz} />
+            ))}
+        </div>
+    )
 }
 
 export default function Quizzes(): JSX.Element {
@@ -18,21 +37,7 @@ export default function Quizzes(): JSX.Element {
     )
 
     const errMessage = getReadableErrorMessage(error)
-    let content: JSX.Element
-
-    if (isLoading) {
-        content = <p className="text-muted-foreground mt-4 text-sm">Loading quizzes...</p>
-    } else if (sortedQuizzes.length === 0) {
-        content = <p className="text-muted-foreground mt-4 text-sm">No quizzes available.</p>
-    } else {
-        content = (
-            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {sortedQuizzes.map((quiz) => (
-                    <QuizCard key={quiz.id} quiz={quiz} />
-                ))}
-            </div>
-        )
-    }
+    const content: JSX.Element = renderQuizzesContent(sortedQuizzes, isLoading)
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
