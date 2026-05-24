@@ -1,7 +1,7 @@
 // frontend/src/components/CreateQuizModal.tsx
 
 /* eslint-disable react/require-default-props */
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import type { FC, SubmitEvent } from "react"
 import { useNavigate } from "react-router"
 import {
@@ -26,29 +26,27 @@ interface CreateQuizModalProps {
     quizId?: string
 }
 
-const CreateQuizModal: FC<CreateQuizModalProps> = ({
-    isOpen,
+interface QuizFormProps {
+    initialDescription: string
+    initialTitle: string
+    mode: "create" | "edit"
+    onClose: () => void
+    onSuccess: (quizId?: string) => void
+    quizId?: string
+}
+
+const QuizForm: FC<QuizFormProps> = ({
+    initialDescription,
+    initialTitle,
+    mode,
     onClose,
     onSuccess,
-    mode = "create",
-    initialTitle = "",
-    initialDescription = "",
     quizId,
 }) => {
     const navigate = useNavigate()
     const [title, setTitle] = useState(initialTitle)
     const [description, setDescription] = useState(initialDescription)
     const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        if (!isOpen) {
-            return
-        }
-
-        setTitle(initialTitle)
-        setDescription(initialDescription)
-        setError(null)
-    }, [initialDescription, initialTitle, isOpen])
 
     const createMutation = useCreateQuiz()
     const updateMutation = useUpdateQuiz(quizId)
@@ -96,7 +94,6 @@ const CreateQuizModal: FC<CreateQuizModalProps> = ({
         }
     }
 
-    // Fix no-nested-ternary error by resolving label here
     let buttonText = "Create Quiz"
     if (isLoading) {
         buttonText = mode === "create" ? "Creating..." : "Saving..."
@@ -104,11 +101,67 @@ const CreateQuizModal: FC<CreateQuizModalProps> = ({
         buttonText = "Save changes"
     }
 
+    return (
+        <form className="space-y-4" onSubmit={handleSubmit}>
+            <div>
+                <Label className="block text-sm font-medium" htmlFor="title">
+                    Title *
+                </Label>
+                <input
+                    required
+                    className="border-input bg-background mt-1 w-full rounded border px-3 py-2 text-sm"
+                    id="title"
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Math Quiz"
+                    type="text"
+                    value={title}
+                />
+            </div>
+
+            <div>
+                <Label className="block text-sm font-medium" htmlFor="description">
+                    Description
+                </Label>
+                <textarea
+                    className="border-input bg-background mt-1 w-full rounded border px-3 py-2 text-sm"
+                    id="description"
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Optional description for your quiz..."
+                    rows={3}
+                    value={description}
+                />
+            </div>
+
+            {error ? <p className="text-sm text-red-500">{error}</p> : null}
+
+            <DialogFooter>
+                <Button disabled={isLoading} onClick={onClose} type="button" variant="outline">
+                    Cancel
+                </Button>
+                <Button disabled={isLoading} type="submit">
+                    {buttonText}
+                </Button>
+            </DialogFooter>
+        </form>
+    )
+}
+
+const CreateQuizModal: FC<CreateQuizModalProps> = ({
+    isOpen,
+    onClose,
+    onSuccess,
+    mode = "create",
+    initialTitle = "",
+    initialDescription = "",
+    quizId,
+}) => {
     const dialogTitle = mode === "edit" ? "Edit quiz" : "Create a new Quiz"
     const dialogDescription =
         mode === "edit"
             ? "Update title and description."
             : "Enter a title and optional description."
+
+    const formKey = [mode, quizId ?? "new", initialTitle, initialDescription].join("|")
 
     return (
         <Dialog
@@ -124,53 +177,15 @@ const CreateQuizModal: FC<CreateQuizModalProps> = ({
                     <DialogTitle>{dialogTitle}</DialogTitle>
                     <DialogDescription>{dialogDescription}</DialogDescription>
                 </DialogHeader>
-
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                    <div>
-                        <Label className="block text-sm font-medium" htmlFor="title">
-                            Title *
-                        </Label>
-                        <input
-                            required
-                            className="border-input bg-background mt-1 w-full rounded border px-3 py-2 text-sm"
-                            id="title"
-                            onChange={(e) => setTitle(e.target.value)}
-                            placeholder="e.g. Math Quiz"
-                            type="text"
-                            value={title}
-                        />
-                    </div>
-
-                    <div>
-                        <Label className="block text-sm font-medium" htmlFor="description">
-                            Description
-                        </Label>
-                        <textarea
-                            className="border-input bg-background mt-1 w-full rounded border px-3 py-2 text-sm"
-                            id="description"
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Optional description for your quiz..."
-                            rows={3}
-                            value={description}
-                        />
-                    </div>
-
-                    {error ? <p className="text-sm text-red-500">{error}</p> : null}
-
-                    <DialogFooter>
-                        <Button
-                            disabled={isLoading}
-                            onClick={onClose}
-                            type="button"
-                            variant="outline"
-                        >
-                            Cancel
-                        </Button>
-                        <Button disabled={isLoading} type="submit">
-                            {buttonText}
-                        </Button>
-                    </DialogFooter>
-                </form>
+                <QuizForm
+                    key={formKey}
+                    initialDescription={initialDescription}
+                    initialTitle={initialTitle}
+                    mode={mode}
+                    onClose={onClose}
+                    onSuccess={onSuccess}
+                    quizId={quizId}
+                />
             </DialogContent>
         </Dialog>
     )
