@@ -107,6 +107,7 @@ export function useDeleteQuestion(quizId?: string): UseMutationResult<void, Erro
             if (quizId) {
                 return queryClient.invalidateQueries({ queryKey: questionKeys.all(quizId) })
             }
+            return Promise.reject()
         },
     })
 }
