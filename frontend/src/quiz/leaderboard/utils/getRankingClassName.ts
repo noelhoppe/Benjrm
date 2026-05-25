@@ -1,15 +1,14 @@
 export default function getRankingClassName(ranking: number): string {
+    const baseClasses =
+        "transition-all duration-300 ease-out hover:scale-[1.01] hover:shadow-lg cursor-pointer"
     if (ranking === 1) {
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700"
+        return `${baseClasses} bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700 hover:shadow-cyan-500/30`
     }
-
     if (ranking === 2) {
-        return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700"
+        return `${baseClasses} bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300 border-orange-300 dark:border-orange-700 hover:shadow-orange-500/30`
     }
-
     if (ranking === 3) {
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-300 dark:border-amber-700"
+        return `${baseClasses} bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border-purple-300 dark:border-purple-700 hover:shadow-purple-500/30`
     }
-
-    return "bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-800"
+    return `${baseClasses} bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-800 hover:shadow-gray-500/20`
 }
