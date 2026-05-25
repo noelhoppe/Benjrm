@@ -25,6 +25,12 @@ export class WebsocketService {
         return null
     }
 
+    private cleanup(): void {
+        console.log("Disconnected")
+        this.socket = null
+        this.listeners.clear()
+    }
+
     public connect(url: string): void {
         if (this.socket?.url === url && this.socket.readyState === WebSocket.OPEN) {
             return
@@ -63,7 +69,7 @@ export class WebsocketService {
         }
 
         this.socket.onclose = () => {
-            this.disconnect()
+            this.cleanup()
         }
 
         this.socket.onerror = (error) => {
@@ -72,10 +78,10 @@ export class WebsocketService {
     }
 
     public disconnect(): void {
-        console.log("Disconnected")
-        this.socket?.close()
-        this.listeners.clear()
-        this.socket = null
+        if (!this.socket) {
+            return
+        }
+        this.socket.close()
     }
 
     public send(message: ClientMessage): void {
