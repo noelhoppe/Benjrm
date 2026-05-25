@@ -7,7 +7,7 @@ const mockLeaderboardItems: LeaderboardItem[] = [
     },
     {
         name: "Ben",
-        points: 1400,
+        points: 1350,
     },
     {
         name: "Max",
