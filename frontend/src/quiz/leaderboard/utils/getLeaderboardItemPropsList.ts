@@ -8,13 +8,9 @@ export default function getLeaderboardItemPropsList(
 
     let rank = 0
     let prevPoints: number | null = null
-    let index = 0
-
-    return sorted.map((item) => {
-        index += 1
-
+    return sorted.map((item, index) => {
         if (item.points !== prevPoints) {
-            rank = index
+            rank = index + 1
             prevPoints = item.points
         }
 
