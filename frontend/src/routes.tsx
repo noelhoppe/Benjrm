@@ -32,6 +32,8 @@ const routes: RouteObject[] = [
                 ),
             },
             {
+                // Introduced in #28 only for testing purposes
+                // TODO: remove when the actual gameplay gets implemented
                 path: "/leaderboard",
                 element: <Leaderboard />,
             },
