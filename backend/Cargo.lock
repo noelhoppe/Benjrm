@@ -107,7 +107,7 @@ dependencies = [
 [[package]]
 name = "actix-security"
 version = "0.2.3"
-source = "git+https://github.com/benjrm/actix-security#8aa80ecd920deb0bb4aacfedf2e7ca641d64452d"
+source = "git+https://github.com/Benjrm/actix-security#8aa80ecd920deb0bb4aacfedf2e7ca641d64452d"
 dependencies = [
  "actix-security-codegen",
  "actix-security-core",
@@ -116,7 +116,7 @@ dependencies = [
 [[package]]
 name = "actix-security-codegen"
 version = "0.2.3"
-source = "git+https://github.com/benjrm/actix-security#8aa80ecd920deb0bb4aacfedf2e7ca641d64452d"
+source = "git+https://github.com/Benjrm/actix-security#8aa80ecd920deb0bb4aacfedf2e7ca641d64452d"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -127,7 +127,7 @@ dependencies = [
 [[package]]
 name = "actix-security-core"
 version = "0.2.3"
-source = "git+https://github.com/benjrm/actix-security#8aa80ecd920deb0bb4aacfedf2e7ca641d64452d"
+source = "git+https://github.com/Benjrm/actix-security#8aa80ecd920deb0bb4aacfedf2e7ca641d64452d"
 dependencies = [
  "actix-service",
  "actix-web",
