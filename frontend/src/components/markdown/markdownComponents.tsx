@@ -1,35 +1,29 @@
-import type { JSX, ReactNode } from "react"
+import type { JSX, ReactElement, ReactNode } from "react"
+import { isValidElement } from "react"
 import type { Components } from "react-markdown"
 import Highlight, { defaultProps } from "prism-react-renderer"
 import type { Language } from "prism-react-renderer"
 import duotoneTheme from "prism-react-renderer/themes/duotoneDark"
-import { Badge } from "@/shadcn/components/ui/badge"
 import { Separator } from "@/shadcn/components/ui/separator"
-
-function inlineCode({ children }: { children?: ReactNode }): JSX.Element {
-    return (
-        <Badge className="px-1.5 py-0.5 font-mono text-xs" variant="secondary">
-            {children}
-        </Badge>
-    )
-}
 
 function codeBlock({
     className,
+    language,
     children,
 }: {
     className?: string
+    language?: string
     children?: ReactNode
 }): JSX.Element {
     const code = String(children).replace(/\n$/, "")
     const match = /language-(\w+)/.exec(className ?? "")
-    const language = match?.[1] ?? "markup"
+    const resolvedLanguage = language ?? match?.[1] ?? "markup"
 
     return (
         <Highlight
             {...defaultProps}
             code={code}
-            language={language as Language}
+            language={resolvedLanguage as Language}
             theme={duotoneTheme}
         >
             {({ className: preClassName, tokens, getLineProps, getTokenProps }) => (
@@ -169,11 +163,24 @@ const markdownComponents: Components = {
     em: ({ children }) => <em className="italic">{children}</em>,
     blockquote: ({ children }) => markdownBlockquote({ children }),
     hr: () => <Separator className="my-8" />,
-    code: (props) => {
-        const inline = "inline" in props ? (props as { inline?: boolean }).inline : false
-        const { className, children } = props
+    code({ className, children, ...props }) {
+        const match = /language-(\w+)/.exec(className ?? "")
 
-        return inline ? inlineCode({ children }) : codeBlock({ className, children })
+        if (match) {
+            return codeBlock({ language: match[1], children })
+        }
+
+        const inlineCodeClassName =
+            "rounded bg-muted px-1.5 py-0.5 font-mono text-sm font-medium text-foreground"
+
+        return (
+            <code
+                className={className ? `${inlineCodeClassName} ${className}` : inlineCodeClassName}
+                {...props}
+            >
+                {children}
+            </code>
+        )
     },
     input: (props) => {
         const { type, checked, disabled: disabledProp, ...rest } = props
@@ -184,7 +191,23 @@ const markdownComponents: Components = {
 
         return <input {...rest} type={type} />
     },
-    pre: ({ children }) => <>{children}</>,
+    pre: ({ children }) => {
+        const codeChild = Array.isArray(children) ? children.find(isValidElement) : children
+
+        if (!isValidElement(codeChild)) {
+            return <pre>{children}</pre>
+        }
+
+        const typedCodeChild = codeChild as ReactElement<{
+            className?: string
+            children?: ReactNode
+        }>
+
+        return codeBlock({
+            className: typedCodeChild.props.className,
+            children: typedCodeChild.props.children,
+        })
+    },
     table: ({ children }) => markdownTable({ children }),
     thead: ({ children }) => <thead className="border-b">{children}</thead>,
     tbody: ({ children }) => <tbody>{children}</tbody>,
