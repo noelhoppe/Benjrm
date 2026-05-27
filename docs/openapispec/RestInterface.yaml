@@ -17,6 +17,8 @@ servers:
 tags:
   - name: Quizzes
     description: Operations related to quizzes.
+  - name: Questions
+    description: Operations related to questions. Questions belong to quizzes.
 
 paths:
   /api/v1/quizzes:
@@ -39,10 +41,22 @@ paths:
                 $ref: '#/components/schemas/Quiz'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       tags:
         - Quizzes
 
@@ -69,10 +83,22 @@ paths:
                   $ref: '#/components/schemas/Quiz'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       tags:
         - Quizzes
 
@@ -89,7 +115,6 @@ paths:
           schema:
             type: string
             format: uuid
-            example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
       responses:
         '200':
           description: Ok
@@ -97,14 +122,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Quiz'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       tags:
         - Quizzes
 
@@ -119,7 +166,6 @@ paths:
           schema:
             type: string
             format: uuid
-            example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
       requestBody:
         required: true
         content:
@@ -135,14 +181,34 @@ paths:
                 $ref: '#/components/schemas/Quiz'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       tags:
         - Quizzes
 
@@ -157,7 +223,6 @@ paths:
           schema:
             type: string
             format: uuid
-            example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
       requestBody:
         required: true
         content:
@@ -173,14 +238,34 @@ paths:
                 $ref: '#/components/schemas/Quiz'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       tags:
         - Quizzes
 
@@ -195,23 +280,407 @@ paths:
           schema:
             type: string
             format: uuid
-            example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
       responses:
         '204':
           description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       tags:
         - Quizzes
 
+  /quizzes/{quiz}/questions:
+    post:
+      summary: Create a question
+      operationId: createQuestion
+      description: 'Create a new question' 
+      parameters:
+        - name: quiz
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewQuestion'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Questions
+
+    get:
+      summary: Get all questions
+      operationId: getQuestions
+      description: 'Get all questions belonging to a quiz'
+      parameters:
+        - name: quiz
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BaseQuestion'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Questions
+
+  /quizzes/{quiz}/questions/{question}:
+    get:
+      summary: Get a single question
+      operationId: getQuestion
+      description: 'Get a single question belonging to a quiz'
+      parameters:
+        - name: quiz
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: question
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Question with answers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Questions
+    patch:
+      summary: Partially update a question
+      operationId: updateQuestion
+      description: 'Partially update a question'
+      parameters:
+        - name: quiz
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: question
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateQuestion'
+      responses:
+        '200':
+          description: Updated question
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Questions
+
+    put:
+      summary: Replace a question
+      operationId: replaceQuestion
+      description: 'Relace a question'
+      parameters:
+        - name: quiz
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: question
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewQuestion'
+      responses:
+        '200':
+          description: Updated question
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Questions
+
+    delete:
+      summary: Delete a question
+      operationId: deleteQuestion
+      description: Delete a question
+      parameters:
+        - name: quiz
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: question
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Questions
+
 components:
   schemas:
+    Error:
+      type: object
+      required:
+        - category
+        - code
+        - message
+      properties:
+        category:
+          type: string
+          example: 'Quiz'
+        code:
+          type: string
+          example: 'not_found'
+        message:
+          type: string
+          example: 'Quiz not found'
 
     NewQuiz:
       type: object
@@ -220,10 +689,11 @@ components:
       properties:
         title:
           type: string
+          example: 'Questions about the fox'
         description:
-          oneOf:
-            - type: string
-            - type: 'null'
+          type: string
+          nullable: true
+          example: 'Learn why the fox is important in operating systems and fonts'
         hidden:
           type: boolean
           default: false
@@ -233,12 +703,14 @@ components:
       properties:
         title:
           type: string
+          example: 'Questions about the fox'
         description:
-          oneOf:
-            - type: string
-            - type: 'null'
+          type: string
+          nullable: true
+          example: 'Learn why the fox is important in operating systems and fonts'
         hidden:
           type: boolean
+          example: false
 
     Quiz:
       type: object
@@ -246,15 +718,16 @@ components:
         id:
           type: string
           format: uuid
-          example: '31a25ce9-c2e8-439b-82d1-7830b2941a6b'
         title:
           type: string
+          example: 'Questions about the fox'
         description:
-          oneOf:
-            - type: string
-            - type: 'null'
+          type: string
+          nullable: true
+          example: 'Learn why the fox is important in operating systems and fonts'
         hidden:
           type: boolean
+          example: false
         created:
           type: string
           format: 'date-time'
@@ -263,3 +736,268 @@ components:
           type: string
           format: 'date-time'
           example: '2024-01-01T12:00:00.000000Z'
+        type:
+          enum:
+            - SLIDE
+            - SINGLE_CHOICE
+            - MULTIPLE_CHOICE
+
+    Position:
+      oneOf:
+        - type: object
+          required:
+            - prev
+          properties:
+            prev:
+              type: string
+              format: uuid
+        - type: object
+          required:
+            - next
+          properties:
+            next:
+              type: string
+              format: uuid
+    
+    BaseQuestion:
+      type: object
+      required:
+        - id
+        - question
+        - hidden
+      properties:
+        id:
+          type: string
+          format: uuid
+        question:
+          type: string
+          example: 'Why did the quick brown fox jump over the lazy dog?'
+        hidden:
+          type: boolean
+          example: false
+    
+    Question:
+      allOf:
+        - $ref: '#/components/schemas/BaseQuestion'
+        - $ref: '#/components/schemas/QuestionOptions'
+    
+    QuestionOptions:
+      oneOf:
+        - $ref: '#/components/schemas/SlideOptions'
+        - $ref: '#/components/schemas/SingleChoiceOptions'
+        - $ref: '#/components/schemas/MultipleChoiceOptions'
+      discriminator:
+        propertyName: type
+        mapping:
+          SLIDE: '#/components/schemas/SlideOptions'
+          SINGLE_CHOICE: '#/components/schemas/SingleChoiceOptions'
+          MULTIPLE_CHOICE: '#/components/schemas/MultipleChoiceOptions'
+    
+    SlideOptions:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [SLIDE]
+    
+    SingleChoiceOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [SINGLE_CHOICE]
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnswerChoice'
+    
+    MultipleChoiceOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [MULTIPLE_CHOICE]
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnswerChoice'
+    
+    AnswerChoice:
+      type: object
+      required: 
+        - id
+        - correct
+        - text
+      properties:
+        id:
+          type: string
+          format: uuid
+        correct:
+          type: boolean
+          example: true
+        text:
+          type: string
+          example: 'Testing fonts'
+
+    NewQuestion:
+      allOf:
+        - type: object
+          required:
+            - question
+          properties:
+            question:
+              type: string
+              example: 'Why did the quick brown fox jump over the lazy dog?'
+            hidden:
+              type: boolean
+              default: false
+        - $ref: '#/components/schemas/NewQuestionOptions'
+        - $ref: '#/components/schemas/Position'
+    
+    NewQuestionOptions:
+      oneOf:
+        - $ref: '#/components/schemas/NewSlideOptions'
+        - $ref: '#/components/schemas/NewSingleChoiceOptions'
+        - $ref: '#/components/schemas/NewMultipleChoiceOptions'
+      discriminator:
+        propertyName: type
+        mapping:
+          SLIDE: '#/components/schemas/NewSlideOptions'
+          SINGLE_CHOICE: '#/components/schemas/NewSingleChoiceOptions'
+          MULTIPLE_CHOICE: '#/components/schemas/NewMultipleChoiceOptions'
+    
+    NewSlideOptions:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [SLIDE]
+    
+    NewSingleChoiceOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [SINGLE_CHOICE]
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewAnswerChoice'
+    
+    NewMultipleChoiceOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [MULTIPLE_CHOICE]
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewAnswerChoice'
+
+    NewAnswerChoice:
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          example: 'Testing fonts'
+        correct:
+          type: boolean
+          default: false
+
+    UpdateQuestion:
+      allOf:
+        - type: object
+          properties:
+            question:
+              type: string
+              example: 'Why did the quick brown fox jump over the lazy dog?'
+            hidden:
+              type: boolean
+              default: false
+        - $ref: '#/components/schemas/UpdateQuestionOptions'
+        - $ref: '#/components/schemas/Position'
+    
+    UpdateQuestionOptions:
+      oneOf:
+        - $ref: '#/components/schemas/UpdateSlideOptions'
+        - $ref: '#/components/schemas/UpdateSingleChoiceOptions'
+        - $ref: '#/components/schemas/UpdateMultipleChoiceOptions'
+      discriminator:
+        propertyName: type
+        mapping:
+          SLIDE: '#/components/schemas/UpdateSlideOptions'
+          SINGLE_CHOICE: '#/components/schemas/UpdateSingleChoiceOptions'
+          MULTIPLE_CHOICE: '#/components/schemas/UpdateMultipleChoiceOptions'
+    
+    UpdateSlideOptions:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [SLIDE]
+    
+    UpdateSingleChoiceOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [SINGLE_CHOICE]
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateAnswerChoiceEnum'
+    
+    UpdateMultipleChoiceOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [MULTIPLE_CHOICE]
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateAnswerChoiceEnum'
+
+    UpdateAnswerChoiceEnum:
+      oneOf:
+        - $ref: '#/components/schemas/NewAnswerChoice'
+        - $ref: '#/components/schemas/UpdateAnswerChoice'
+
+    UpdateAnswerChoice:
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+          example: 'Testing fonts'
+        correct:
+          type: boolean
