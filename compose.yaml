@@ -1,3 +1,7 @@
+networks:
+  web:
+    external: true
+
 services:
   benjrm:
     build: .
@@ -11,6 +15,12 @@ services:
       - ./config:/config
     ports:
       - 8080:80
+    networks:
+      - default
+      - web
+    labels:
+      traefik.enable: true
+      traefik.http.routers.benjrm_backend.rule: Host("${DOMAIN}")
   
   identity-provider:
     # note: in the deployment stage, we will use image: <keycloak-image-from-github-container-registry>
@@ -26,6 +36,13 @@ services:
       # note: this management interface should not be exposed to external traffic.
       # It should be protected with a reverse proxy and only accessible to internal traffic
       - "127.0.0.1:9000:9000"
+    networks:
+      - default
+      - web
+    labels:
+      traefik.enable: true
+      traefik.http.routers.benjrm_identity_provider.rule: Host("idp.${DOMAIN}")
+      traefik.http.services.benjrm_identity_provider.loadbalancer.server.port: 8088
     env_file:
       - .env
     depends_on:
