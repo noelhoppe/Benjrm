@@ -9,6 +9,7 @@ import PublicLayout from "./layouts/PublicLayout"
 import ImprintPage from "./pages/ImprintPage"
 import QuizCreator from "./pages/QuizCreator"
 import Quizzes from "./pages/Quizzes"
+import OrderQuestion from "./pages/OrderQuestion"
 import LoginRedirect from "@/auth/utils/LoginRedirect.tsx"
 import AuthGuard from "@/auth/guards/AuthGuard.tsx"
 import SingleChoiceQuestion from "@/pages/SingleChoiceQuestion.tsx"
@@ -70,6 +71,10 @@ const routes: RouteObject[] = [
             {
                 path: "/quizzes",
                 element: <Quizzes />,
+            },
+            {
+                path: "/quiz/order",
+                element: <OrderQuestion />,
             },
         ],
     },
