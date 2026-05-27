@@ -18,7 +18,7 @@ export default function InfoSlideContent({
     totalSlides = 1,
 }: InfoSlideContentProps): JSX.Element {
     return (
-        <div className="bg-background text-foreground min-h-screen px-4 py-8">
+        <div className="bg-background text-foreground min-h-full px-4 py-8">
             <div className="mx-auto flex max-w-2xl flex-col gap-8">
                 {/* Header */}
                 <div className="relative flex items-center justify-center">
@@ -41,7 +41,7 @@ export default function InfoSlideContent({
                     </h1>
 
                     {/* Content */}
-                    <div className="text-muted-foreground prose prose-invert max-w-none space-y-4 text-center text-sm leading-relaxed sm:text-base">
+                    <div className="text-muted-foreground max-w-none space-y-4 text-center text-sm leading-relaxed sm:text-base">
                         <p>{content}</p>
                     </div>
                 </div>
