@@ -16,7 +16,7 @@ The default config uses LetsEncrypt dnsChallenge. For testing with the staging s
 caServer: https://acme-staging-v02.api.letsencrypt.org/directory
 ```
 
-If you wish to use httpChallenge instead, change `certResolver: dnsResolver` to `certResolver: httpResolver` in `traefik.yaml`. In this case, the environment variables starting with `RFC2136_` are not needed.
+If you wish to use httpChallenge instead, change `entryPoints.websecure.http.tls.certResolver: dnsResolver` to `entryPoints.websecure.http.tls.certResolver: httpResolver` in `traefik.yaml`. In this case, the environment variables starting with `RFC2136_` are not needed.
 
 ### Start traefik
 

@@ -19,10 +19,13 @@ docker compose -f compose.dev.yaml up --build
 
 ### Test users
 
+Admin user: admin, password: admin
+
+> This credentials can be configured using the `KC_BOOTSTRAP_ADMIN_USERNAME` and `KC_BOOTSTRAP_ADMIN_PASSWORD` environment variables.
+
 | Username   | Password |
 | ---------- | -------- |
 | demo-admin | password |
-| admin      | admin    |
 | user       | password |
 | simon      | password |
 
@@ -49,6 +52,8 @@ docker compose up --build
 ```
 
 Keycloak admin user: admin, password: admin
+
+> This credentials can be configured using the `KC_BOOTSTRAP_ADMIN_USERNAME` and `KC_BOOTSTRAP_ADMIN_PASSWORD` environment variables.
 
 ### Use other identity provider than the one shipped in `compose.yaml`
 
