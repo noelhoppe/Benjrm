@@ -1,7 +1,7 @@
 use {
     crate::{
         app_data::TestAppData,
-        quiz::{NewQuiz, QuizError, QuizFilter, UpdateQuiz, entity::Quiz},
+        quiz::{NewQuiz, QuizError, QuizFilter, UpdateQuiz, entity::QuizModel},
         update_value::{UpdateOption, UpdateValue},
     },
     chrono::{Duration, Utc},
@@ -18,7 +18,7 @@ async fn test_create_one() {
         hidden: false,
     };
 
-    let quiz = Quiz::create(&data.db, user, input).await.unwrap();
+    let quiz = QuizModel::create(&data.db, user, input).await.unwrap();
 
     assert_eq!(quiz.title, "Test Quiz");
     assert_eq!(quiz.description.as_deref(), Some("desc"));
@@ -47,13 +47,15 @@ async fn test_get_many() {
     ];
 
     for quiz in input {
-        Quiz::create(&data.db, user, quiz.clone()).await.unwrap();
-        Quiz::create(&data.db, data.dummy_user_id().await, quiz)
+        QuizModel::create(&data.db, user, quiz.clone())
+            .await
+            .unwrap();
+        QuizModel::create(&data.db, data.dummy_user_id().await, quiz)
             .await
             .unwrap();
     }
 
-    let result = Quiz::get_many(
+    let result = QuizModel::get_many(
         &data.db,
         user,
         &QuizFilter {
@@ -66,14 +68,14 @@ async fn test_get_many() {
     assert_eq!(result.len(), 1);
     assert_eq!(result[0].title, "Visible");
 
-    let result = Quiz::get_many(&data.db, user, &QuizFilter { hidden: Some(true) })
+    let result = QuizModel::get_many(&data.db, user, &QuizFilter { hidden: Some(true) })
         .await
         .unwrap();
 
     assert_eq!(result.len(), 1);
     assert_eq!(result[0].title, "Hidden");
 
-    let result = Quiz::get_many(&data.db, user, &QuizFilter { hidden: None })
+    let result = QuizModel::get_many(&data.db, user, &QuizFilter { hidden: None })
         .await
         .unwrap();
 
@@ -85,7 +87,7 @@ async fn test_get_one() {
     let data = &TestAppData::test().await;
     let user = data.dummy_user_id().await;
 
-    let quiz = Quiz::create(
+    let quiz = QuizModel::create(
         &data.db,
         user,
         NewQuiz {
@@ -97,11 +99,11 @@ async fn test_get_one() {
     .await
     .unwrap();
 
-    let fetched = Quiz::get(&data.db, user, quiz.id).await.unwrap();
+    let fetched = QuizModel::get(&data.db, user, quiz.id).await.unwrap();
     assert_eq!(fetched, quiz);
 
     let other_user = data.dummy_user_id().await;
-    let fetched = Quiz::get(&data.db, other_user, quiz.id).await;
+    let fetched = QuizModel::get(&data.db, other_user, quiz.id).await;
     assert!(matches!(fetched, Err(QuizError::Forbidden)));
 }
 
@@ -110,7 +112,7 @@ async fn test_patch() {
     let data = &TestAppData::test().await;
     let user = data.dummy_user_id().await;
 
-    let quiz = Quiz::create(
+    let quiz = QuizModel::create(
         &data.db,
         user,
         NewQuiz {
@@ -140,7 +142,7 @@ async fn test_delete() {
     let data = &TestAppData::test().await;
     let user = data.dummy_user_id().await;
 
-    let quiz = Quiz::create(
+    let quiz = QuizModel::create(
         &data.db,
         user,
         NewQuiz {
@@ -152,13 +154,13 @@ async fn test_delete() {
     .await
     .unwrap();
 
-    Quiz::get(&data.db, user, quiz.id)
+    QuizModel::get(&data.db, user, quiz.id)
         .await
         .unwrap()
         .delete(&data.db)
         .await
         .unwrap();
 
-    let result = Quiz::get(&data.db, user, quiz.id).await;
+    let result = QuizModel::get(&data.db, user, quiz.id).await;
     assert!(matches!(result, Err(QuizError::NotFound)));
 }

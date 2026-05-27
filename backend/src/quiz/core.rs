@@ -1,7 +1,7 @@
 use {
     crate::quiz::{
         NewQuiz, QuizError, QuizFilter, UpdateQuiz,
-        entity::{ActiveQuiz, Quiz, QuizColumn, QuizEntity},
+        entity::{ActiveQuiz, QuizColumn, QuizEntity, QuizModel},
     },
     sea_orm::{
         ActiveModelTrait,
@@ -12,7 +12,7 @@ use {
     uuid::Uuid,
 };
 
-impl Quiz {
+impl QuizModel {
     pub async fn create(
         conn: &impl ConnectionTrait,
         user: Uuid,

@@ -12,6 +12,7 @@ mod app_data;
 mod auth;
 mod error;
 mod frontend;
+mod question;
 mod quiz;
 mod static_file;
 mod update_value;
@@ -71,7 +72,11 @@ async fn main() -> std::io::Result<()> {
             .configure(frontend::init)
             .configure(auth::init)
             .configure(static_file::init)
-            .service(web::scope("/api/v1").configure(quiz::init));
+            .service(
+                web::scope("/api/v1")
+                    .configure(quiz::init)
+                    .configure(question::init),
+            );
 
         if cfg!(debug_assertions) {
             app.app_data(awc::Client::new())
