@@ -103,12 +103,12 @@ impl Neighbors {
         if let Some(prev) = self.prev {
             let mut model = prev.into_active_model();
             model.next = Set(Some(id));
-            model.update(txn).await.unwrap();
+            model.update(txn).await?;
         }
         if let Some(next) = self.next {
             let mut model = next.into_active_model();
             model.prev = Set(Some(id));
-            model.update(txn).await.unwrap();
+            model.update(txn).await?;
         }
         Ok(())
     }
@@ -124,8 +124,7 @@ impl Neighbors {
                 ..Default::default()
             }
             .update(txn)
-            .await
-            .unwrap();
+            .await?;
         }
 
         if let Some(next) = question.next {
@@ -135,8 +134,7 @@ impl Neighbors {
                 ..Default::default()
             }
             .update(txn)
-            .await
-            .unwrap();
+            .await?;
         }
         Ok(())
     }

@@ -99,7 +99,7 @@ async fn delete(
 
     let quiz = QuizModel::get(&app_data.db, user.id, quiz_id).await?;
     let question = quiz.get_question(&app_data.db, question_id).await?;
-    question.delete(&app_data.db).await?;
+    question.delete(quiz, &app_data.db).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }

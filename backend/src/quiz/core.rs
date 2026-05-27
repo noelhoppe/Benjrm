@@ -3,11 +3,10 @@ use {
         NewQuiz, QuizError, QuizFilter, UpdateQuiz,
         entity::{ActiveQuiz, QuizColumn, QuizEntity, QuizModel},
     },
+    chrono::DateTime,
     sea_orm::{
-        ActiveModelTrait,
-        ActiveValue::{self, Set},
-        ColumnTrait, ConnectionTrait, EntityTrait, IntoActiveModel, QueryFilter,
-        sqlx::types::chrono::Utc,
+        ActiveModelTrait, ActiveValue::Set, ColumnTrait, ConnectionTrait, DbErr, EntityTrait,
+        IntoActiveModel, QueryFilter, sqlx::types::chrono::Utc,
     },
     uuid::Uuid,
 };
@@ -69,7 +68,7 @@ impl QuizModel {
         model.title = update_quiz.title.into();
         model.description = update_quiz.description.into();
         model.hidden = update_quiz.hidden.into();
-        model.modified = ActiveValue::set(Utc::now());
+        model.modified = Set(Utc::now());
 
         let model = model.update(conn).await?;
         Ok(model)
@@ -78,5 +77,15 @@ impl QuizModel {
     pub async fn delete(self, conn: &impl ConnectionTrait) -> Result<(), QuizError> {
         self.into_active_model().delete(conn).await?;
         Ok(())
+    }
+
+    pub async fn update_modified(
+        self,
+        date: DateTime<Utc>,
+        conn: &impl ConnectionTrait,
+    ) -> Result<Self, DbErr> {
+        let mut model = self.into_active_model();
+        model.modified = Set(date);
+        model.update(conn).await
     }
 }

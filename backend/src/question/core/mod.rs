@@ -29,7 +29,7 @@ pub mod neighbors;
 
 impl QuizModel {
     pub async fn create_question(
-        &self,
+        self,
         conn: &impl TransactionTrait,
         new_question: NewQuestion,
     ) -> Result<Question, QuestionError> {
@@ -48,7 +48,7 @@ impl QuizModel {
             modified: Set(now),
         };
 
-        let neighbors = Neighbors::get_opt(self, new_question.position, &txn).await?;
+        let neighbors = Neighbors::get_opt(&self, new_question.position, &txn).await?;
         question.prev = Set(neighbors.prev_id());
         question.next = Set(neighbors.next_id());
 
@@ -64,6 +64,8 @@ impl QuizModel {
                 options: question.insert_options(options, &txn).await?,
             },
         };
+
+        self.update_modified(now, &txn).await?;
 
         txn.commit().await?;
 
@@ -128,7 +130,7 @@ impl QuestionModel {
             if i < option_models.len() - 1 {
                 model.set_next(Some(option_models[i + 1].id()));
             }
-            option_models[i] = ActiveNewOption::update(model, txn).await.unwrap();
+            option_models[i] = ActiveNewOption::update(model, txn).await?;
         }
 
         Ok(option_models)
@@ -176,10 +178,15 @@ impl QuestionModel {
         Ok(())
     }
 
-    pub async fn delete(self, conn: &impl TransactionTrait) -> Result<(), QuestionError> {
+    pub async fn delete(
+        self,
+        quiz: QuizModel,
+        conn: &impl TransactionTrait,
+    ) -> Result<(), QuestionError> {
         let txn = conn.begin().await?;
         self.delete_answers(&txn).await?;
         self.into_active_model().delete(&txn).await?;
+        quiz.update_modified(Utc::now(), &txn).await?;
         txn.commit().await?;
         Ok(())
     }
@@ -208,10 +215,11 @@ impl Question {
             self.model.delete_answers(&txn).await?;
         }
 
+        let now = Utc::now();
         let mut model = self.model.into_active_model();
         model.question = update_question.question.into();
         model.hidden = update_question.hidden.into();
-        model.modified = Set(Utc::now());
+        model.modified = Set(now);
 
         if let Some(neighbors) = neighbors {
             model.prev = Set(neighbors.prev_id());
@@ -240,7 +248,8 @@ impl Question {
                 }
             };
         }
-        let model = model.update(&txn).await.unwrap();
+        let model = model.update(&txn).await?;
+        quiz.update_modified(now, &txn).await?;
 
         txn.commit().await?;
         Ok(Question {

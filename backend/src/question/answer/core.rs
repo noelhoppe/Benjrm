@@ -97,9 +97,7 @@ impl<T: ActiveNewOption> UpdateLinkedOptions<T> {
 
         let mut return_options = Vec::with_capacity(self.options.len());
         for option in self.options {
-            let option = ActiveNewOption::update(option.active_model, txn)
-                .await
-                .unwrap();
+            let option = ActiveNewOption::update(option.active_model, txn).await?;
             return_options.push(option);
         }
 
