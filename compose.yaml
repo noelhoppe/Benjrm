@@ -18,7 +18,7 @@ services:
       - web
     labels:
       traefik.enable: true
-      traefik.http.routers.benjrm_backend.rule: Host("${DOMAIN}")
+      traefik.http.routers.benjrm_backend.rule: Host("${DOMAIN}") || Host("www.${DOMAIN}")
   
   identity-provider:
     # note: in the deployment stage, we will use image: <keycloak-image-from-github-container-registry>
