@@ -49,7 +49,6 @@ mod serve_frontend {
         let uri = req.uri();
 
         const FORWARD_HEADER_NAMES: &[&str] = &[
-            "host",
             "accept",
             "accept-encoding",
             "accept-language",
