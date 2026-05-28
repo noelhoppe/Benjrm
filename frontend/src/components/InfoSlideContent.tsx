@@ -19,7 +19,7 @@ export default function InfoSlideContent({
 }: InfoSlideContentProps): JSX.Element {
     return (
         <div className="bg-background text-foreground min-h-full px-4 py-8">
-            <div className="mx-auto flex max-w-2xl flex-col gap-8">
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 md:max-w-3xl">
                 {/* Header */}
                 <div className="relative flex items-center justify-center">
                     <div className="border-border/50 bg-muted/30 flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur-sm">
