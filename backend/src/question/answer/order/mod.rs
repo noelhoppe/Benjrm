@@ -11,6 +11,8 @@ use {
 };
 
 mod core;
+#[cfg(test)]
+mod test;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]

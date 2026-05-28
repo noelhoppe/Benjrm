@@ -1,13 +1,20 @@
-use crate::{
-    app_data::TestAppData,
-    question::{
-        NewQuestion, NewQuestionOptions, QuestionError, QuestionOptions, UpdateQuestion,
-        UpdateQuestionOptions,
-        answer::choice::{NewAnswerChoice, UpdateAnswerChoice, UpdateAnswerChoiceEnum},
-        entity::QuestionType::{self},
+use {
+    crate::{
+        app_data::TestAppData,
+        question::{
+            NewQuestion, NewQuestionOptions, Question, QuestionError, QuestionOptions,
+            UpdateQuestion, UpdateQuestionOptions,
+            answer::{
+                choice::{NewAnswerChoice, UpdateAnswerChoice, UpdateAnswerChoiceEnum},
+                order::{UpdateAnswerOrder, UpdateAnswerOrderEnum},
+            },
+            core::neighbors::Position,
+            entity::QuestionType::{self},
+        },
+        quiz::{entity::QuizModel, test::create_one},
+        update_value::UpdateValue::Unset,
     },
-    quiz::{entity::QuizModel, test::create_one},
-    update_value::UpdateValue::Unset,
+    sea_orm::{DatabaseTransaction, TransactionTrait},
 };
 
 #[actix_web::test]
@@ -43,123 +50,6 @@ pub async fn create_question_slide() {
     assert_eq!(question.model.question, String::from("Slide"));
     assert_eq!(question.model.r#type, QuestionType::Slide);
     assert_eq!(QuestionType::Slide.get_answer_table(), QuestionType::Slide);
-}
-
-#[actix_web::test]
-pub async fn create_choice_question() {
-    let data = TestAppData::test().await;
-    let user = data.dummy_user_id().await;
-
-    macro_rules! test_choice_types {
-        ($id:ident) => {
-            let quiz = create_one(&data.db, user, None, None, false).await.unwrap();
-            let quiz_modification = quiz.modified;
-
-            let new_question = NewQuestion {
-                question: "Question".into(),
-                hidden: true,
-                position: None,
-                options: NewQuestionOptions::$id { options: vec![] },
-            };
-            let result = quiz.clone().create_question(&data.db, new_question).await;
-            assert!(matches!(result, Err(QuestionError::NoCorrectAnswer)));
-            let quiz = QuizModel::get(&data.db, user, quiz.id).await.unwrap();
-            assert_eq!(quiz.modified, quiz_modification);
-
-            let new_question = NewQuestion {
-                question: "Question".into(),
-                hidden: true,
-                position: None,
-                options: NewQuestionOptions::$id {
-                    options: vec![
-                        NewAnswerChoice {
-                            text: "A".into(),
-                            correct: false,
-                        },
-                        NewAnswerChoice {
-                            text: "B".into(),
-                            correct: false,
-                        },
-                        NewAnswerChoice {
-                            text: "C".into(),
-                            correct: false,
-                        },
-                        NewAnswerChoice {
-                            text: "D".into(),
-                            correct: false,
-                        },
-                    ],
-                },
-            };
-            let result = quiz.clone().create_question(&data.db, new_question).await;
-            assert!(matches!(result, Err(QuestionError::NoCorrectAnswer)));
-            let quiz = QuizModel::get(&data.db, user, quiz.id).await.unwrap();
-            assert_eq!(quiz.modified, quiz_modification);
-
-            let new_question = NewQuestion {
-                question: "Question".into(),
-                hidden: true,
-                position: None,
-                options: NewQuestionOptions::$id {
-                    options: vec![
-                        NewAnswerChoice {
-                            text: "A".into(),
-                            correct: false,
-                        },
-                        NewAnswerChoice {
-                            text: "B".into(),
-                            correct: true,
-                        },
-                        NewAnswerChoice {
-                            text: "C".into(),
-                            correct: false,
-                        },
-                        NewAnswerChoice {
-                            text: "D".into(),
-                            correct: false,
-                        },
-                        NewAnswerChoice {
-                            text: "E".into(),
-                            correct: true,
-                        },
-                    ],
-                },
-            };
-            let question = quiz
-                .clone()
-                .create_question(&data.db, new_question)
-                .await
-                .unwrap();
-            assert_eq!(question.model.r#type, QuestionType::$id);
-            let quiz = QuizModel::get(&data.db, user, quiz.id).await.unwrap();
-            assert!(quiz.modified > quiz_modification);
-
-            let options = match question.options {
-                QuestionOptions::$id { options } => options,
-                _ => panic!("Type missmatch"),
-            };
-
-            assert_eq!(
-                QuestionType::$id.get_answer_table(),
-                QuestionType::SingleChoice
-            );
-
-            assert_eq!(options[0].correct, false);
-            assert_eq!(options[1].correct, true);
-            assert_eq!(options[2].correct, false);
-            assert_eq!(options[3].correct, false);
-            assert_eq!(options[4].correct, true);
-
-            assert_eq!(options[0].text, String::from("A"));
-            assert_eq!(options[1].text, String::from("B"));
-            assert_eq!(options[2].text, String::from("C"));
-            assert_eq!(options[3].text, String::from("D"));
-            assert_eq!(options[4].text, String::from("E"));
-        };
-    }
-
-    test_choice_types!(SingleChoice);
-    test_choice_types!(MultipleChoice);
 }
 
 #[actix_web::test]
@@ -270,7 +160,7 @@ async fn change_choice_type() {
                 question: "question".into(),
                 hidden: false,
                 position: None,
-                options: NewQuestionOptions::SingleChoice { options },
+                options: NewQuestionOptions::$from { options },
             };
             let question = quiz
                 .clone()
@@ -278,7 +168,7 @@ async fn change_choice_type() {
                 .await
                 .unwrap();
             let question_id = question.model.id;
-            let QuestionOptions::SingleChoice { options } = question.options.clone() else {
+            let QuestionOptions::$from { options } = question.options.clone() else {
                 panic!();
             };
 
@@ -296,7 +186,7 @@ async fn change_choice_type() {
                 question: Unset,
                 hidden: Unset,
                 position: None,
-                options: Some(UpdateQuestionOptions::MultipleChoice {
+                options: Some(UpdateQuestionOptions::$to {
                     options: new_options,
                 }),
             };
@@ -313,7 +203,7 @@ async fn change_choice_type() {
                 .await
                 .unwrap();
 
-            let QuestionOptions::MultipleChoice {
+            let QuestionOptions::$to {
                 options: new_options,
             } = question.options
             else {
@@ -453,4 +343,210 @@ async fn change_single_choice_to_slide() {
         panic!()
     };
     assert!(options.is_empty());
+}
+
+#[actix_web::test]
+async fn change_single_choice_to_order_to_single_choice() {
+    let data = TestAppData::test().await;
+    let user = data.dummy_user_id().await;
+    let quiz = create_one(&data.db, user, None, None, false).await.unwrap();
+
+    let options = vec![
+        NewAnswerChoice {
+            text: "a".into(),
+            correct: true,
+        },
+        NewAnswerChoice {
+            text: "b".into(),
+            correct: true,
+        },
+        NewAnswerChoice {
+            text: "c".into(),
+            correct: true,
+        },
+        NewAnswerChoice {
+            text: "d".into(),
+            correct: true,
+        },
+    ];
+    let new_question = NewQuestion {
+        question: "tt".into(),
+        hidden: false,
+        position: None,
+        options: NewQuestionOptions::SingleChoice { options },
+    };
+    let question = quiz
+        .clone()
+        .create_question(&data.db, new_question)
+        .await
+        .unwrap();
+
+    let QuestionOptions::SingleChoice { options } = question.options.clone() else {
+        panic!();
+    };
+    let new_options: Vec<_> = options
+        .iter()
+        .map(|x| {
+            UpdateAnswerOrderEnum::Update(UpdateAnswerOrder {
+                id: x.id,
+                text: Unset,
+            })
+        })
+        .collect();
+    let update_question = UpdateQuestion {
+        question: Unset,
+        hidden: Unset,
+        position: None,
+        options: Some(UpdateQuestionOptions::Order {
+            options: new_options,
+        }),
+    };
+    let question = question
+        .update(quiz.clone(), &data.db, update_question)
+        .await
+        .unwrap();
+
+    let QuestionOptions::Order {
+        options: new_options,
+    } = question.options.clone()
+    else {
+        panic!();
+    };
+    for i in 0..options.len() {
+        assert_eq!(options[i].id, new_options[i].id);
+        assert_eq!(options[i].text, new_options[i].text);
+    }
+
+    let new_options: Vec<_> = new_options
+        .iter()
+        .map(|x| {
+            UpdateAnswerChoiceEnum::Update(UpdateAnswerChoice {
+                id: x.id,
+                text: Unset,
+                correct: Unset,
+            })
+        })
+        .collect();
+
+    let update_question = UpdateQuestion {
+        question: Unset,
+        hidden: Unset,
+        position: None,
+        options: Some(UpdateQuestionOptions::SingleChoice {
+            options: new_options,
+        }),
+    };
+    let question = question
+        .update(quiz, &data.db, update_question)
+        .await
+        .unwrap();
+
+    let QuestionOptions::SingleChoice {
+        options: new_options,
+    } = question.options
+    else {
+        panic!();
+    };
+    for i in 0..options.len() {
+        assert_eq!(options[i].id, new_options[i].id);
+        assert_eq!(options[i].text, new_options[i].text);
+        assert_eq!(options[i].correct, new_options[i].correct);
+    }
+}
+
+#[actix_web::test]
+async fn create_and_reorder_questions() {
+    let data = TestAppData::test().await;
+    let user = data.dummy_user_id().await;
+    let quiz = create_one(&data.db, user, None, None, false).await.unwrap();
+
+    async fn insert_new_slide(
+        quiz: &QuizModel,
+        conn: &DatabaseTransaction,
+        question: &str,
+        position: Option<Position>,
+    ) -> Question {
+        let slide = NewQuestion {
+            question: question.into(),
+            hidden: false,
+            position,
+            options: NewQuestionOptions::Slide,
+        };
+
+        quiz.clone().create_question(conn, slide).await.unwrap()
+    }
+    let txn = data.db.begin().await.unwrap();
+    let first = insert_new_slide(&quiz, &txn, "first", None).await;
+    let last = insert_new_slide(&quiz, &txn, "last", None).await;
+    let second =
+        insert_new_slide(&quiz, &txn, "second", Some(Position::Prev(first.model.id))).await;
+    let third = insert_new_slide(&quiz, &txn, "third", Some(Position::Next(last.model.id))).await;
+    let before_first = insert_new_slide(
+        &quiz,
+        &txn,
+        "before_first",
+        Some(Position::Next(first.model.id)),
+    )
+    .await;
+
+    txn.commit().await.unwrap();
+
+    let questions = quiz.get_questions(&data.db).await.unwrap();
+
+    assert_eq!(questions[0].id, before_first.model.id);
+    assert_eq!(questions[1].id, first.model.id);
+    assert_eq!(questions[2].id, second.model.id);
+    assert_eq!(questions[3].id, third.model.id);
+    assert_eq!(questions[4].id, last.model.id);
+
+    let second = quiz
+        .get_question(&data.db, second.model.id)
+        .await
+        .unwrap()
+        .get_answers(&data.db)
+        .await
+        .unwrap();
+    second
+        .clone()
+        .update(
+            quiz.clone(),
+            &data.db,
+            UpdateQuestion {
+                question: Unset,
+                hidden: Unset,
+                position: Some(Position::Prev(third.model.id)),
+                options: None,
+            },
+        )
+        .await
+        .unwrap();
+
+    let last = quiz
+        .get_question(&data.db, last.model.id)
+        .await
+        .unwrap()
+        .get_answers(&data.db)
+        .await
+        .unwrap();
+    last.clone()
+        .update(
+            quiz.clone(),
+            &data.db,
+            UpdateQuestion {
+                question: Unset,
+                hidden: Unset,
+                position: Some(Position::Next(before_first.model.id)),
+                options: None,
+            },
+        )
+        .await
+        .unwrap();
+
+    let questions = quiz.get_questions(&data.db).await.unwrap();
+
+    assert_eq!(questions[0].id, last.model.id);
+    assert_eq!(questions[1].id, before_first.model.id);
+    assert_eq!(questions[2].id, first.model.id);
+    assert_eq!(questions[3].id, third.model.id);
+    assert_eq!(questions[4].id, second.model.id);
 }

@@ -2,18 +2,18 @@ use {
     crate::{
         app_data::TestAppData,
         question::{
-            NewQuestion, NewQuestionOptions, QuestionOptions, UpdateQuestion,
-            UpdateQuestionOptions,
+            NewQuestion, NewQuestionOptions, QuestionError, QuestionOptions, QuestionType,
+            UpdateQuestion, UpdateQuestionOptions,
             answer::{
                 choice::{
                     NewAnswerChoice, UpdateAnswerChoice, UpdateAnswerChoiceEnum,
-                    entity::{ActiveAnswerChoice, AnswerChoiceModel},
+                    entity::AnswerChoiceModel,
                 },
                 core::UpdateLinkedOptions,
-                sort_linked_items,
             },
+            sort_linked_items,
         },
-        quiz::test::create_one,
+        quiz::{entity::QuizModel, test::create_one},
         update_value::UpdateValue::{Set, Unset},
     },
     uuid::Uuid,
@@ -96,7 +96,7 @@ fn sort_invalid_prev() {
 #[test]
 fn update_linked() {
     let options = sort_linked_items(MODELS1.clone()).unwrap();
-    let mut update = UpdateLinkedOptions::<ActiveAnswerChoice>::new(*QUESTION, options);
+    let mut update = UpdateLinkedOptions::<AnswerChoiceModel>::new(*QUESTION, options);
 
     update.add_new(NewAnswerChoice {
         text: String::from("new1"),
@@ -312,7 +312,7 @@ async fn update_choices() {
         question: Unset,
         hidden: Unset,
         position: None,
-        options: Some(UpdateQuestionOptions::SingleChoice { options }),
+        options: Some(UpdateQuestionOptions::MultipleChoice { options }),
     };
 
     let question = question
@@ -321,7 +321,7 @@ async fn update_choices() {
         .unwrap();
 
     let inserted_options = match question.options {
-        QuestionOptions::SingleChoice { options } => options,
+        QuestionOptions::MultipleChoice { options } => options,
         _ => panic!(),
     };
 
@@ -333,4 +333,121 @@ async fn update_choices() {
     assert_eq!(inserted_options[4].text, "middle_3");
     assert_eq!(inserted_options[5].text, "a");
     assert_eq!(inserted_options[6].text, "last");
+}
+
+#[actix_web::test]
+pub async fn create_choice_question() {
+    let data = TestAppData::test().await;
+    let user = data.dummy_user_id().await;
+
+    macro_rules! test_choice_types {
+        ($id:ident) => {
+            let quiz = create_one(&data.db, user, None, None, false).await.unwrap();
+            let quiz_modification = quiz.modified;
+
+            let new_question = NewQuestion {
+                question: "Question".into(),
+                hidden: true,
+                position: None,
+                options: NewQuestionOptions::$id { options: vec![] },
+            };
+            let result = quiz.clone().create_question(&data.db, new_question).await;
+            assert!(matches!(result, Err(QuestionError::NoCorrectAnswer)));
+            let quiz = QuizModel::get(&data.db, user, quiz.id).await.unwrap();
+            assert_eq!(quiz.modified, quiz_modification);
+
+            let new_question = NewQuestion {
+                question: "Question".into(),
+                hidden: true,
+                position: None,
+                options: NewQuestionOptions::$id {
+                    options: vec![
+                        NewAnswerChoice {
+                            text: "A".into(),
+                            correct: false,
+                        },
+                        NewAnswerChoice {
+                            text: "B".into(),
+                            correct: false,
+                        },
+                        NewAnswerChoice {
+                            text: "C".into(),
+                            correct: false,
+                        },
+                        NewAnswerChoice {
+                            text: "D".into(),
+                            correct: false,
+                        },
+                    ],
+                },
+            };
+            let result = quiz.clone().create_question(&data.db, new_question).await;
+            assert!(matches!(result, Err(QuestionError::NoCorrectAnswer)));
+            let quiz = QuizModel::get(&data.db, user, quiz.id).await.unwrap();
+            assert_eq!(quiz.modified, quiz_modification);
+
+            let new_question = NewQuestion {
+                question: "Question".into(),
+                hidden: true,
+                position: None,
+                options: NewQuestionOptions::$id {
+                    options: vec![
+                        NewAnswerChoice {
+                            text: "A".into(),
+                            correct: false,
+                        },
+                        NewAnswerChoice {
+                            text: "B".into(),
+                            correct: true,
+                        },
+                        NewAnswerChoice {
+                            text: "C".into(),
+                            correct: false,
+                        },
+                        NewAnswerChoice {
+                            text: "D".into(),
+                            correct: false,
+                        },
+                        NewAnswerChoice {
+                            text: "E".into(),
+                            correct: true,
+                        },
+                    ],
+                },
+            };
+            let question = quiz
+                .clone()
+                .create_question(&data.db, new_question)
+                .await
+                .unwrap();
+            assert_eq!(question.model.r#type, QuestionType::$id);
+            let quiz = QuizModel::get(&data.db, user, quiz.id).await.unwrap();
+            assert!(quiz.modified > quiz_modification);
+
+            let options = match question.options {
+                QuestionOptions::$id { options } => options,
+                _ => panic!("Type missmatch"),
+            };
+
+            assert_eq!(
+                QuestionType::$id.get_answer_table(),
+                QuestionType::SingleChoice
+            );
+
+            assert_eq!(options[0].correct, false);
+            assert_eq!(options[1].correct, true);
+            assert_eq!(options[2].correct, false);
+            assert_eq!(options[3].correct, false);
+            assert_eq!(options[4].correct, true);
+
+            assert_eq!(options[0].text, String::from("A"));
+            assert_eq!(options[1].text, String::from("B"));
+            assert_eq!(options[2].text, String::from("C"));
+            assert_eq!(options[3].text, String::from("D"));
+            assert_eq!(options[4].text, String::from("E"));
+        };
+    }
+
+    test_choice_types!(SingleChoice);
+    test_choice_types!(MultipleChoice);
 }
