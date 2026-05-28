@@ -1,4 +1,7 @@
-use actix_web::{Route, web};
+use {
+    actix_web::{Route, web},
+    awc::http::Method,
+};
 
 #[cfg(not(debug_assertions))]
 mod serve_frontend {
@@ -38,20 +41,33 @@ mod serve_frontend {
 
     pub async fn serve_file(req: HttpRequest) -> Result<HttpResponse, SendRequestError> {
         let client = req.app_data::<awc::Client>().unwrap();
-        let path = req.path();
+        let uri = req.uri();
 
+        const FORWARD_HEADER_NAMES: &[&str] = &[
+            "accept",
+            "accept-encoding",
+            "accept-language",
+            "cache-control",
+            "user-agent",
+        ];
         lazy_static::lazy_static! {
             static ref FRONTEND_HOST: String = std::env::var("FRONTEND_HOST").unwrap_or_else(|_| String::from("localhost"));
         }
 
-        let mut dev_req = client.get(format!("http://{}:5173{path}", *FRONTEND_HOST));
-        for header in req.headers() {
-            dev_req = dev_req.insert_header(header);
+        let mut dev_req = client.get(format!("http://{}:5173{uri}", *FRONTEND_HOST));
+        for (key, value) in req.headers() {
+            if FORWARD_HEADER_NAMES.contains(&key.as_str()) {
+                dev_req = dev_req.insert_header((key, value));
+            }
         }
         Ok(dev_req.send().await?.into_http_response())
     }
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {
-    cfg.default_service(Route::new().to(serve_frontend::serve_file));
+    cfg.default_service(
+        Route::new()
+            .method(Method::GET)
+            .to(serve_frontend::serve_file),
+    );
 }
