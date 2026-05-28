@@ -5,25 +5,25 @@ use {
     },
     sea_orm::{
         ActiveValue::{Set, Unchanged},
-        DatabaseTransaction, IntoActiveModel,
+        DatabaseTransaction,
     },
     uuid::Uuid,
 };
 
-pub struct UpdateLinkedOptions<T: ActiveNewOption> {
+pub struct UpdateLinkedOptions<Model: OptionModel> {
     question_id: Uuid,
     pos: usize,
-    pub(super) options: Vec<LinkedOption<T>>,
-    pub(super) delete: Vec<LinkedOption<T>>,
+    pub(super) options: Vec<LinkedOption<Model>>,
+    pub(super) delete: Vec<LinkedOption<Model>>,
 }
 
-pub(super) struct LinkedOption<T: ActiveNewOption> {
+pub(super) struct LinkedOption<Model: OptionModel> {
     pub(super) id: Uuid,
-    pub(super) active_model: T,
+    pub(super) active_model: Model::Active,
 }
 
-impl<T: ActiveNewOption> UpdateLinkedOptions<T> {
-    pub fn new(question: Uuid, options: Vec<T::Model>) -> Self {
+impl<Model: OptionModel> UpdateLinkedOptions<Model> {
+    pub fn new(question: Uuid, options: Vec<Model>) -> Self {
         Self {
             question_id: question,
             pos: 0,
@@ -38,7 +38,7 @@ impl<T: ActiveNewOption> UpdateLinkedOptions<T> {
         }
     }
 
-    pub fn add_new(&mut self, new: T::NewOption) {
+    pub fn add_new(&mut self, new: Model::New) {
         let id = Uuid::new_v4();
         let option = LinkedOption {
             id,
@@ -48,7 +48,7 @@ impl<T: ActiveNewOption> UpdateLinkedOptions<T> {
         self.pos += 1;
     }
 
-    pub fn update_option(&mut self, update: T::UpdateOption) -> Result<(), QuestionError> {
+    pub fn update_option(&mut self, update: Model::Update) -> Result<(), QuestionError> {
         if let Some(pos) = self.options.iter().position(|x| x.id == update.id()) {
             if pos < self.pos {
                 return Err(QuestionError::DuplicateAnswerId(update.id()));
@@ -84,7 +84,7 @@ impl<T: ActiveNewOption> UpdateLinkedOptions<T> {
         }
     }
 
-    pub async fn execute(self, txn: &DatabaseTransaction) -> Result<Vec<T::Model>, QuestionError> {
+    pub async fn execute(self, txn: &DatabaseTransaction) -> Result<Vec<Model>, QuestionError> {
         // insert new options before updating prev and next for all options
         for option in &self.options {
             if matches!(option.active_model.id(), Set(_)) {

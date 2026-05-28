@@ -1,51 +1,55 @@
 use {
     crate::question::{
-        LinkedItem, NewAnswerChoice, QuestionError, UpdateAnswerChoiceEnum,
+        LinkedItem, QuestionError,
         answer::{
             ActiveNewOption, NewOption, OptionModel, UpdateOption,
-            choice::{
-                UpdateAnswerChoice,
-                entity::{ActiveAnswerChoice, AnswerChoiceModel},
-            },
+            choice::entity::ActiveAnswerChoice,
             core::UpdateLinkedOptions,
+            order::{AnswerOrderModel, NewAnswerOrder, UpdateAnswerOrder, UpdateAnswerOrderEnum},
         },
     },
     sea_orm::{
         ActiveModelTrait,
         ActiveValue::{self, NotSet, Set},
-        ConnectionTrait, DatabaseTransaction, DbErr,
+        ConnectionTrait, DatabaseTransaction, DbErr, IntoActiveModel,
     },
     uuid::Uuid,
 };
 
-impl UpdateOption for UpdateAnswerChoice {
+impl IntoActiveModel<ActiveAnswerChoice> for AnswerOrderModel {
+    fn into_active_model(self) -> ActiveAnswerChoice {
+        self.choice.into_active_model()
+    }
+}
+
+impl UpdateOption for UpdateAnswerOrder {
     fn id(&self) -> Uuid {
         self.id
     }
 }
 
-impl OptionModel for AnswerChoiceModel {
+impl OptionModel for AnswerOrderModel {
     type Active = ActiveAnswerChoice;
-    type New = NewAnswerChoice;
-    type Update = UpdateAnswerChoice;
+    type New = NewAnswerOrder;
+    type Update = UpdateAnswerOrder;
 
     fn id(&self) -> Uuid {
         self.id
     }
 }
 
-impl NewOption<AnswerChoiceModel> for NewAnswerChoice {
+impl NewOption<AnswerOrderModel> for NewAnswerOrder {
     type Active = ActiveAnswerChoice;
 
     fn correct(&self) -> bool {
-        self.correct
+        true
     }
 
     fn into_active_model(self, question_id: Uuid, id: Uuid) -> Self::Active {
         ActiveAnswerChoice {
             id: Set(id),
             question: Set(question_id),
-            correct: Set(self.correct),
+            correct: Set(true),
             text: Set(self.text),
             prev: NotSet,
             next: NotSet,
@@ -53,10 +57,9 @@ impl NewOption<AnswerChoiceModel> for NewAnswerChoice {
     }
 }
 
-impl ActiveNewOption<AnswerChoiceModel, UpdateAnswerChoice> for ActiveAnswerChoice {
-    fn set(&mut self, update: UpdateAnswerChoice) {
+impl ActiveNewOption<AnswerOrderModel, UpdateAnswerOrder> for ActiveAnswerChoice {
+    fn set(&mut self, update: UpdateAnswerOrder) {
         self.text = update.text.into();
-        self.correct = update.correct.into();
     }
 
     fn id(&self) -> &ActiveValue<Uuid> {
@@ -79,12 +82,12 @@ impl ActiveNewOption<AnswerChoiceModel, UpdateAnswerChoice> for ActiveAnswerChoi
         self.next = Set(next);
     }
 
-    async fn insert(self, db: &impl ConnectionTrait) -> Result<AnswerChoiceModel, DbErr> {
-        ActiveModelTrait::insert(self, db).await
+    async fn insert(self, db: &impl ConnectionTrait) -> Result<AnswerOrderModel, DbErr> {
+        ActiveModelTrait::insert(self, db).await.map(Into::into)
     }
 
-    async fn update(self, db: &impl ConnectionTrait) -> Result<AnswerChoiceModel, DbErr> {
-        ActiveModelTrait::update(self, db).await
+    async fn update(self, db: &impl ConnectionTrait) -> Result<AnswerOrderModel, DbErr> {
+        ActiveModelTrait::update(self, db).await.map(Into::into)
     }
 
     async fn delete(self, db: &impl ConnectionTrait) -> Result<(), DbErr> {
@@ -93,7 +96,7 @@ impl ActiveNewOption<AnswerChoiceModel, UpdateAnswerChoice> for ActiveAnswerChoi
     }
 }
 
-impl LinkedItem for AnswerChoiceModel {
+impl LinkedItem for AnswerOrderModel {
     fn id(&self) -> Uuid {
         self.id
     }
@@ -107,16 +110,16 @@ impl LinkedItem for AnswerChoiceModel {
     }
 }
 
-impl UpdateLinkedOptions<AnswerChoiceModel> {
+impl UpdateLinkedOptions<AnswerOrderModel> {
     pub async fn update(
         mut self,
-        new: Vec<UpdateAnswerChoiceEnum>,
+        new: Vec<UpdateAnswerOrderEnum>,
         txn: &DatabaseTransaction,
-    ) -> Result<Vec<AnswerChoiceModel>, QuestionError> {
+    ) -> Result<Vec<AnswerOrderModel>, QuestionError> {
         for option in new {
             match option {
-                UpdateAnswerChoiceEnum::New(option) => self.add_new(option),
-                UpdateAnswerChoiceEnum::Update(option) => self.update_option(option)?,
+                UpdateAnswerOrderEnum::New(option) => self.add_new(option),
+                UpdateAnswerOrderEnum::Update(option) => self.update_option(option)?,
             }
         }
         self.delete_remaining();

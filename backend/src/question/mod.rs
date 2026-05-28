@@ -2,7 +2,10 @@ use {
     crate::{
         error::impl_err,
         question::{
-            answer::choice::{NewAnswerChoice, UpdateAnswerChoiceEnum, entity::AnswerChoiceModel},
+            answer::{
+                choice::{NewAnswerChoice, UpdateAnswerChoiceEnum, entity::AnswerChoiceModel},
+                order::{AnswerOrderModel, NewAnswerOrder, UpdateAnswerOrderEnum},
+            },
             core::neighbors::Position,
             entity::{QuestionModel, QuestionType},
         },
@@ -58,14 +61,25 @@ pub enum QuestionOptions {
     Slide,
     SingleChoice { options: Vec<AnswerChoiceModel> },
     MultipleChoice { options: Vec<AnswerChoiceModel> },
+    Order { options: Vec<AnswerOrderModel> },
 }
 
 impl QuestionOptions {
     pub fn get_answer_choice_options(self) -> Vec<AnswerChoiceModel> {
         match self {
             Self::Slide => Vec::new(),
-            Self::SingleChoice { options } => options,
-            Self::MultipleChoice { options } => options,
+            Self::SingleChoice { options } | Self::MultipleChoice { options } => options,
+            Self::Order { options } => options.into_iter().map(Into::into).collect(),
+        }
+    }
+
+    pub fn get_answer_order_options(self) -> Vec<AnswerOrderModel> {
+        match self {
+            Self::Slide => Vec::new(),
+            Self::SingleChoice { options } | Self::MultipleChoice { options } => {
+                options.into_iter().map(Into::into).collect()
+            }
+            Self::Order { options } => options,
         }
     }
 }
@@ -88,6 +102,7 @@ pub enum NewQuestionOptions {
     Slide,
     SingleChoice { options: Vec<NewAnswerChoice> },
     MultipleChoice { options: Vec<NewAnswerChoice> },
+    Order { options: Vec<NewAnswerOrder> },
 }
 
 impl NewQuestionOptions {
@@ -96,6 +111,7 @@ impl NewQuestionOptions {
             Self::Slide => QuestionType::Slide,
             Self::SingleChoice { .. } => QuestionType::SingleChoice,
             Self::MultipleChoice { .. } => QuestionType::MultipleChoice,
+            Self::Order { .. } => QuestionType::Order,
         }
     }
 }
@@ -134,6 +150,9 @@ pub enum UpdateQuestionOptions {
     MultipleChoice {
         options: Vec<UpdateAnswerChoiceEnum>,
     },
+    Order {
+        options: Vec<UpdateAnswerOrderEnum>,
+    },
 }
 
 impl UpdateQuestionOptions {
@@ -142,6 +161,7 @@ impl UpdateQuestionOptions {
             Self::Slide => QuestionType::Slide,
             Self::SingleChoice { .. } => QuestionType::SingleChoice,
             Self::MultipleChoice { .. } => QuestionType::MultipleChoice,
+            Self::Order { .. } => QuestionType::Order,
         }
     }
 }
@@ -156,6 +176,9 @@ impl From<NewQuestionOptions> for UpdateQuestionOptions {
             NewQuestionOptions::MultipleChoice { options } => Self::MultipleChoice {
                 options: options.into_iter().map(Into::into).collect(),
             },
+            NewQuestionOptions::Order { options } => Self::Order {
+                options: options.into_iter().map(Into::into).collect(),
+            },
         }
     }
 }
@@ -164,7 +187,34 @@ impl QuestionType {
     pub fn get_answer_table(&self) -> Self {
         match self {
             Self::Slide => Self::Slide,
-            Self::SingleChoice | Self::MultipleChoice => Self::SingleChoice,
+            Self::SingleChoice | Self::MultipleChoice | Self::Order => Self::SingleChoice,
         }
     }
+}
+
+pub trait LinkedItem {
+    fn id(&self) -> Uuid;
+    fn prev(&self) -> Option<Uuid>;
+    fn next(&self) -> Option<Uuid>;
+}
+
+pub fn sort_linked_items<T: LinkedItem>(mut items: Vec<T>) -> Option<Vec<T>> {
+    if items.is_empty() {
+        return Some(items);
+    }
+    let first = items.iter().position(|x| x.prev().is_none())?;
+    items.swap(first, 0);
+    let mut id = items[0].id();
+    for i in 1..items.len() {
+        let item = items.iter().position(|x| x.prev() == Some(id))?;
+        items.swap(item, i);
+        id = items[i].id();
+        if items[i - 1].next() != Some(id) {
+            return None;
+        }
+    }
+    if items[items.len() - 1].next().is_some() {
+        return None;
+    }
+    Some(items)
 }

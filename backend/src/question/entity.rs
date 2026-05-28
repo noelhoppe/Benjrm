@@ -22,6 +22,8 @@ mod question {
         MultipleChoice,
         #[sea_orm(string_value = "SingleChoice")]
         SingleChoice,
+        #[sea_orm(string_value = "Order")]
+        Order,
         #[sea_orm(string_value = "Slide")]
         Slide,
     }

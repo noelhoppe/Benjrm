@@ -26,7 +26,6 @@ impl MigrationTrait for Migration {
                             .to_col("id")
                             .on_update(ForeignKeyAction::Restrict)
                             .on_delete(ForeignKeyAction::Restrict),
-
                     )
                     .foreign_key(
                         ForeignKey::create()
@@ -36,7 +35,7 @@ impl MigrationTrait for Migration {
                             .to_tbl("answer_choice")
                             .to_col("id")
                             .on_update(ForeignKeyAction::Restrict)
-                            .on_delete(ForeignKeyAction::Restrict)
+                            .on_delete(ForeignKeyAction::Restrict),
                     )
                     .foreign_key(
                         ForeignKey::create()
@@ -46,7 +45,7 @@ impl MigrationTrait for Migration {
                             .to_tbl("answer_choice")
                             .to_col("id")
                             .on_update(ForeignKeyAction::Restrict)
-                            .on_delete(ForeignKeyAction::Restrict)
+                            .on_delete(ForeignKeyAction::Restrict),
                     )
                     .to_owned(),
             )

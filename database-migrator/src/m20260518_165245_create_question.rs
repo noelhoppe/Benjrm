@@ -1,4 +1,6 @@
-use sea_orm_migration::{prelude::*, schema::*, sea_orm::DbBackend, sea_query::extension::postgres::Type};
+use sea_orm_migration::{
+    prelude::*, schema::*, sea_orm::DbBackend, sea_query::extension::postgres::Type,
+};
 
 use crate::col_datetime;
 
@@ -9,7 +11,14 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         if manager.get_database_backend() == DbBackend::Postgres {
-            manager.create_type(Type::create().as_enum("question_type").values(["Slide", "SingleChoice", "MultipleChoice"]).to_owned()).await?;
+            manager
+                .create_type(
+                    Type::create()
+                        .as_enum("question_type")
+                        .values(["Slide", "SingleChoice", "MultipleChoice", "Order"])
+                        .to_owned(),
+                )
+                .await?;
         }
         manager
             .create_table(
@@ -18,7 +27,11 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_uuid("id"))
                     .col(uuid("quiz"))
-                    .col(enumeration("type", "question_type", ["Slide", "SingleChoice", "MultipleChoice"]))
+                    .col(enumeration(
+                        "type",
+                        "question_type",
+                        ["Slide", "SingleChoice", "MultipleChoice", "Order"],
+                    ))
                     .col(string("question"))
                     .col(boolean("hidden").default(false))
                     .col(uuid_null("prev"))
@@ -34,7 +47,7 @@ impl MigrationTrait for Migration {
                             .to_col("id")
                             .on_update(ForeignKeyAction::Restrict)
                             .on_delete(ForeignKeyAction::Restrict),
-                        )
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_question-prev")
@@ -43,7 +56,7 @@ impl MigrationTrait for Migration {
                             .to_tbl("question")
                             .to_col("id")
                             .on_update(ForeignKeyAction::Restrict)
-                            .on_delete(ForeignKeyAction::Restrict)
+                            .on_delete(ForeignKeyAction::Restrict),
                     )
                     .foreign_key(
                         ForeignKey::create()
@@ -53,9 +66,9 @@ impl MigrationTrait for Migration {
                             .to_tbl("question")
                             .to_col("id")
                             .on_update(ForeignKeyAction::Restrict)
-                            .on_delete(ForeignKeyAction::Restrict)
+                            .on_delete(ForeignKeyAction::Restrict),
                     )
-                    .to_owned()
+                    .to_owned(),
             )
             .await
     }

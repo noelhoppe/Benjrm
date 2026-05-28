@@ -1,16 +1,16 @@
 use {
     crate::{
         question::{
-            NewQuestion, NewQuestionOptions, Question, QuestionError, QuestionOptions,
+            LinkedItem, NewQuestion, NewQuestionOptions, Question, QuestionError, QuestionOptions,
             UpdateQuestion, UpdateQuestionOptions,
             answer::{
                 ActiveNewOption, NewOption, OptionModel,
                 choice::entity::{AnswerChoiceColumn, AnswerChoiceEntity},
                 core::UpdateLinkedOptions,
-                sort_linked_items,
             },
             core::neighbors::Neighbors,
             entity::{ActiveQuestion, QuestionEntity, QuestionModel, QuestionType},
+            sort_linked_items,
         },
         quiz::entity::QuizModel,
     },
@@ -26,6 +26,20 @@ use {
 };
 
 pub mod neighbors;
+
+impl LinkedItem for QuestionModel {
+    fn id(&self) -> Uuid {
+        self.id
+    }
+
+    fn prev(&self) -> Option<Uuid> {
+        self.prev
+    }
+
+    fn next(&self) -> Option<Uuid> {
+        self.next
+    }
+}
 
 impl QuizModel {
     pub async fn create_question(
@@ -61,6 +75,9 @@ impl QuizModel {
                 options: question.insert_options(options, &txn).await?,
             },
             NewQuestionOptions::MultipleChoice { options } => QuestionOptions::MultipleChoice {
+                options: question.insert_options(options, &txn).await?,
+            },
+            NewQuestionOptions::Order { options } => QuestionOptions::Order {
                 options: question.insert_options(options, &txn).await?,
             },
         };
@@ -103,11 +120,11 @@ impl QuizModel {
 }
 
 impl QuestionModel {
-    async fn insert_options<T: NewOption>(
+    async fn insert_options<Model: OptionModel, New: NewOption<Model>>(
         &self,
-        new_options: Vec<T>,
+        new_options: Vec<New>,
         txn: &DatabaseTransaction,
-    ) -> Result<Vec<<T::ActiveModel as ActiveNewOption>::Model>, QuestionError> {
+    ) -> Result<Vec<Model>, QuestionError> {
         let mut option_models = Vec::with_capacity(new_options.len());
         let mut correct_found = false;
         for option in new_options {
@@ -149,6 +166,12 @@ impl QuestionModel {
                 let models = sort_linked_items(models).ok_or(QuestionError::CorruptedAnswerList)?;
                 QuestionOptions::MultipleChoice { options: models }
             }
+            QuestionType::Order => {
+                let models = self.find_related(AnswerChoiceEntity).all(conn).await?;
+                let models = sort_linked_items(models).ok_or(QuestionError::CorruptedAnswerList)?;
+                let models = models.into_iter().map(Into::into).collect();
+                QuestionOptions::Order { options: models }
+            }
         };
 
         Ok(Question {
@@ -160,7 +183,7 @@ impl QuestionModel {
     pub async fn delete_answers(&self, txn: &DatabaseTransaction) -> Result<(), QuestionError> {
         match self.r#type {
             QuestionType::Slide => (),
-            QuestionType::SingleChoice | QuestionType::MultipleChoice => {
+            QuestionType::SingleChoice | QuestionType::MultipleChoice | QuestionType::Order => {
                 AnswerChoiceEntity::update_many()
                     .col_expr(AnswerChoiceColumn::Next, Expr::value(None::<Uuid>))
                     .col_expr(AnswerChoiceColumn::Prev, Expr::value(None::<Uuid>))
@@ -246,6 +269,11 @@ impl Question {
                         .await?,
                     }
                 }
+                UpdateQuestionOptions::Order { options } => QuestionOptions::Order {
+                    options: UpdateLinkedOptions::new(id, self.options.get_answer_order_options())
+                        .update(options, &txn)
+                        .await?,
+                },
             };
         }
         let model = model.update(&txn).await?;
