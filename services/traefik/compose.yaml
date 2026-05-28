@@ -16,7 +16,9 @@ services:
     container_name: traefik
     restart: always
     entrypoint: /bin/sh /prepare.sh
-    env_file: ".env"
+    env_file:
+      - ".env"
+      - "../../.env"
     security_opt:
       - no-new-privileges:true
     depends_on:

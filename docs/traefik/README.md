@@ -6,7 +6,10 @@ This project contains an example traefik configuration located at `/services/tra
 
 ### Configuration
 
-Enter the directory `/services/traefik` and create an `.env` file based on `.env.example`. The default config exposes the traeik dashboard at `traefik.<YOUR_DOMAIN>`. If you wish to disable this, delete the file `config/dashboard.yaml`.
+- Set the `DOMAIN` variable in the file `/.env`.
+- Enter the directory `/services/traefik` and create an `.env` file based on `.env.example`.
+
+The default config exposes the traeik dashboard at `traefik.<YOUR_DOMAIN>`. If you wish to disable this, delete the file `config/dashboard.yaml`.
 
 ### Cert resolver
 
