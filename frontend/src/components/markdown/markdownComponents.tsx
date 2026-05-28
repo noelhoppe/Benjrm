@@ -182,14 +182,19 @@ const markdownComponents: Components = {
             </code>
         )
     },
-    input: (props) => {
-        const { type, checked, disabled: disabledProp, ...rest } = props
-
+    input: ({ type, checked, disabled, ...rest }) => {
         if (type === "checkbox") {
-            return <input {...rest} defaultChecked={Boolean(checked)} type="checkbox" />
+            return (
+                <input
+                    {...rest}
+                    defaultChecked={Boolean(checked)}
+                    type="checkbox"
+                    disabled={true}
+                />
+            )
         }
 
-        return <input {...rest} type={type} />
+        return <input {...rest} type={type} disabled={Boolean(disabled)} />
     },
     pre: ({ children }) => {
         const codeChild = Array.isArray(children) ? children.find(isValidElement) : children

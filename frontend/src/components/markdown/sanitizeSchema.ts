@@ -115,15 +115,10 @@ const sanitizeSchema = {
         ],
         source: [...(defaultSchema.attributes?.source ?? []), "src", "type", "media"],
         input: [
-            ...(defaultSchema.attributes?.input ?? []).filter(
-                (attribute) =>
-                    !(
-                        (typeof attribute === "string" && attribute === "disabled") ||
-                        (Array.isArray(attribute) && attribute[0] === "disabled")
-                    )
-            ),
+            ...(defaultSchema.attributes?.input ?? []),
             ["type", "checkbox"],
             "checked",
+            "disabled",
         ],
         code: [
             ...(defaultSchema.attributes?.code ?? []),
