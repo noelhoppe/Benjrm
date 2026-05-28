@@ -741,6 +741,7 @@ components:
             - SLIDE
             - SINGLE_CHOICE
             - MULTIPLE_CHOICE
+            - ORDER
 
     Position:
       oneOf:
@@ -786,12 +787,14 @@ components:
         - $ref: '#/components/schemas/SlideOptions'
         - $ref: '#/components/schemas/SingleChoiceOptions'
         - $ref: '#/components/schemas/MultipleChoiceOptions'
+        - $ref: '#/components/schemas/OrderOptions'
       discriminator:
         propertyName: type
         mapping:
           SLIDE: '#/components/schemas/SlideOptions'
           SINGLE_CHOICE: '#/components/schemas/SingleChoiceOptions'
           MULTIPLE_CHOICE: '#/components/schemas/MultipleChoiceOptions'
+          ORDER: '#/components/schemas/OrderOptions'
     
     SlideOptions:
       type: object
@@ -830,6 +833,20 @@ components:
           items:
             $ref: '#/components/schemas/AnswerChoice'
     
+    OrderOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [ORDER]
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnswerOrder'
+    
     AnswerChoice:
       type: object
       required: 
@@ -843,6 +860,19 @@ components:
         correct:
           type: boolean
           example: true
+        text:
+          type: string
+          example: 'Testing fonts'
+
+    AnswerOrder:
+      type: object
+      required: 
+        - id
+        - text
+      properties:
+        id:
+          type: string
+          format: uuid
         text:
           type: string
           example: 'Testing fonts'
@@ -867,12 +897,14 @@ components:
         - $ref: '#/components/schemas/NewSlideOptions'
         - $ref: '#/components/schemas/NewSingleChoiceOptions'
         - $ref: '#/components/schemas/NewMultipleChoiceOptions'
+        - $ref: '#/components/schemas/NewOrderOptions'
       discriminator:
         propertyName: type
         mapping:
           SLIDE: '#/components/schemas/NewSlideOptions'
           SINGLE_CHOICE: '#/components/schemas/NewSingleChoiceOptions'
           MULTIPLE_CHOICE: '#/components/schemas/NewMultipleChoiceOptions'
+          ORDER: '#/components/schemas/NewOrderOptions'
     
     NewSlideOptions:
       type: object
@@ -910,6 +942,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NewAnswerChoice'
+    
+    NewOrderOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [ORDER]
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewAnswerOrder'
 
     NewAnswerChoice:
       required:
@@ -921,6 +967,14 @@ components:
         correct:
           type: boolean
           default: false
+
+    NewAnswerOrder:
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          example: 'Testing fonts'
 
     UpdateQuestion:
       allOf:
@@ -940,12 +994,14 @@ components:
         - $ref: '#/components/schemas/UpdateSlideOptions'
         - $ref: '#/components/schemas/UpdateSingleChoiceOptions'
         - $ref: '#/components/schemas/UpdateMultipleChoiceOptions'
+        - $ref: '#/components/schemas/UpdateOrderOptions'
       discriminator:
         propertyName: type
         mapping:
           SLIDE: '#/components/schemas/UpdateSlideOptions'
           SINGLE_CHOICE: '#/components/schemas/UpdateSingleChoiceOptions'
-          MULTIPLE_CHOICE: '#/components/schemas/UpdateMultipleChoiceOptions'
+          MULTIPLE_CHOICE: '#/components/schemas/UpdateOrderOptions'
+          ORDER: '#/components/schemas/UpdateOrderOptions'
     
     UpdateSlideOptions:
       type: object
@@ -983,6 +1039,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UpdateAnswerChoiceEnum'
+    
+    UpdateOrderOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [ORDER]
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateAnswerOrderEnum'
 
     UpdateAnswerChoiceEnum:
       oneOf:
@@ -1001,3 +1071,19 @@ components:
           example: 'Testing fonts'
         correct:
           type: boolean
+   
+    UpdateAnswerOrderEnum:
+      oneOf:
+        - $ref: '#/components/schemas/NewAnswerOrder'
+        - $ref: '#/components/schemas/UpdateAnswerOrder'
+
+    UpdateAnswerOrder:
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+          example: 'Testing fonts'
