@@ -5,12 +5,13 @@ import { useState } from "react"
 import { Edit2, Settings, Trash2 } from "lucide-react"
 import { useParams, useNavigate } from "react-router"
 
-import AnswerCard from "../components/AnswerCard"
 import CreateQuizModal from "../components/CreateQuizModal"
+import QuestionAnswerOptions from "../components/QuestionAnswerOptions"
 import QuestionSidebar from "../components/QuestionSidebar"
 import SettingsPanel from "../components/SettingsPanel"
-import type { Question } from "../types/quiz"
 import { useQuiz, useDeleteQuiz } from "@/api/queries"
+import type { QuestionType } from "@/api/questions/types/questionType"
+import type { Question } from "@/types/quiz"
 
 import { Button } from "@/shadcn/components/ui/button"
 import { Textarea } from "@/shadcn/components/ui/textarea"
@@ -36,6 +37,19 @@ function getReadableQuizErrorMessage(error: Error | null | undefined): string | 
     return "Quiz data could not be loaded right now."
 }
 
+function createEmptyQuestion(): Question {
+    return {
+        id: crypto.randomUUID(),
+        question: "",
+        options: [
+            { id: crypto.randomUUID(), answer: "", correct: false },
+            { id: crypto.randomUUID(), answer: "", correct: false },
+        ],
+        type: "MULTIPLE_CHOICE",
+        hidden: false,
+    }
+}
+
 // --- Main Page ---
 
 export default function QuizCreator(): JSX.Element {
@@ -56,14 +70,7 @@ export default function QuizCreator(): JSX.Element {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const [deleteError, setDeleteError] = useState<string | null>(null)
 
-    const [questions, setQuestions] = useState<Question[]>([
-        {
-            id: crypto.randomUUID(),
-            options: ["", "", "", ""],
-            title: "",
-            type: "Multiple Choice",
-        },
-    ])
+    const [questions, setQuestions] = useState<Question[]>([createEmptyQuestion()])
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0)
 
@@ -103,21 +110,30 @@ export default function QuizCreator(): JSX.Element {
     const updateOption = (index: number, value: string) => {
         const newOptions = [...currentQuestion.options]
 
-        newOptions[index] = value
+        newOptions[index] = {
+            ...newOptions[index],
+            answer: value,
+        }
+
+        updateQuestion({ options: newOptions })
+    }
+
+    const toggleOptionCorrect = (index: number) => {
+        const newOptions = currentQuestion.options.map((option, optionIndex) =>
+            optionIndex === index
+                ? {
+                      ...option,
+                      correct: !option.correct,
+                  }
+                : option
+        )
 
         updateQuestion({ options: newOptions })
     }
 
     const deleteQuestion = (indexToDelete: number) => {
         if (questions.length === 1) {
-            setQuestions([
-                {
-                    id: crypto.randomUUID(),
-                    options: ["", "", "", ""],
-                    title: "",
-                    type: "Multiple Choice",
-                },
-            ])
+            setQuestions([createEmptyQuestion()])
             setCurrentQuestionIndex(0)
             return
         }
@@ -130,20 +146,29 @@ export default function QuizCreator(): JSX.Element {
     }
 
     const handleAddQuestion = () => {
-        setQuestions((prev) => [
-            ...prev,
-            {
-                id: crypto.randomUUID(),
-                options: ["", "", "", ""],
-                title: "",
-                type: "Multiple Choice",
-            },
-        ])
+        setQuestions((prev) => [...prev, createEmptyQuestion()])
+    }
+
+    const handleAddOption = () => {
+        updateQuestion({
+            options: [
+                ...currentQuestion.options,
+                { id: crypto.randomUUID(), answer: "", correct: false },
+            ],
+        })
+    }
+
+    const handleDeleteOption = (indexToDelete: number) => {
+        if (currentQuestion.options.length <= 2) return
+
+        updateQuestion({
+            options: currentQuestion.options.filter((_, index) => index !== indexToDelete),
+        })
     }
 
     const handleSelectType = (value: string) => {
         updateQuestion({
-            type: value as Question["type"],
+            type: value as QuestionType,
         })
     }
 
@@ -248,7 +273,7 @@ export default function QuizCreator(): JSX.Element {
                 {/* Layout */}
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-[280px_1fr_320px]">
                     {/* Sidebar */}
-                    <div className="bg-muted/30 border-border rounded-3xl border p-4 shadow-xl backdrop-blur-sm">
+                    <div className="bg-muted/30 border-border flex h-full min-h-0 flex-col rounded-3xl border p-4 shadow-xl backdrop-blur-sm">
                         <QuestionSidebar
                             activeIndex={currentQuestionIndex}
                             onAdd={handleAddQuestion}
@@ -279,11 +304,13 @@ export default function QuizCreator(): JSX.Element {
                                         </SelectTrigger>
 
                                         <SelectContent>
-                                            <SelectItem value="Multiple Choice">
+                                            <SelectItem value="MULTIPLE_CHOICE">
                                                 Multiple Choice
                                             </SelectItem>
 
-                                            <SelectItem value="True/False">True/False</SelectItem>
+                                            <SelectItem value="SINGLE_CHOICE">
+                                                Single Choice
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -291,10 +318,10 @@ export default function QuizCreator(): JSX.Element {
                                 <Textarea
                                     className="placeholder:text-muted-foreground/40 min-h-40 resize-none border-none bg-transparent p-0 text-3xl leading-tight font-bold shadow-none focus-visible:ring-0 md:text-4xl"
                                     placeholder="Type your question here..."
-                                    value={currentQuestion.title}
+                                    value={currentQuestion.question}
                                     onChange={(e) =>
                                         updateQuestion({
-                                            title: e.target.value,
+                                            question: e.target.value,
                                         })
                                     }
                                 />
@@ -302,43 +329,13 @@ export default function QuizCreator(): JSX.Element {
                         </div>
 
                         {/* Answers */}
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <AnswerCard
-                                accent="#2d4cc9"
-                                glow="radial-gradient(circle, #2d4cc9 0%, transparent 70%)"
-                                icon="▲"
-                                onChange={(val) => updateOption(0, val)}
-                                placeholder="Option 1"
-                                value={currentQuestion.options[0]}
-                            />
-
-                            <AnswerCard
-                                accent="#ffa602"
-                                glow="radial-gradient(circle, #ffa602 0%, transparent 70%)"
-                                icon="◆"
-                                onChange={(val) => updateOption(1, val)}
-                                placeholder="Option 2"
-                                value={currentQuestion.options[1]}
-                            />
-
-                            <AnswerCard
-                                accent="#11c8d4"
-                                glow="radial-gradient(circle, #11c8d4 0%, transparent 70%)"
-                                icon="●"
-                                onChange={(val) => updateOption(2, val)}
-                                placeholder="Option 3"
-                                value={currentQuestion.options[2]}
-                            />
-
-                            <AnswerCard
-                                accent="#ff4949"
-                                glow="radial-gradient(circle, #ff4949 0%, transparent 70%)"
-                                icon="■"
-                                onChange={(val) => updateOption(3, val)}
-                                placeholder="Option 4"
-                                value={currentQuestion.options[3]}
-                            />
-                        </div>
+                        <QuestionAnswerOptions
+                            onAddOption={handleAddOption}
+                            onChange={updateOption}
+                            onDeleteOption={handleDeleteOption}
+                            onToggleCorrect={toggleOptionCorrect}
+                            options={currentQuestion.options}
+                        />
                     </main>
 
                     {/* Settings */}

@@ -1,10 +1,12 @@
 import { Trash2 } from "lucide-react"
 import type { MouseEvent, KeyboardEvent, ReactNode } from "react"
-import type { Question } from "@/types/quiz.ts"
 import { Button } from "@shadcn/components/ui/button.tsx"
 
 interface QuestionProps {
-    question: Question
+    question: {
+        id: string
+        question: string
+    }
     onSelect: (index: number) => void
     index: number
     onDelete: (index: number) => void
@@ -75,7 +77,7 @@ export default function QuestionItem({
 
                 {/* Title */}
                 <p className="mb-4 line-clamp-2 min-h-10 text-sm font-semibold">
-                    {question.title || "Untitled question"}
+                    {question.question || "Untitled question"}
                 </p>
 
                 {/* Preview */}
