@@ -7,7 +7,7 @@ import ErrorPage from "./pages/ErrorPage"
 import RootLayout from "./layouts/RootLayout"
 import PublicLayout from "./layouts/PublicLayout"
 import ImprintPage from "./pages/ImprintPage"
-import QuizCreator from "./pages/QuizCreator.tsx"
+import QuizCreator from "./pages/QuizCreator"
 import LoginRedirect from "@/auth/utils/LoginRedirect.tsx"
 import AuthGuard from "@/auth/guards/AuthGuard.tsx"
 import Leaderboard from "@/quiz/leaderboard/components/Leaderboard.tsx"
@@ -66,7 +66,19 @@ const routes: RouteObject[] = [
                         path: ":quizId",
                         element: <QuizCreator />,
                     },
+                    {
+                        path: "play",
+                        element: <SingleChoiceQuestion />,
+                    },
                 ],
+            },
+            {
+                path: "/quizzes",
+                element: <Quizzes />,
+            },
+            {
+                path: "/infoslide",
+                element: <InfoSlide />,
             },
         ],
     },
