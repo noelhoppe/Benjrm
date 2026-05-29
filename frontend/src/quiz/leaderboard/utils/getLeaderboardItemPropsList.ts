@@ -6,14 +6,16 @@ export default function getLeaderboardItemPropsList(
 ): LeaderboardItemProps[] {
     const sorted = [...items].sort((a, b) => b.points - a.points)
 
-    let rank = 0
     let prevPoints: number | null = null
-    return sorted.map((item, index) => {
-        if (item.points !== prevPoints) {
-            rank = index + 1
-            prevPoints = item.points
-        }
+    let currentRank = 1
+    let rank = 1
 
+    return sorted.map((item) => {
+        if (item.points !== prevPoints) {
+            rank = currentRank
+            prevPoints = item.points
+            currentRank += 1
+        }
         return {
             ranking: rank,
             avatar: item.avatar,
