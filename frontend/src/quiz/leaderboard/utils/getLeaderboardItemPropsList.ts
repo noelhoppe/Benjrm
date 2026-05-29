@@ -7,14 +7,11 @@ export default function getLeaderboardItemPropsList(
     const sorted = [...items].sort((a, b) => b.points - a.points)
 
     let prevPoints: number | null = null
-    let currentRank = 1
-    let rank = 1
-
+    let rank = 0
     return sorted.map((item) => {
         if (item.points !== prevPoints) {
-            rank = currentRank
             prevPoints = item.points
-            currentRank += 1
+            rank += 1
         }
         return {
             ranking: rank,
