@@ -1,6 +1,6 @@
 export interface QuestionOption {
     id: string
-    text: string
+    answer: string
     correct: boolean
 }
 

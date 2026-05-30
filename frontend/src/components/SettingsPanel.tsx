@@ -153,7 +153,7 @@ export default function SettingsPanel({ question }: SettingsPanelProps): JSX.Ele
                                             </span>
 
                                             <span className="relative z-10 line-clamp-2 text-[11px] leading-4 font-semibold text-slate-700 dark:text-white">
-                                                {option.text || "Answer"}
+                                                {option.answer || "Answer"}
                                             </span>
 
                                             {option.correct ? (

@@ -47,8 +47,8 @@ function createEmptyQuestion(): Question {
         id: generateUuid(),
         question: "",
         options: [
-            { id: generateUuid(), text: "", correct: false },
-            { id: generateUuid(), text: "", correct: false },
+            { id: generateUuid(), answer: "", correct: false },
+            { id: generateUuid(), answer: "", correct: false },
         ],
         type: "MULTIPLE_CHOICE",
         hidden: false,
@@ -60,8 +60,8 @@ function questionToRequest(question: Question): QuestionApiRequest {
         question: question.question,
         type: question.type,
         hidden: question.hidden,
-        options: question.options.map(({ text, correct }) => ({
-            text,
+        options: question.options.map(({ answer, correct }) => ({
+            answer,
             correct,
         })),
     }
@@ -75,7 +75,7 @@ function requestToQuestion(request: QuestionApiRequest): Question {
         hidden: request.hidden,
         options: request.options.map((option) => ({
             id: generateUuid(),
-            text: option.text,
+            answer: option.answer ?? "",
             correct: option.correct,
         })),
     }
@@ -86,7 +86,7 @@ function responseToQuestion(response: {
     question: string
     type: Question["type"]
     hidden: boolean
-    options: { id: string; text: string; correct: boolean }[]
+    options: { id: string; answer: string; correct: boolean }[]
 }): Question {
     return {
         id: response.id,
@@ -95,7 +95,7 @@ function responseToQuestion(response: {
         hidden: response.hidden,
         options: response.options.map((option) => ({
             id: option.id,
-            text: option.text,
+            answer: option.answer ?? "",
             correct: option.correct,
         })),
     }
@@ -182,14 +182,14 @@ export default function QuizCreator(): JSX.Element {
                         return requestToQuestion({
                             ...request,
                             options: (request.options ?? []).map((option) => ({
-                                text: (() => {
+                                answer: (() => {
                                     const legacyOption = option as {
                                         text?: string
                                         answer?: string
                                         correct: boolean
                                     }
 
-                                    return legacyOption.text ?? legacyOption.answer ?? ""
+                                    return legacyOption.answer ?? ""
                                 })(),
                                 correct: (option as { correct: boolean }).correct,
                             })),
@@ -390,20 +390,13 @@ export default function QuizCreator(): JSX.Element {
 
             for (let optionIndex = 0; optionIndex < question.options.length; optionIndex += 1) {
                 const option = question.options[optionIndex]
-                if (!option.text.trim()) {
+                if (!option.answer.trim()) {
                     return `Question ${questionIndex + 1}, option ${optionIndex + 1} is empty.`
                 }
             }
 
             if (!question.options.some((option) => option.correct)) {
                 return `Question ${questionIndex + 1} needs at least one correct answer.`
-            }
-
-            if (
-                question.type === "SINGLE_CHOICE" &&
-                question.options.filter((option) => option.correct).length > 1
-            ) {
-                return `Question ${questionIndex + 1} is single-choice, so only one option may be marked correct.`
             }
         }
 
@@ -524,7 +517,7 @@ export default function QuizCreator(): JSX.Element {
 
         newOptions[index] = {
             ...newOptions[index],
-            text: value,
+            answer: value,
         }
 
         updateQuestion({ options: newOptions })
@@ -532,18 +525,10 @@ export default function QuizCreator(): JSX.Element {
 
     const toggleOptionCorrect = (index: number) => {
         markUnsavedChanges()
-        const newOptions = currentQuestion.options.map((option, optionIndex) => {
-            if (currentQuestion.type === "SINGLE_CHOICE") {
-                // In single-choice mode only the clicked option can be correct
-                return {
-                    ...option,
-                    correct: optionIndex === index ? !option.correct : false,
-                }
-            }
-
-            // In multiple-choice mode toggle independently
-            return optionIndex === index ? { ...option, correct: !option.correct } : option
-        })
+        // Allow toggling independently in the editor regardless of question type
+        const newOptions = currentQuestion.options.map((option, optionIndex) =>
+            optionIndex === index ? { ...option, correct: !option.correct } : option
+        )
 
         updateQuestion({ options: newOptions })
     }
@@ -571,7 +556,10 @@ export default function QuizCreator(): JSX.Element {
     const handleAddOption = () => {
         markUnsavedChanges()
         updateQuestion({
-            options: [...currentQuestion.options, { id: generateUuid(), text: "", correct: false }],
+            options: [
+                ...currentQuestion.options,
+                { id: generateUuid(), answer: "", correct: false },
+            ],
         })
     }
 
