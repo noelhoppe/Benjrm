@@ -39,10 +39,12 @@ export default class QuestionMockAdapter implements QuestionAdapter {
         const idx = questions.findIndex((q) => q.id === questionId)
         if (idx === -1) throw new Error("Question not found")
         const prev = questions[idx]
+        const prevOptions = prev.options ?? []
         const updatedOptions = request.options
             ? request.options.map((opt, i) => ({
-                  ...prev.options[i],
+                  ...prevOptions[i],
                   ...opt,
+                  id: prevOptions[i].id ?? crypto.randomUUID(),
                   modified: new Date().toISOString(),
               }))
             : prev.options
