@@ -1,7 +1,7 @@
 // frontend/src/compontents/QuestionCardContent.tsx
 
 import type { JSX } from "react"
-
+import { useState } from "react"
 import { toast } from "sonner"
 import QuestionHeader from "@/components/QuestionHeader"
 import QuestionContainer from "@/components/QuestionContainer"
@@ -12,25 +12,24 @@ const COLORS = ["#2d4cc9", "#ffa602", "#11c8d4", "#ff4949", "#28c28b", "#8b5cf6"
 
 export default function QuestionCardContent(): JSX.Element {
     const remainingTime = 12
-    const selectedAnswer = "0"
+
+    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+
     const sendAnswer = (id: string) => {
+        setSelectedAnswer(id)
+
         toast.success("Answer Submitted", {
             description: `Mock data recorded for: ${id}`,
-
             duration: 2000,
         })
     }
 
     const question = {
         question: "Why did the developer go broke?",
-
         options: [
             { id: "opt_1", text: "Because they used up all their cache" },
-
             { id: "opt_2", text: "Because Docker ate their wallet" },
-
             { id: "opt_3", text: "Too many unhandled promises" },
-
             { id: "opt_4", text: "They bought a mechanical keyboard" },
         ],
     }
