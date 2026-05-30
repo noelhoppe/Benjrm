@@ -1,7 +1,7 @@
 // frontend/src/components/AnswerCard.tsx
 
 import type { JSX } from "react"
-import { Check, Trash2 } from "lucide-react"
+import { Check, Trash2, X } from "lucide-react"
 import { Textarea } from "@/shadcn/components/ui/textarea"
 import { Button } from "@/shadcn/components/ui/button"
 
@@ -32,7 +32,7 @@ export default function AnswerCard({
 }: AnswerCardProps): JSX.Element {
     return (
         <div
-            className="bg-muted/40 border-border group relative overflow-hidden rounded-2xl border p-3 shadow-lg backdrop-blur-sm transition-all hover:scale-[1.01] sm:p-5"
+            className="bg-background/95 dark:bg-muted/40 border-border group relative overflow-hidden rounded-2xl border p-3 shadow-lg backdrop-blur-sm transition-all hover:scale-[1.01] sm:p-5"
             style={{
                 boxShadow: `0 0 0 rgba(0,0,0,0)`,
             }}
@@ -57,7 +57,7 @@ export default function AnswerCard({
                     </div>
 
                     <Textarea
-                        className="placeholder:text-muted-foreground/60 h-28 w-full resize-none overflow-y-auto border-none bg-transparent p-0 text-lg leading-7 font-semibold shadow-none focus-visible:ring-0 sm:h-24 sm:text-lg"
+                        className="placeholder:text-muted-foreground/60 bg-muted/90 dark:bg-muted/25 h-28 w-full resize-none overflow-y-auto border-none p-4 text-lg leading-7 font-semibold shadow-none focus-visible:ring-0 sm:h-24 sm:text-lg"
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={placeholder}
                         rows={2}
@@ -90,11 +90,15 @@ export default function AnswerCard({
                         className={`h-8 w-full gap-2 rounded-full px-3 text-[10px] font-bold tracking-widest shadow-none transition-colors sm:w-auto ${
                             correct
                                 ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/25"
-                                : "border-white/10 bg-black/20 text-white hover:bg-white/10"
+                                : "border-red-400/40 bg-red-500/20 text-red-300 hover:bg-red-500/25"
                         }`}
                     >
-                        <Check className="h-3.5 w-3.5" />
-                        Correct
+                        {correct ? (
+                            <Check className="h-3.5 w-3.5" />
+                        ) : (
+                            <X className="h-3.5 w-3.5" />
+                        )}
+                        {correct ? "Correct" : "Wrong"}
                     </Button>
                 </div>
             </div>

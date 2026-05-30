@@ -7,12 +7,13 @@ import { useParams, useNavigate } from "react-router"
 import {
     closestCenter,
     DndContext,
+    DragOverlay,
     PointerSensor,
     TouchSensor,
     useSensor,
     useSensors,
 } from "@dnd-kit/core"
-import type { DragEndEvent } from "@dnd-kit/core"
+import type { Modifier, DragStartEvent, DragEndEvent } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
 
 import CreateQuizModal from "../components/CreateQuizModal"
@@ -23,6 +24,7 @@ import { useQuiz, useDeleteQuiz } from "@/api/queries"
 import { useCreateQuestion, useDeleteQuestion, useQuestions } from "@/api/questions"
 import type { QuestionApiRequest } from "@/api/questions/types/question.api"
 import type { Question } from "@/types/quiz"
+import generateUuid from "@/utils/uuid"
 
 import { Button } from "@/shadcn/components/ui/button"
 import {
@@ -42,11 +44,11 @@ function getReadableQuizErrorMessage(error: Error | null | undefined): string | 
 
 function createEmptyQuestion(): Question {
     return {
-        id: crypto.randomUUID(),
+        id: generateUuid(),
         question: "",
         options: [
-            { id: crypto.randomUUID(), text: "", correct: false },
-            { id: crypto.randomUUID(), text: "", correct: false },
+            { id: generateUuid(), text: "", correct: false },
+            { id: generateUuid(), text: "", correct: false },
         ],
         type: "MULTIPLE_CHOICE",
         hidden: false,
@@ -67,12 +69,12 @@ function questionToRequest(question: Question): QuestionApiRequest {
 
 function requestToQuestion(request: QuestionApiRequest): Question {
     return {
-        id: crypto.randomUUID(),
+        id: generateUuid(),
         question: request.question,
         type: request.type,
         hidden: request.hidden,
         options: request.options.map((option) => ({
-            id: crypto.randomUUID(),
+            id: generateUuid(),
             text: option.text,
             correct: option.correct,
         })),
@@ -104,6 +106,11 @@ interface QuizDraftStorage {
     currentQuestionIndex: number
     savedAt: string
 }
+
+const restrictToVerticalAxis: Modifier = ({ transform }) => ({
+    ...transform,
+    x: 0,
+})
 
 // --- Main Page ---
 
@@ -143,6 +150,7 @@ export default function QuizCreator(): JSX.Element {
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0)
     const [hasInitializedQuestions, setHasInitializedQuestions] = useState(false)
+    const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null)
 
     // Local draft storage key (uses 'new' for unsaved quizzes)
     const draftKey = useMemo(() => `quiz:draft:${quizId ?? "new"}`, [quizId])
@@ -278,8 +286,7 @@ export default function QuizCreator(): JSX.Element {
         }),
         useSensor(TouchSensor, {
             activationConstraint: {
-                delay: 150,
-                tolerance: 5,
+                distance: 4,
             },
         })
     )
@@ -346,9 +353,19 @@ export default function QuizCreator(): JSX.Element {
     const handleDragEnd = (event: DragEndEvent): void => {
         const { active, over } = event
 
+        setActiveQuestionId(null)
+
         if (!over || active.id === over.id) return
 
         reorderQuestions(String(active.id), String(over.id))
+    }
+
+    const handleDragStart = (event: DragStartEvent): void => {
+        setActiveQuestionId(String(event.active.id))
+    }
+
+    const handleDragCancel = (): void => {
+        setActiveQuestionId(null)
     }
 
     const validateQuestions = (): string | null => {
@@ -554,10 +571,7 @@ export default function QuizCreator(): JSX.Element {
     const handleAddOption = () => {
         markUnsavedChanges()
         updateQuestion({
-            options: [
-                ...currentQuestion.options,
-                { id: crypto.randomUUID(), text: "", correct: false },
-            ],
+            options: [...currentQuestion.options, { id: generateUuid(), text: "", correct: false }],
         })
     }
 
@@ -710,7 +724,10 @@ export default function QuizCreator(): JSX.Element {
                     {/* Sidebar */}
                     <DndContext
                         collisionDetection={closestCenter}
+                        modifiers={[restrictToVerticalAxis]}
+                        onDragCancel={handleDragCancel}
                         onDragEnd={handleDragEnd}
+                        onDragStart={handleDragStart}
                         sensors={sensors}
                     >
                         <div className="bg-muted/30 border-border flex h-full min-h-0 flex-col rounded-3xl border p-4 shadow-xl backdrop-blur-sm">
@@ -723,6 +740,42 @@ export default function QuizCreator(): JSX.Element {
                                 questions={questions}
                             />
                         </div>
+
+                        <DragOverlay dropAnimation={null}>
+                            {activeQuestionId
+                                ? (() => {
+                                      const activeQuestion = questions.find(
+                                          (question) => question.id === activeQuestionId
+                                      )
+
+                                      if (!activeQuestion) return null
+
+                                      return (
+                                          <div className="border-border bg-muted/95 w-[280px] rounded-2xl border p-4 shadow-2xl">
+                                              <div className="mb-3 flex items-center gap-2">
+                                                  <div className="text-muted-foreground/60 flex h-9 w-9 items-center justify-center rounded-md bg-white/5">
+                                                      <span className="text-lg">⋮⋮</span>
+                                                  </div>
+                                                  <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                                                      Question
+                                                  </span>
+                                              </div>
+
+                                              <p className="mb-4 line-clamp-2 min-h-10 text-sm font-semibold">
+                                                  {activeQuestion.question || "Untitled question"}
+                                              </p>
+
+                                              <div className="grid grid-cols-2 gap-1.5 opacity-80">
+                                                  <div className="h-2 rounded-full bg-[#2d4cc9]" />
+                                                  <div className="h-2 rounded-full bg-[#ffa602]" />
+                                                  <div className="h-2 rounded-full bg-[#11c8d4]" />
+                                                  <div className="h-2 rounded-full bg-[#ff4949]" />
+                                              </div>
+                                          </div>
+                                      )
+                                  })()
+                                : null}
+                        </DragOverlay>
                     </DndContext>
 
                     <QuestionEditor

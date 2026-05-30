@@ -36,7 +36,7 @@ export default function QuestionEditor({
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-6">
             {/* Question Card */}
-            <div className="bg-muted/30 border-border relative overflow-hidden rounded-3xl border p-6 shadow-xl backdrop-blur-sm md:p-8">
+            <div className="bg-background/90 dark:bg-muted/30 border-border relative overflow-hidden rounded-3xl border p-6 shadow-xl backdrop-blur-sm md:p-8">
                 <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-[#00F2FF]/10 blur-3xl" />
 
                 <div className="relative">
@@ -63,7 +63,7 @@ export default function QuestionEditor({
                     </div>
 
                     <Textarea
-                        className="placeholder:text-muted-foreground/40 min-h-40 resize-none border-none bg-transparent p-0 text-3xl leading-tight font-bold shadow-none focus-visible:ring-0 md:text-4xl"
+                        className="placeholder:text-muted-foreground/40 bg-muted/90 dark:bg-muted/25 min-h-40 resize-none border-none p-4 text-3xl leading-tight font-bold shadow-none focus-visible:ring-0 md:text-4xl"
                         placeholder="Type your question here..."
                         value={question.question}
                         onChange={(e) =>

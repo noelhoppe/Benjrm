@@ -30,8 +30,8 @@ export default function QuestionItem({
 
     const style = {
         opacity: isDragging ? 0.7 : 1,
-        transform: CSS.Transform.toString(transform),
-        transition,
+        transform: CSS.Translate.toString(transform),
+        transition: isDragging ? undefined : transition,
         zIndex: isDragging ? 50 : "auto",
     }
 
@@ -52,7 +52,7 @@ export default function QuestionItem({
             onClick={() => onSelect(index)}
             style={style}
             variant="ghost"
-            className={`group border-border bg-muted/30 relative h-auto w-full flex-col items-stretch justify-start overflow-hidden rounded-2xl border p-4 text-left whitespace-normal shadow-lg backdrop-blur-sm transition-all duration-200 ${
+            className={`group border-border bg-muted/30 relative h-auto w-full flex-col items-stretch justify-start overflow-hidden rounded-2xl border p-4 text-left whitespace-normal shadow-lg backdrop-blur-sm transition-[transform,opacity,background-color,border-color,box-shadow] duration-150 ${
                 active
                     ? "border-[#00F2FF]/40 bg-[#00F2FF]/5 shadow-[0_0_30px_rgba(0,242,255,0.08)] hover:bg-[#00F2FF]/5"
                     : "hover:bg-muted/50 hover:border-[#00F2FF]/20"
@@ -71,7 +71,8 @@ export default function QuestionItem({
                             {...attributes}
                             {...listeners}
                             aria-label="Drag question"
-                            className="text-muted-foreground/40 hover:text-foreground flex cursor-grab items-center pr-1 transition-colors active:cursor-grabbing"
+                            className="text-muted-foreground/40 hover:text-foreground flex min-h-10 min-w-10 cursor-grab touch-none items-center rounded-xl p-2 pr-3 transition-colors select-none active:cursor-grabbing"
+                            style={{ touchAction: "none" }}
                         >
                             <GripVertical className="h-4 w-4" />
                         </div>

@@ -48,7 +48,7 @@ export default function QuestionAnswerOptions({
             </div>
 
             <Button
-                className="border-border bg-muted/40 hover:bg-muted/70 w-full gap-2 rounded-2xl border backdrop-blur-sm"
+                className="border-border bg-background/95 hover:bg-background/90 dark:bg-muted/40 dark:hover:bg-muted/70 w-full gap-2 rounded-2xl border backdrop-blur-sm"
                 onClick={onAddOption}
                 type="button"
                 variant="ghost"

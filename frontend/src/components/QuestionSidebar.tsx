@@ -51,7 +51,10 @@ export default function QuestionSidebar({
 
                 {isMobileOpen ? (
                     <div className="mt-4 flex h-[45vh] flex-col overflow-hidden rounded-3xl border border-white/5 bg-black/10 p-4 shadow-inner">
-                        <ScrollArea className="min-h-0 flex-1 pr-2">
+                        <div
+                            className="min-h-0 flex-1 overflow-y-auto pr-2"
+                            style={{ touchAction: "pan-y" }}
+                        >
                             <SortableContext
                                 items={questionIds}
                                 strategy={verticalListSortingStrategy}
@@ -69,7 +72,7 @@ export default function QuestionSidebar({
                                     ))}
                                 </div>
                             </SortableContext>
-                        </ScrollArea>
+                        </div>
 
                         <Button
                             className="mt-3 h-12 w-full shrink-0 gap-2 rounded-2xl bg-[#00F2FF] font-bold text-black shadow-lg transition-all hover:bg-[#00d8e4]"

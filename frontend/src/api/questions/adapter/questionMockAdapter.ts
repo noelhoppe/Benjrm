@@ -1,5 +1,6 @@
 import type { QuestionAdapter } from "@/api/questions/adapter/questionAdapter.ts"
 import type { QuestionApiRequest, QuestionApiResponse } from "@/api/questions/types/question.api.ts"
+import generateUuid from "@/utils/uuid"
 
 export default class QuestionMockAdapter implements QuestionAdapter {
     private questionsByQuiz: Record<string, QuestionApiResponse[]> = {}
@@ -61,12 +62,12 @@ export default class QuestionMockAdapter implements QuestionAdapter {
         const questions = this.loadQuiz(quizId)
         const date = new Date().toISOString()
         const newQuestion: QuestionApiResponse = {
-            id: crypto.randomUUID(),
+            id: generateUuid(),
             ...request,
             created: date,
             modified: date,
             options: request.options.map((option) => ({
-                id: crypto.randomUUID(),
+                id: generateUuid(),
                 ...option,
             })),
         }
