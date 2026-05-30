@@ -3,7 +3,7 @@ use {
         AppData,
         auth::{
             SessionUser, User,
-            entity::{ActiveUser, UserColumn, UserEntity},
+            entity::{ActiveUser, UserColumn, UserEntity, UserModel},
             oidc::error::Error,
         },
     },
@@ -12,7 +12,10 @@ use {
     chrono::{DateTime, TimeDelta, Utc},
     oauth2::{CsrfToken, PkceCodeVerifier},
     openidconnect::Nonce,
-    sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, SqlErr},
+    sea_orm::{
+        ActiveModelTrait, ActiveValue::Set, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter,
+        SqlErr,
+    },
     serde::{Deserialize, Serialize},
     uuid::Uuid,
 };
@@ -94,35 +97,7 @@ async fn callback(
 
     let user = oidc_user.ok_or(Error::MissingOidcUser(Box::new(oauth_user)))?;
 
-    let fetch_db_user = || {
-        UserEntity::find()
-            .filter(UserColumn::Subject.eq(&user.oauth2_user.sub))
-            .one(&data.db)
-    };
-
-    let db_user = match fetch_db_user().await? {
-        Some(user) => user,
-        None => {
-            let now = Utc::now();
-            let res = ActiveUser {
-                id: Set(Uuid::new_v4()),
-                subject: Set(user.oauth2_user.sub.clone()),
-                registered: Set(now),
-                last_login: Set(now),
-            }
-            .insert(&data.db)
-            .await;
-
-            match res {
-                Ok(model) => model,
-                Err(e) if matches!(e.sql_err(), Some(SqlErr::UniqueConstraintViolation(_))) => {
-                    let db_user = fetch_db_user().await?;
-                    db_user.ok_or(Error::FetchDbUser)?
-                }
-                Err(e) => return Err(e.into()),
-            }
-        }
-    };
+    let db_user = fetch_insert_db_user(&data.db, &user.oauth2_user.sub).await?;
 
     let user = SessionUser {
         id: db_user.id,
@@ -166,9 +141,68 @@ async fn get_user(user: User) -> HttpResponse {
     HttpResponse::Ok().json(user)
 }
 
+#[cfg(debug_assertions)]
+async fn dummy_login(
+    data: web::Data<AppData>,
+    session: Session,
+    path: web::Path<usize>,
+) -> Result<HttpResponse, Error> {
+    let sub = format!("dummy_user_{}", path.into_inner());
+
+    let db_user = fetch_insert_db_user(&data.db, &sub).await?;
+
+    let user = SessionUser {
+        id: db_user.id,
+        id_token: Some(sub),
+    };
+    session
+        .insert("user", &user)
+        .map_err(Error::SessionInsert)?;
+    session.remove("oidc_state");
+
+    Ok(HttpResponse::Ok().json(user))
+}
+
+async fn fetch_insert_db_user(conn: &impl ConnectionTrait, sub: &str) -> Result<UserModel, Error> {
+    let fetch_db_user = || {
+        UserEntity::find()
+            .filter(UserColumn::Subject.eq(sub))
+            .one(conn)
+    };
+
+    let db_user = match fetch_db_user().await? {
+        Some(user) => user,
+        None => {
+            let now = Utc::now();
+            let res = ActiveUser {
+                id: Set(Uuid::new_v4()),
+                subject: Set(sub.into()),
+                registered: Set(now),
+                last_login: Set(now),
+            }
+            .insert(conn)
+            .await;
+
+            match res {
+                Ok(model) => model,
+                Err(e) if matches!(e.sql_err(), Some(SqlErr::UniqueConstraintViolation(_))) => {
+                    let db_user = fetch_db_user().await?;
+                    db_user.ok_or(Error::FetchDbUser)?
+                }
+                Err(e) => return Err(e.into()),
+            }
+        }
+    };
+
+    Ok(db_user)
+}
+
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(web::resource("/login").route(web::get().to(login)));
     cfg.service(web::resource("/oidc/callback").route(web::get().to(callback)));
     cfg.service(web::resource("/logout").route(web::post().to(logout)));
     cfg.service(web::resource("/user").route(web::get().to(get_user)));
+
+    #[cfg(debug_assertions)]
+    cfg.service(web::resource("/login/dummy/{id}").route(web::get().to(dummy_login)));
 }
