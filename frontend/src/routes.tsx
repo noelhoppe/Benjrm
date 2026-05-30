@@ -8,13 +8,13 @@ import RootLayout from "./layouts/RootLayout"
 import PublicLayout from "./layouts/PublicLayout"
 import ImprintPage from "./pages/ImprintPage"
 import QuizCreator from "./pages/QuizCreator"
+import OrderQuestion from "./pages/OrderQuestion"
 import LoginRedirect from "@/auth/utils/LoginRedirect.tsx"
 import AuthGuard from "@/auth/guards/AuthGuard.tsx"
 import Leaderboard from "@/quiz/leaderboard/components/Leaderboard.tsx"
 import SingleChoiceQuestion from "@/pages/SingleChoiceQuestion.tsx"
 import Quizzes from "@/pages/Quizzes.tsx"
 import InfoSlide from "@/pages/InfoSlide.tsx"
-import OrderQuestion from "./pages/OrderQuestion"
 
 const routes: RouteObject[] = [
     {
@@ -85,8 +85,8 @@ const routes: RouteObject[] = [
                 element: <OrderQuestion />,
             },
             {
-              path: "/infoslide",
-              element: <InfoSlide />,
+                path: "/infoslide",
+                element: <InfoSlide />,
             },
         ],
     },
