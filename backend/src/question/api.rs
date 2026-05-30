@@ -3,14 +3,14 @@ use {
         AppData,
         auth::User,
         error::Result,
+        not_found_route,
         question::{NewQuestion, UpdateQuestion},
         quiz::entity::QuizModel,
     },
-    actix_web::{HttpResponse, delete, get, patch, post, put, web},
+    actix_web::{HttpResponse, web},
     uuid::Uuid,
 };
 
-#[post("/quizzes/{quiz}/questions")]
 async fn create_one(
     question: web::Json<NewQuestion>,
     app_data: web::Data<AppData>,
@@ -25,7 +25,6 @@ async fn create_one(
     Ok(HttpResponse::Created().json(question))
 }
 
-#[get("/quizzes/{quiz}/questions/{question}")]
 async fn get_one(
     id: web::Path<(Uuid, Uuid)>,
     app_data: web::Data<AppData>,
@@ -40,7 +39,6 @@ async fn get_one(
     Ok(HttpResponse::Ok().json(question))
 }
 
-#[get("/quizzes/{quiz}/questions")]
 async fn get_many(
     id: web::Path<Uuid>,
     app_data: web::Data<AppData>,
@@ -51,7 +49,6 @@ async fn get_many(
     Ok(HttpResponse::Ok().json(questions))
 }
 
-#[patch("/quizzes/{quiz}/questions/{question}")]
 async fn patch(
     id: web::Path<(Uuid, Uuid)>,
     update_question: web::Json<UpdateQuestion>,
@@ -70,7 +67,6 @@ async fn patch(
     Ok(HttpResponse::Ok().json(question))
 }
 
-#[put("/quizzes/{quiz}/questions/{question}")]
 async fn put(
     id: web::Path<(Uuid, Uuid)>,
     new_question: web::Json<NewQuestion>,
@@ -89,7 +85,6 @@ async fn put(
     Ok(HttpResponse::Ok().json(question))
 }
 
-#[delete("/quizzes/{quiz}/questions/{question}")]
 async fn delete(
     id: web::Path<(Uuid, Uuid)>,
     app_data: web::Data<AppData>,
@@ -105,10 +100,20 @@ async fn delete(
 }
 
 pub fn init(cfg: &mut actix_web::web::ServiceConfig) {
-    cfg.service(create_one);
-    cfg.service(get_one);
-    cfg.service(get_many);
-    cfg.service(patch);
-    cfg.service(put);
-    cfg.service(delete);
+    cfg.service(
+        web::scope("/quizzes/{quiz}")
+            .service(
+                web::resource("/questions")
+                    .route(web::post().to(create_one))
+                    .route(web::get().to(get_many)),
+            )
+            .service(
+                web::resource("/questions/{question}")
+                    .route(web::get().to(get_one))
+                    .route(web::patch().to(patch))
+                    .route(web::put().to(put))
+                    .route(web::delete().to(delete)),
+            )
+            .default_service(not_found_route()),
+    );
 }
