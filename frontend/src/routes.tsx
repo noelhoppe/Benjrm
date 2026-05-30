@@ -8,6 +8,7 @@ import RootLayout from "./layouts/RootLayout"
 import PublicLayout from "./layouts/PublicLayout"
 import ImprintPage from "./pages/ImprintPage"
 import QuizCreator from "./pages/QuizCreator"
+import OrderQuestion from "./pages/OrderQuestion"
 import LoginRedirect from "@/auth/utils/LoginRedirect.tsx"
 import AuthGuard from "@/auth/guards/AuthGuard.tsx"
 import Leaderboard from "@/quiz/leaderboard/components/Leaderboard.tsx"
@@ -78,6 +79,10 @@ const routes: RouteObject[] = [
             {
                 path: "/quizzes",
                 element: <Quizzes />,
+            },
+            {
+                path: "/quiz/order",
+                element: <OrderQuestion />,
             },
             {
                 path: "/infoslide",
