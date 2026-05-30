@@ -14,7 +14,7 @@ impl MigrationTrait for Migration {
                     .col(pk_uuid("id"))
                     .col(uuid("question"))
                     .col(boolean("correct").default(false))
-                    .col(string("text"))
+                    .col(string("answer"))
                     .col(uuid_null("prev"))
                     .col(uuid_null("next"))
                     .foreign_key(

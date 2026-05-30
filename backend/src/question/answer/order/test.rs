@@ -21,10 +21,10 @@ async fn update_options() {
         position: None,
         options: NewQuestionOptions::Order {
             options: vec![
-                NewAnswerOrder { text: "A".into() },
-                NewAnswerOrder { text: "B".into() },
+                NewAnswerOrder { answer: "A".into() },
+                NewAnswerOrder { answer: "B".into() },
                 NewAnswerOrder {
-                    text: "Delete".into(),
+                    answer: "Delete".into(),
                 },
             ],
         },
@@ -43,27 +43,27 @@ async fn update_options() {
 
     let options = vec![
         UpdateAnswerOrderEnum::New(NewAnswerOrder {
-            text: "first".into(),
+            answer: "first".into(),
         }),
         UpdateAnswerOrderEnum::Update(UpdateAnswerOrder {
             id: options[1].id,
-            text: Set("b".into()),
+            answer: Set("b".into()),
         }),
         UpdateAnswerOrderEnum::New(NewAnswerOrder {
-            text: "middle_1".into(),
+            answer: "middle_1".into(),
         }),
         UpdateAnswerOrderEnum::New(NewAnswerOrder {
-            text: "middle_2".into(),
+            answer: "middle_2".into(),
         }),
         UpdateAnswerOrderEnum::New(NewAnswerOrder {
-            text: "middle_3".into(),
+            answer: "middle_3".into(),
         }),
         UpdateAnswerOrderEnum::Update(UpdateAnswerOrder {
             id: options[0].id,
-            text: Set("a".into()),
+            answer: Set("a".into()),
         }),
         UpdateAnswerOrderEnum::New(NewAnswerOrder {
-            text: "last".into(),
+            answer: "last".into(),
         }),
     ];
 
@@ -85,13 +85,13 @@ async fn update_options() {
     };
 
     assert_eq!(inserted_options.len(), 7);
-    assert_eq!(inserted_options[0].text, "first");
-    assert_eq!(inserted_options[1].text, "b");
-    assert_eq!(inserted_options[2].text, "middle_1");
-    assert_eq!(inserted_options[3].text, "middle_2");
-    assert_eq!(inserted_options[4].text, "middle_3");
-    assert_eq!(inserted_options[5].text, "a");
-    assert_eq!(inserted_options[6].text, "last");
+    assert_eq!(inserted_options[0].answer, "first");
+    assert_eq!(inserted_options[1].answer, "b");
+    assert_eq!(inserted_options[2].answer, "middle_1");
+    assert_eq!(inserted_options[3].answer, "middle_2");
+    assert_eq!(inserted_options[4].answer, "middle_3");
+    assert_eq!(inserted_options[5].answer, "a");
+    assert_eq!(inserted_options[6].answer, "last");
 }
 
 #[actix_web::test]
@@ -107,8 +107,8 @@ pub async fn create_order_question() {
         position: None,
         options: NewQuestionOptions::Order {
             options: vec![
-                NewAnswerOrder { text: "A".into() },
-                NewAnswerOrder { text: "B".into() },
+                NewAnswerOrder { answer: "A".into() },
+                NewAnswerOrder { answer: "B".into() },
             ],
         },
     };
@@ -131,6 +131,6 @@ pub async fn create_order_question() {
         QuestionType::SingleChoice
     );
 
-    assert_eq!(options[0].text, String::from("A"));
-    assert_eq!(options[1].text, String::from("B"));
+    assert_eq!(options[0].answer, String::from("A"));
+    assert_eq!(options[1].answer, String::from("B"));
 }

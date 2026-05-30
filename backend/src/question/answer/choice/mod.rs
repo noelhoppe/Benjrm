@@ -8,7 +8,7 @@ mod test;
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewAnswerChoice {
-    pub text: String,
+    pub answer: String,
     #[serde(default)]
     pub correct: bool,
 }
@@ -18,7 +18,7 @@ pub struct NewAnswerChoice {
 pub struct UpdateAnswerChoice {
     pub id: Uuid,
     #[serde(default)]
-    pub text: UpdateValue<String>,
+    pub answer: UpdateValue<String>,
     #[serde(default)]
     pub correct: UpdateValue<bool>,
 }
@@ -44,7 +44,7 @@ impl<'de> Deserialize<'de> for UpdateAnswerChoiceEnum {
         #[serde(rename_all = "camelCase")]
         struct UpdateAnswerChoiceDto {
             id: Option<Uuid>,
-            text: Option<String>,
+            answer: Option<String>,
             correct: Option<bool>,
         }
 
@@ -53,16 +53,16 @@ impl<'de> Deserialize<'de> for UpdateAnswerChoiceEnum {
         Ok(match dto.id {
             Some(id) => UpdateAnswerChoiceEnum::Update(UpdateAnswerChoice {
                 id,
-                text: dto.text.into(),
+                answer: dto.answer.into(),
                 correct: dto.correct.into(),
             }),
             None => {
                 use serde::de::Error;
-                let text = dto.text.ok_or_else(|| {
-                    D::Error::custom("field `text` is required when not supplying field `id`")
+                let answer = dto.answer.ok_or_else(|| {
+                    D::Error::custom("field `answer` is required when not supplying field `id`")
                 })?;
                 let correct = dto.correct.unwrap_or_default();
-                UpdateAnswerChoiceEnum::New(NewAnswerChoice { text, correct })
+                UpdateAnswerChoiceEnum::New(NewAnswerChoice { answer, correct })
             }
         })
     }

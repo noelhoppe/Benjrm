@@ -20,7 +20,7 @@ mod choice {
         #[serde(skip)]
         pub question: Uuid,
         pub correct: bool,
-        pub text: String,
+        pub answer: String,
         #[serde(skip)]
         pub prev: Option<Uuid>,
         #[serde(skip)]

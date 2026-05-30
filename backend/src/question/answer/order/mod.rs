@@ -17,13 +17,13 @@ mod test;
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewAnswerOrder {
-    pub text: String,
+    pub answer: String,
 }
 
 impl From<NewAnswerOrder> for NewAnswerChoice {
     fn from(value: NewAnswerOrder) -> Self {
         NewAnswerChoice {
-            text: value.text,
+            answer: value.answer,
             correct: true,
         }
     }
@@ -34,14 +34,14 @@ impl From<NewAnswerOrder> for NewAnswerChoice {
 pub struct UpdateAnswerOrder {
     pub id: Uuid,
     #[serde(default)]
-    pub text: UpdateValue<String>,
+    pub answer: UpdateValue<String>,
 }
 
 impl From<UpdateAnswerOrder> for UpdateAnswerChoice {
     fn from(value: UpdateAnswerOrder) -> Self {
         UpdateAnswerChoice {
             id: value.id,
-            text: value.text,
+            answer: value.answer,
             correct: UpdateValue::Unset,
         }
     }
@@ -59,7 +59,7 @@ impl Serialize for AnswerOrderModel {
     {
         let mut serializer = serializer.serialize_struct("AnswerOrderModel", 2)?;
         serializer.serialize_field("id", &self.choice.id)?;
-        serializer.serialize_field("text", &self.choice.text)?;
+        serializer.serialize_field("answer", &self.choice.answer)?;
         serializer.end()
     }
 }
@@ -111,7 +111,7 @@ impl<'de> Deserialize<'de> for UpdateAnswerOrderEnum {
         #[serde(rename_all = "camelCase")]
         struct UpdateAnswerOrderDto {
             id: Option<Uuid>,
-            text: Option<String>,
+            answer: Option<String>,
         }
 
         let dto = UpdateAnswerOrderDto::deserialize(deserializer)?;
@@ -119,14 +119,14 @@ impl<'de> Deserialize<'de> for UpdateAnswerOrderEnum {
         Ok(match dto.id {
             Some(id) => UpdateAnswerOrderEnum::Update(UpdateAnswerOrder {
                 id,
-                text: dto.text.into(),
+                answer: dto.answer.into(),
             }),
             None => {
                 use serde::de::Error;
-                let text = dto.text.ok_or_else(|| {
-                    D::Error::custom("field `text` is required when not supplying field `id`")
+                let answer = dto.answer.ok_or_else(|| {
+                    D::Error::custom("field `answer` is required when not supplying field `id`")
                 })?;
-                UpdateAnswerOrderEnum::New(NewAnswerOrder { text })
+                UpdateAnswerOrderEnum::New(NewAnswerOrder { answer })
             }
         })
     }

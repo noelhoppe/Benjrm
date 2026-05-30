@@ -876,7 +876,7 @@ components:
       required: 
         - id
         - correct
-        - text
+        - answer
       properties:
         id:
           type: string
@@ -884,7 +884,7 @@ components:
         correct:
           type: boolean
           example: true
-        text:
+        answer:
           type: string
           example: 'Testing fonts'
 
@@ -892,12 +892,12 @@ components:
       type: object
       required: 
         - id
-        - text
+        - answer
       properties:
         id:
           type: string
           format: uuid
-        text:
+        answer:
           type: string
           example: 'Testing fonts'
 
@@ -983,9 +983,9 @@ components:
 
     NewAnswerChoice:
       required:
-        - text
+        - answer
       properties:
-        text:
+        answer:
           type: string
           example: 'Testing fonts'
         correct:
@@ -994,9 +994,9 @@ components:
 
     NewAnswerOrder:
       required:
-        - text
+        - answer
       properties:
-        text:
+        answer:
           type: string
           example: 'Testing fonts'
 
@@ -1090,7 +1090,7 @@ components:
         id:
           type: string
           format: uuid
-        text:
+        answer:
           type: string
           example: 'Testing fonts'
         correct:
@@ -1108,6 +1108,6 @@ components:
         id:
           type: string
           format: uuid
-        text:
+        answer:
           type: string
           example: 'Testing fonts'

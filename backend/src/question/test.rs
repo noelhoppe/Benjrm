@@ -65,11 +65,11 @@ async fn delete_choice_question() {
         options: NewQuestionOptions::SingleChoice {
             options: vec![
                 NewAnswerChoice {
-                    text: "A".into(),
+                    answer: "A".into(),
                     correct: false,
                 },
                 NewAnswerChoice {
-                    text: "B".into(),
+                    answer: "B".into(),
                     correct: true,
                 },
             ],
@@ -107,11 +107,11 @@ async fn delete_quiz_with_choice_questions() {
         options: NewQuestionOptions::SingleChoice {
             options: vec![
                 NewAnswerChoice {
-                    text: "A".into(),
+                    answer: "A".into(),
                     correct: false,
                 },
                 NewAnswerChoice {
-                    text: "B".into(),
+                    answer: "B".into(),
                     correct: true,
                 },
             ],
@@ -151,11 +151,11 @@ async fn change_choice_type() {
         ($from:ident, $to: ident) => {
             let options = vec![
                 NewAnswerChoice {
-                    text: "a".into(),
+                    answer: "a".into(),
                     correct: true,
                 },
                 NewAnswerChoice {
-                    text: "b".into(),
+                    answer: "b".into(),
                     correct: false,
                 },
             ];
@@ -180,7 +180,7 @@ async fn change_choice_type() {
                 .map(|x| {
                     UpdateAnswerChoiceEnum::Update(UpdateAnswerChoice {
                         id: x.id,
-                        text: Unset,
+                        answer: Unset,
                         correct: Unset,
                     })
                 })
@@ -214,7 +214,7 @@ async fn change_choice_type() {
             };
             for i in 0..2 {
                 assert_eq!(options[i].id, new_options[i].id);
-                assert_eq!(options[i].text, new_options[i].text);
+                assert_eq!(options[i].answer, new_options[i].answer);
                 assert_eq!(options[i].correct, new_options[i].correct);
             }
         };
@@ -245,11 +245,11 @@ async fn change_slide_to_single_choice() {
 
     let options = vec![
         NewAnswerChoice {
-            text: "a".into(),
+            answer: "a".into(),
             correct: true,
         },
         NewAnswerChoice {
-            text: "b".into(),
+            answer: "b".into(),
             correct: false,
         },
     ];
@@ -285,7 +285,7 @@ async fn change_slide_to_single_choice() {
         panic!()
     };
     for i in 0..2 {
-        assert_eq!(options[i].text, new_options[i].text);
+        assert_eq!(options[i].answer, new_options[i].answer);
         assert_eq!(options[i].correct, new_options[i].correct);
     }
 }
@@ -298,11 +298,11 @@ async fn change_single_choice_to_slide() {
 
     let options = vec![
         NewAnswerChoice {
-            text: "a".into(),
+            answer: "a".into(),
             correct: true,
         },
         NewAnswerChoice {
-            text: "b".into(),
+            answer: "b".into(),
             correct: false,
         },
     ];
@@ -356,19 +356,19 @@ async fn change_single_choice_to_order_to_single_choice() {
 
     let options = vec![
         NewAnswerChoice {
-            text: "a".into(),
+            answer: "a".into(),
             correct: true,
         },
         NewAnswerChoice {
-            text: "b".into(),
+            answer: "b".into(),
             correct: true,
         },
         NewAnswerChoice {
-            text: "c".into(),
+            answer: "c".into(),
             correct: true,
         },
         NewAnswerChoice {
-            text: "d".into(),
+            answer: "d".into(),
             correct: true,
         },
     ];
@@ -392,7 +392,7 @@ async fn change_single_choice_to_order_to_single_choice() {
         .map(|x| {
             UpdateAnswerOrderEnum::Update(UpdateAnswerOrder {
                 id: x.id,
-                text: Unset,
+                answer: Unset,
             })
         })
         .collect();
@@ -417,7 +417,7 @@ async fn change_single_choice_to_order_to_single_choice() {
     };
     for i in 0..options.len() {
         assert_eq!(options[i].id, new_options[i].id);
-        assert_eq!(options[i].text, new_options[i].text);
+        assert_eq!(options[i].answer, new_options[i].answer);
     }
 
     let new_options: Vec<_> = new_options
@@ -425,7 +425,7 @@ async fn change_single_choice_to_order_to_single_choice() {
         .map(|x| {
             UpdateAnswerChoiceEnum::Update(UpdateAnswerChoice {
                 id: x.id,
-                text: Unset,
+                answer: Unset,
                 correct: Unset,
             })
         })
@@ -452,7 +452,7 @@ async fn change_single_choice_to_order_to_single_choice() {
     };
     for i in 0..options.len() {
         assert_eq!(options[i].id, new_options[i].id);
-        assert_eq!(options[i].text, new_options[i].text);
+        assert_eq!(options[i].answer, new_options[i].answer);
         assert_eq!(options[i].correct, new_options[i].correct);
     }
 }

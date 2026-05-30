@@ -50,7 +50,7 @@ impl NewOption<AnswerOrderModel> for NewAnswerOrder {
             id: Set(id),
             question: Set(question_id),
             correct: Set(true),
-            text: Set(self.text),
+            answer: Set(self.answer),
             prev: NotSet,
             next: NotSet,
         }
@@ -59,7 +59,7 @@ impl NewOption<AnswerOrderModel> for NewAnswerOrder {
 
 impl ActiveNewOption<AnswerOrderModel, UpdateAnswerOrder> for ActiveAnswerChoice {
     fn set(&mut self, update: UpdateAnswerOrder) {
-        self.text = update.text.into();
+        self.answer = update.answer.into();
     }
 
     fn id(&self) -> &ActiveValue<Uuid> {

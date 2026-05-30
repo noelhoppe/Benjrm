@@ -26,21 +26,21 @@ lazy_static::lazy_static! {
     ];
 
     static ref MODELS1: Vec<AnswerChoiceModel> = vec![
-        AnswerChoiceModel { id: IDS[0], question: *QUESTION, correct: false, text: String::new(), prev: None, next: Some(IDS[1]) },
-        AnswerChoiceModel { id: IDS[5], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[4]), next: None },
-        AnswerChoiceModel { id: IDS[4], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[3]), next: Some(IDS[5]) },
-        AnswerChoiceModel { id: IDS[2], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[1]), next: Some(IDS[3]) },
-        AnswerChoiceModel { id: IDS[3], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[2]), next: Some(IDS[4]) },
-        AnswerChoiceModel { id: IDS[1], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[0]), next: Some(IDS[2]) },
+        AnswerChoiceModel { id: IDS[0], question: *QUESTION, correct: false, answer: String::new(), prev: None, next: Some(IDS[1]) },
+        AnswerChoiceModel { id: IDS[5], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[4]), next: None },
+        AnswerChoiceModel { id: IDS[4], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[3]), next: Some(IDS[5]) },
+        AnswerChoiceModel { id: IDS[2], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[1]), next: Some(IDS[3]) },
+        AnswerChoiceModel { id: IDS[3], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[2]), next: Some(IDS[4]) },
+        AnswerChoiceModel { id: IDS[1], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[0]), next: Some(IDS[2]) },
     ];
 
     static ref MODELS2: Vec<AnswerChoiceModel> = vec![
-        AnswerChoiceModel { id: IDS[5], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[4]), next: None },
-        AnswerChoiceModel { id: IDS[4], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[3]), next: Some(IDS[5]) },
-        AnswerChoiceModel { id: IDS[3], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[2]), next: Some(IDS[4]) },
-        AnswerChoiceModel { id: IDS[2], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[1]), next: Some(IDS[3]) },
-        AnswerChoiceModel { id: IDS[0], question: *QUESTION, correct: false, text: String::new(), prev: None, next: Some(IDS[1]) },
-        AnswerChoiceModel { id: IDS[1], question: *QUESTION, correct: false, text: String::new(), prev: Some(IDS[0]), next: Some(IDS[2]) },
+        AnswerChoiceModel { id: IDS[5], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[4]), next: None },
+        AnswerChoiceModel { id: IDS[4], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[3]), next: Some(IDS[5]) },
+        AnswerChoiceModel { id: IDS[3], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[2]), next: Some(IDS[4]) },
+        AnswerChoiceModel { id: IDS[2], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[1]), next: Some(IDS[3]) },
+        AnswerChoiceModel { id: IDS[0], question: *QUESTION, correct: false, answer: String::new(), prev: None, next: Some(IDS[1]) },
+        AnswerChoiceModel { id: IDS[1], question: *QUESTION, correct: false, answer: String::new(), prev: Some(IDS[0]), next: Some(IDS[2]) },
     ];
 }
 
@@ -99,62 +99,62 @@ fn update_linked() {
     let mut update = UpdateLinkedOptions::<AnswerChoiceModel>::new(*QUESTION, options);
 
     update.add_new(NewAnswerChoice {
-        text: String::from("new1"),
+        answer: String::from("new1"),
         correct: false,
     });
     update.add_new(NewAnswerChoice {
-        text: String::from("new2"),
+        answer: String::from("new2"),
         correct: false,
     });
     update
         .update_option(UpdateAnswerChoice {
             id: IDS[0],
-            text: Unset,
+            answer: Unset,
             correct: Unset,
         })
         .unwrap();
     update
         .update_option(UpdateAnswerChoice {
             id: IDS[2],
-            text: Unset,
+            answer: Unset,
             correct: Unset,
         })
         .unwrap();
     update
         .update_option(UpdateAnswerChoice {
             id: IDS[1],
-            text: Unset,
+            answer: Unset,
             correct: Unset,
         })
         .unwrap();
     update.add_new(NewAnswerChoice {
-        text: String::from("new3"),
+        answer: String::from("new3"),
         correct: false,
     });
     update.add_new(NewAnswerChoice {
-        text: String::from("new4"),
+        answer: String::from("new4"),
         correct: false,
     });
     update.add_new(NewAnswerChoice {
-        text: String::from("new5"),
+        answer: String::from("new5"),
         correct: false,
     });
     update
         .update_option(UpdateAnswerChoice {
             id: IDS[5],
-            text: Unset,
+            answer: Unset,
             correct: Unset,
         })
         .unwrap();
     update.add_new(NewAnswerChoice {
-        text: String::from("new6"),
+        answer: String::from("new6"),
         correct: false,
     });
     assert!(
         update
             .update_option(UpdateAnswerChoice {
                 id: IDS[0],
-                text: Unset,
+                answer: Unset,
                 correct: Unset
             })
             .is_err()
@@ -169,21 +169,21 @@ fn update_linked() {
     assert!(update.delete.iter().any(|x| x.id == IDS[4]));
 
     assert!(!IDS.contains(&update.options[0].id));
-    assert!(update.options[0].active_model.text.clone().unwrap() == "new1");
+    assert!(update.options[0].active_model.answer.clone().unwrap() == "new1");
     assert!(!IDS.contains(&update.options[1].id));
-    assert!(update.options[1].active_model.text.clone().unwrap() == "new2");
+    assert!(update.options[1].active_model.answer.clone().unwrap() == "new2");
     assert!(update.options[2].id == IDS[0]);
     assert!(update.options[3].id == IDS[2]);
     assert!(update.options[4].id == IDS[1]);
     assert!(!IDS.contains(&update.options[5].id));
-    assert!(update.options[5].active_model.text.clone().unwrap() == "new3");
+    assert!(update.options[5].active_model.answer.clone().unwrap() == "new3");
     assert!(!IDS.contains(&update.options[6].id));
-    assert!(update.options[6].active_model.text.clone().unwrap() == "new4");
+    assert!(update.options[6].active_model.answer.clone().unwrap() == "new4");
     assert!(!IDS.contains(&update.options[7].id));
-    assert!(update.options[7].active_model.text.clone().unwrap() == "new5");
+    assert!(update.options[7].active_model.answer.clone().unwrap() == "new5");
     assert!(update.options[8].id == IDS[5]);
     assert!(!IDS.contains(&update.options[9].id));
-    assert!(update.options[9].active_model.text.clone().unwrap() == "new6");
+    assert!(update.options[9].active_model.answer.clone().unwrap() == "new6");
 
     for i in 0..update.options.len() {
         let prev = update.options[i].active_model.prev.clone().unwrap();
@@ -205,11 +205,11 @@ fn update_linked() {
 
 #[test]
 fn parse_update_answer_choice_enum() {
-    let new: UpdateAnswerChoiceEnum = serde_json::from_str(r#"{"text": "asdf"}"#).unwrap();
+    let new: UpdateAnswerChoiceEnum = serde_json::from_str(r#"{"answer": "asdf"}"#).unwrap();
     assert!(matches!(new, UpdateAnswerChoiceEnum::New(_)));
 
     let new: UpdateAnswerChoiceEnum =
-        serde_json::from_str(r#"{"text": "asdf", "correct": true}"#).unwrap();
+        serde_json::from_str(r#"{"answer": "asdf", "correct": true}"#).unwrap();
     assert!(matches!(new, UpdateAnswerChoiceEnum::New(_)));
 
     let update: UpdateAnswerChoiceEnum =
@@ -217,12 +217,12 @@ fn parse_update_answer_choice_enum() {
     assert!(matches!(update, UpdateAnswerChoiceEnum::Update(_)));
 
     let update: UpdateAnswerChoiceEnum =
-        serde_json::from_str(r#"{"id": "a1a2a3a4-b1b2-c1c2-d1d2-d3d4d5d6d7d8", "text": "asdf"}"#)
+        serde_json::from_str(r#"{"id": "a1a2a3a4-b1b2-c1c2-d1d2-d3d4d5d6d7d8", "answer": "asdf"}"#)
             .unwrap();
     assert!(matches!(update, UpdateAnswerChoiceEnum::Update(_)));
 
     let update: UpdateAnswerChoiceEnum = serde_json::from_str(
-        r#"{"id": "a1a2a3a4-b1b2-c1c2-d1d2-d3d4d5d6d7d8", "text": "asdf", "correct": true}"#,
+        r#"{"id": "a1a2a3a4-b1b2-c1c2-d1d2-d3d4d5d6d7d8", "answer": "asdf", "correct": true}"#,
     )
     .unwrap();
     assert!(matches!(update, UpdateAnswerChoiceEnum::Update(_)));
@@ -249,15 +249,15 @@ async fn update_choices() {
         options: NewQuestionOptions::MultipleChoice {
             options: vec![
                 NewAnswerChoice {
-                    text: "A".into(),
+                    answer: "A".into(),
                     correct: false,
                 },
                 NewAnswerChoice {
-                    text: "B".into(),
+                    answer: "B".into(),
                     correct: true,
                 },
                 NewAnswerChoice {
-                    text: "Delete".into(),
+                    answer: "Delete".into(),
                     correct: true,
                 },
             ],
@@ -277,33 +277,33 @@ async fn update_choices() {
 
     let options = vec![
         UpdateAnswerChoiceEnum::New(NewAnswerChoice {
-            text: "first".into(),
+            answer: "first".into(),
             correct: true,
         }),
         UpdateAnswerChoiceEnum::Update(UpdateAnswerChoice {
             id: options[1].id,
-            text: Set("b".into()),
+            answer: Set("b".into()),
             correct: Unset,
         }),
         UpdateAnswerChoiceEnum::New(NewAnswerChoice {
-            text: "middle_1".into(),
+            answer: "middle_1".into(),
             correct: true,
         }),
         UpdateAnswerChoiceEnum::New(NewAnswerChoice {
-            text: "middle_2".into(),
+            answer: "middle_2".into(),
             correct: true,
         }),
         UpdateAnswerChoiceEnum::New(NewAnswerChoice {
-            text: "middle_3".into(),
+            answer: "middle_3".into(),
             correct: true,
         }),
         UpdateAnswerChoiceEnum::Update(UpdateAnswerChoice {
             id: options[0].id,
-            text: Set("a".into()),
+            answer: Set("a".into()),
             correct: Unset,
         }),
         UpdateAnswerChoiceEnum::New(NewAnswerChoice {
-            text: "last".into(),
+            answer: "last".into(),
             correct: true,
         }),
     ];
@@ -326,13 +326,13 @@ async fn update_choices() {
     };
 
     assert_eq!(inserted_options.len(), 7);
-    assert_eq!(inserted_options[0].text, "first");
-    assert_eq!(inserted_options[1].text, "b");
-    assert_eq!(inserted_options[2].text, "middle_1");
-    assert_eq!(inserted_options[3].text, "middle_2");
-    assert_eq!(inserted_options[4].text, "middle_3");
-    assert_eq!(inserted_options[5].text, "a");
-    assert_eq!(inserted_options[6].text, "last");
+    assert_eq!(inserted_options[0].answer, "first");
+    assert_eq!(inserted_options[1].answer, "b");
+    assert_eq!(inserted_options[2].answer, "middle_1");
+    assert_eq!(inserted_options[3].answer, "middle_2");
+    assert_eq!(inserted_options[4].answer, "middle_3");
+    assert_eq!(inserted_options[5].answer, "a");
+    assert_eq!(inserted_options[6].answer, "last");
 }
 
 #[actix_web::test]
@@ -363,19 +363,19 @@ pub async fn create_choice_question() {
                 options: NewQuestionOptions::$id {
                     options: vec![
                         NewAnswerChoice {
-                            text: "A".into(),
+                            answer: "A".into(),
                             correct: false,
                         },
                         NewAnswerChoice {
-                            text: "B".into(),
+                            answer: "B".into(),
                             correct: false,
                         },
                         NewAnswerChoice {
-                            text: "C".into(),
+                            answer: "C".into(),
                             correct: false,
                         },
                         NewAnswerChoice {
-                            text: "D".into(),
+                            answer: "D".into(),
                             correct: false,
                         },
                     ],
@@ -393,23 +393,23 @@ pub async fn create_choice_question() {
                 options: NewQuestionOptions::$id {
                     options: vec![
                         NewAnswerChoice {
-                            text: "A".into(),
+                            answer: "A".into(),
                             correct: false,
                         },
                         NewAnswerChoice {
-                            text: "B".into(),
+                            answer: "B".into(),
                             correct: true,
                         },
                         NewAnswerChoice {
-                            text: "C".into(),
+                            answer: "C".into(),
                             correct: false,
                         },
                         NewAnswerChoice {
-                            text: "D".into(),
+                            answer: "D".into(),
                             correct: false,
                         },
                         NewAnswerChoice {
-                            text: "E".into(),
+                            answer: "E".into(),
                             correct: true,
                         },
                     ],
@@ -440,11 +440,11 @@ pub async fn create_choice_question() {
             assert_eq!(options[3].correct, false);
             assert_eq!(options[4].correct, true);
 
-            assert_eq!(options[0].text, String::from("A"));
-            assert_eq!(options[1].text, String::from("B"));
-            assert_eq!(options[2].text, String::from("C"));
-            assert_eq!(options[3].text, String::from("D"));
-            assert_eq!(options[4].text, String::from("E"));
+            assert_eq!(options[0].answer, String::from("A"));
+            assert_eq!(options[1].answer, String::from("B"));
+            assert_eq!(options[2].answer, String::from("C"));
+            assert_eq!(options[3].answer, String::from("D"));
+            assert_eq!(options[4].answer, String::from("E"));
         };
     }
 

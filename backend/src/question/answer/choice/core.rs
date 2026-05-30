@@ -46,7 +46,7 @@ impl NewOption<AnswerChoiceModel> for NewAnswerChoice {
             id: Set(id),
             question: Set(question_id),
             correct: Set(self.correct),
-            text: Set(self.text),
+            answer: Set(self.answer),
             prev: NotSet,
             next: NotSet,
         }
@@ -55,7 +55,7 @@ impl NewOption<AnswerChoiceModel> for NewAnswerChoice {
 
 impl ActiveNewOption<AnswerChoiceModel, UpdateAnswerChoice> for ActiveAnswerChoice {
     fn set(&mut self, update: UpdateAnswerChoice) {
-        self.text = update.text.into();
+        self.answer = update.answer.into();
         self.correct = update.correct.into();
     }
 
