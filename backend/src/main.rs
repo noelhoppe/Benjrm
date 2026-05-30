@@ -4,7 +4,7 @@ use {
     actix_web::{
         App, HttpResponse, HttpServer, Route,
         cookie::{self, SameSite},
-        web::{self, JsonConfig},
+        web::{self, JsonConfig, PathConfig},
     },
     awc::http::Method,
 };
@@ -61,6 +61,7 @@ async fn main() -> std::io::Result<()> {
         let app = App::new()
             .wrap(actix_web::middleware::Logger::default())
             .app_data(JsonConfig::default().error_handler(Error::json_handler))
+            .app_data(PathConfig::default().error_handler(Error::path_handler))
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
                     .cookie_http_only(true)
