@@ -331,7 +331,7 @@ paths:
       tags:
         - Quizzes
 
-  /quizzes/{quiz}/questions:
+  /api/v1/quizzes/{quiz}/questions:
     post:
       summary: Create a question
       operationId: createQuestion
@@ -449,7 +449,7 @@ paths:
       tags:
         - Questions
 
-  /quizzes/{quiz}/questions/{question}:
+  /api/v1/quizzes/{quiz}/questions/{question}:
     get:
       summary: Get a single question
       operationId: getQuestion
