@@ -8,6 +8,14 @@ import type {
     MultipleChoiceAnswerResponse,
 } from "@/api/questions/types/multipleChoiceAnswer.ts"
 import type { Identifier, ReadonlyMetadata } from "@/api/utils.ts"
+import type {
+    SlideAnswerRequest,
+    SlideAnswerResponse,
+} from "@/api/questions/types/slideAnswerRequest.ts"
+import type {
+    OrderAnswerRequest,
+    OrderAnswerResponse,
+} from "@/api/questions/types/orderAnswerRequest.ts"
 
 export interface QuestionApiRequest {
     question: string
@@ -15,9 +23,13 @@ export interface QuestionApiRequest {
     hidden: boolean
     prev?: string
     next?: string
-    options: (SingleChoiceAnswerRequest | MultipleChoiceAnswerRequest)[]
+    options:
+        | SlideAnswerRequest
+        | (SingleChoiceAnswerRequest | MultipleChoiceAnswerRequest | OrderAnswerRequest)[]
 }
 
 export interface QuestionApiResponse extends QuestionApiRequest, Identifier, ReadonlyMetadata {
-    options: (SingleChoiceAnswerResponse | MultipleChoiceAnswerResponse)[]
+    options:
+        | SlideAnswerResponse
+        | (SingleChoiceAnswerResponse | MultipleChoiceAnswerResponse | OrderAnswerResponse)[]
 }
