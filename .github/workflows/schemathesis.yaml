@@ -32,6 +32,7 @@ jobs:
         env:
           DATABASE_URL: 'sqlite::memory:'
           PORT: '8080'
+          OIDC_ISSUER_URL: 'https://example.com'
       - uses: schemathesis/action@v3
         with:
           schema: 'docs/openapispec/RestInterface.yaml'
