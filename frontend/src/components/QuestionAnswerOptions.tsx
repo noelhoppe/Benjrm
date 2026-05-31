@@ -25,21 +25,19 @@ export default function QuestionAnswerOptions({
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                {options.map((option, index) => {
-                    return (
-                        <AnswerCard
-                            key={option.id}
-                            index={index}
-                            canDelete={options.length > 2}
-                            correct={option.correct}
-                            onChange={(value) => onChange(index, value)}
-                            onDelete={options.length > 2 ? () => onDeleteOption(index) : undefined}
-                            onToggleCorrect={() => onToggleCorrect(index)}
-                            placeholder={`Option ${index + 1}`}
-                            value={option.answer}
-                        />
-                    )
-                })}
+                {options.map((option, index) => (
+                    <AnswerCard
+                        key={option.id}
+                        canDelete={options.length > 2}
+                        correct={option.correct}
+                        index={index}
+                        onChange={(value) => onChange(index, value)}
+                        onDelete={options.length > 2 ? () => onDeleteOption(index) : undefined}
+                        onToggleCorrect={() => onToggleCorrect(index)}
+                        placeholder={`Option ${index + 1}`}
+                        value={option.answer}
+                    />
+                ))}
             </div>
 
             <Button

@@ -1,4 +1,4 @@
-export type QueueStorageItem = {
+export interface QueueStorageItem {
     id: string
     op: "create" | "update" | "delete" | "reorder"
     quizId: string
@@ -28,7 +28,8 @@ function cloneQueue(queue: QueueStorageItem[]): QueueStorageItem[] {
 export function createQuestionQueueStorage(): QuestionQueueStorage {
     const memoryStore = new Map<string, QueueStorageItem[]>()
 
-    const readFromMemory = (quizId: string): QueueStorageItem[] => cloneQueue(memoryStore.get(quizId) ?? [])
+    const readFromMemory = (quizId: string): QueueStorageItem[] =>
+        cloneQueue(memoryStore.get(quizId) ?? [])
 
     return {
         getQueue(quizId: string): QueueStorageItem[] {

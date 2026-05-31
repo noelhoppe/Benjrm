@@ -1,5 +1,18 @@
+import type { Modifier } from "@dnd-kit/core"
 import type { Question } from "@/types/quiz"
 import type { QuestionApiRequest } from "@/api/questions/types/question.api"
+
+export interface QuestionApiResponse {
+    id: string
+    question: string
+    type: Question["type"]
+    hidden: boolean
+    options: {
+        id: string
+        answer?: string
+        correct: boolean
+    }[]
+}
 
 export function createEmptyQuestion(): Question {
     return {
@@ -23,19 +36,31 @@ export function questionToRequest(question: Question): QuestionApiRequest {
     }
 }
 
-export function responseToQuestion(response: {
-    id: string
-    question: string
-    type: Question["type"]
-    hidden: boolean
-    options: { id: string; answer: string; correct: boolean }[]
-}): Question {
+export function responseToQuestion(response: unknown): Question {
+    const resp = (response as Partial<QuestionApiResponse>) ?? {}
+
+    const optionsRaw = Array.isArray(resp.options) ? resp.options : []
+
+    const options = optionsRaw.map((opt) => {
+        const o = opt as Record<string, unknown>
+        const id = typeof o.id === "string" ? o.id : String(o.id ?? crypto.randomUUID())
+        const answer = typeof o.answer === "string" ? o.answer : String(o.answer ?? "")
+        const correct = typeof o.correct === "boolean" ? o.correct : Boolean(o.correct)
+        return { id, answer, correct }
+    })
+
+    const id = typeof resp.id === "string" ? resp.id : String(resp.id ?? crypto.randomUUID())
+    const questionText =
+        typeof resp.question === "string" ? resp.question : String(resp.question ?? "")
+    const type = (resp.type as Question["type"]) ?? "MULTIPLE_CHOICE"
+    const hidden = typeof resp.hidden === "boolean" ? resp.hidden : Boolean(resp.hidden)
+
     return {
-        id: response.id,
-        question: response.question,
-        type: response.type,
-        hidden: response.hidden,
-        options: response.options.map((option) => ({ id: option.id, answer: option.answer ?? "", correct: option.correct })),
+        id,
+        question: questionText,
+        type,
+        hidden,
+        options,
     }
 }
 
@@ -45,7 +70,6 @@ export interface QuizDraftStorage {
     savedAt: string
 }
 
-import type { Modifier } from "@dnd-kit/core"
 export const restrictToVerticalAxis: Modifier = ({ transform }) => ({
     ...transform,
     x: 0,

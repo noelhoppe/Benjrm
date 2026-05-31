@@ -2,9 +2,9 @@
 
 import type { JSX } from "react"
 import { Check, Trash2, X } from "lucide-react"
+import getAnswerVisuals from "../utils/answerVisuals"
 import { Textarea } from "@/shadcn/components/ui/textarea"
 import { Button } from "@/shadcn/components/ui/button"
-import getAnswerVisuals from "../utils/answerVisuals"
 
 export interface AnswerCardProps {
     // visual props are optional; can be derived from `index`
@@ -37,11 +37,15 @@ export default function AnswerCard({
 }: AnswerCardProps): JSX.Element {
     // If any visual prop is provided, use provided (with defaults). Otherwise, derive from index when available.
     const hasProvidedVisuals = icon != null || accent != null || glow != null
-    const visuals = hasProvidedVisuals
-        ? { accent: accent ?? "#111827", glow: glow ?? "transparent", icon: icon ?? "" }
-        : index != null
-        ? getAnswerVisuals(index)
-        : { accent: "#111827", glow: "transparent", icon: "" }
+    let visuals: { accent: string; glow: string; icon: string }
+
+    if (hasProvidedVisuals) {
+        visuals = { accent: accent ?? "#111827", glow: glow ?? "transparent", icon: icon ?? "" }
+    } else if (index != null) {
+        visuals = getAnswerVisuals(index)
+    } else {
+        visuals = { accent: "#111827", glow: "transparent", icon: "" }
+    }
 
     const usedAccent = visuals.accent
     const usedGlow = visuals.glow

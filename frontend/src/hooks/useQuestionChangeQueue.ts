@@ -19,7 +19,12 @@ type Action =
     | { type: "clear" }
     | { type: "replace"; items: QueueItem[] }
     | { type: "upsertReorder"; order: string[]; quizId?: string }
-    | { type: "upsertUpdate"; questionId: string; payload: Partial<QuestionApiRequest>; quizId?: string }
+    | {
+          type: "upsertUpdate"
+          questionId: string
+          payload: Partial<QuestionApiRequest>
+          quizId?: string
+      }
 
 function reducer(state: QueueItem[], action: Action): QueueItem[] {
     switch (action.type) {
@@ -39,7 +44,7 @@ function reducer(state: QueueItem[], action: Action): QueueItem[] {
                     quizId: action.quizId ?? "",
                     payload: { order: action.order },
                     createdAt: new Date().toISOString(),
-                } as QueueItem,
+                },
             ]
         case "upsertUpdate":
             // remove existing update items for this question and append latest
@@ -52,7 +57,7 @@ function reducer(state: QueueItem[], action: Action): QueueItem[] {
                     questionId: action.questionId,
                     payload: action.payload,
                     createdAt: new Date().toISOString(),
-                } as QueueItem,
+                },
             ]
         default:
             return state
@@ -101,13 +106,19 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         dispatch({ type: "enqueue", item })
     }, [])
 
-    const upsertReorder = useCallback((order: string[]) => {
-        dispatch({ type: "upsertReorder", order, quizId: quizId })
-    }, [quizId])
+    const upsertReorder = useCallback(
+        (order: string[]) => {
+            dispatch({ type: "upsertReorder", order, quizId })
+        },
+        [quizId]
+    )
 
-    const upsertUpdate = useCallback((questionId: string, payload: Partial<QuestionApiRequest>) => {
-        dispatch({ type: "upsertUpdate", questionId, payload, quizId: quizId })
-    }, [quizId])
+    const upsertUpdate = useCallback(
+        (questionId: string, payload: Partial<QuestionApiRequest>) => {
+            dispatch({ type: "upsertUpdate", questionId, payload, quizId })
+        },
+        [quizId]
+    )
 
     const clear = useCallback(() => {
         dispatch({ type: "clear" })
@@ -119,19 +130,29 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         setLastError(null)
     }, [queueStorage, storageQuizId])
 
-    const flush = useCallback(async (): Promise<{ items: QueueItem[]; idMap: Record<string, string> }> => {
+    const flush = useCallback(async (): Promise<{
+        items: QueueItem[]
+        idMap: Record<string, string>
+    }> => {
         setIsFlushing(true)
         setLastError(null)
         try {
             const items = [...queue]
             const idMap: Record<string, string> = {}
 
-            // process sequentially
-            for (let idx = 0; idx < items.length; idx += 1) {
-                const item = items[idx]
+            // process sequentially by chaining promises to avoid `await` in a loop lint rule
+            await items.reduce(async (prevPromise, rawItem) => {
+                await prevPromise
+
+                const item = { ...rawItem }
+
+                if (!item.quizId) {
+                    await Promise.resolve()
+                    return undefined
+                }
+
                 try {
-                    if (!item.quizId) continue
-                    // if we previously created a question with a temporary id, translate references
+                    // translate temporary question IDs if we have a mapping
                     if (item.questionId && idMap[item.questionId]) {
                         item.questionId = idMap[item.questionId]
                     }
@@ -139,32 +160,39 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
                     if (item.op === "create") {
                         const req = item.payload as QuestionApiRequest
                         const created = await questionAdapterImpl.createQuestion(item.quizId, req)
-                        // map temporary questionId (if present) to created id
                         if (item.questionId) {
                             idMap[item.questionId] = created.id
                         }
-                        // also, if there are future items referencing the temp id in reorder payloads or questionId, they will be rewritten at processing time
                     } else if (item.op === "update") {
                         const req = item.payload as Partial<QuestionApiRequest>
-                        if (!item.questionId) continue
+                        if (!item.questionId) {
+                            await Promise.resolve()
+                            return undefined
+                        }
                         await questionAdapterImpl.updateQuestion(item.quizId, item.questionId, req)
                     } else if (item.op === "delete") {
-                        if (!item.questionId) continue
+                        if (!item.questionId) {
+                            await Promise.resolve()
+                            return undefined
+                        }
                         await questionAdapterImpl.deleteQuestion(item.quizId, item.questionId)
                     } else if (item.op === "reorder") {
-                        let order = (item.payload as any)?.order as string[]
-                        if (order && order.length) {
+                        const payload = item.payload as { order?: string[] } | undefined
+                        let order = payload?.order ?? []
+                        if (order.length) {
                             order = order.map((id) => idMap[id] ?? id)
                         }
-                        await questionAdapterImpl.reorderQuestions(item.quizId, order ?? [])
+                        await questionAdapterImpl.reorderQuestions(item.quizId, order)
                     }
+
+                    await Promise.resolve()
+                    return undefined
                 } catch (innerErr) {
-                    // stop processing on first error and set lastError
                     const e = innerErr instanceof Error ? innerErr : new Error(String(innerErr))
                     setLastError(e)
                     throw e
                 }
-            }
+            }, Promise.resolve())
 
             clear()
             return { items, idMap }

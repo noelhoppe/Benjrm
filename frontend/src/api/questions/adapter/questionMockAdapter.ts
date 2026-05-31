@@ -1,6 +1,7 @@
 import type { QuestionAdapter } from "@/api/questions/adapter/questionAdapter.ts"
 import type { QuestionApiRequest, QuestionApiResponse } from "@/api/questions/types/question.api.ts"
-import { createQuestionStorage, type QuestionStorage } from "@/api/questions/storage/questionStorage.ts"
+import { createQuestionStorage } from "@/api/questions/storage/questionStorage.ts"
+import type { QuestionStorage } from "@/api/questions/storage/questionStorage.ts"
 
 export default class QuestionMockAdapter implements QuestionAdapter {
     private questionsByQuiz: Record<string, QuestionApiResponse[]> = {}
