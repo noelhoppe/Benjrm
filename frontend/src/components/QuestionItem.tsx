@@ -3,6 +3,7 @@ import { useSortable } from "@dnd-kit/sortable"
 import { GripVertical, Trash2 } from "lucide-react"
 import type { MouseEvent, KeyboardEvent, ReactNode } from "react"
 import { Button } from "@shadcn/components/ui/button.tsx"
+import { getQuestionPreviewText } from "@/pages/quiz/quizUtils"
 
 interface QuestionProps {
     question: {
@@ -85,7 +86,7 @@ export default function QuestionItem({
                         />
 
                         <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-                            Question {index + 1}
+                            {question.type === "SLIDE" ? "Slide" : "Question"} {index + 1}
                         </span>
                     </div>
 
@@ -103,7 +104,7 @@ export default function QuestionItem({
 
                 {/* Title */}
                 <p className="mb-4 line-clamp-2 min-h-10 text-sm font-semibold">
-                    {question.question || "Untitled question"}
+                    {getQuestionPreviewText(question.question, question.type)}
                 </p>
 
                 {/* Preview */}

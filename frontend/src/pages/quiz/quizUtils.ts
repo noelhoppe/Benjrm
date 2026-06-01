@@ -16,6 +16,24 @@ export interface QuestionApiResponse {
     }[]
 }
 
+export function getQuestionPreviewText(text: string | undefined, type?: string): string {
+    if (!text?.trim()) {
+        return type === "SLIDE" ? "Untitled slide" : "Untitled question"
+    }
+
+    const firstLine =
+        text
+            .split("\n")
+            .map((l) => l.trim())
+            .find((l) => l.length > 0) ?? ""
+    const cleaned = firstLine
+        .replace(/^#+\s*/, "")
+        .replace(/[*_~`]/g, "")
+        .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+        .trim()
+    return cleaned || (type === "SLIDE" ? "Untitled slide" : "Untitled question")
+}
+
 export function createEmptyQuestion(): Question {
     return {
         id: tempId(),

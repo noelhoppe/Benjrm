@@ -4,7 +4,6 @@ import type { JSX } from "react"
 import MarkdownPageComponent from "@/components/markdown/MarkdownPageComponent"
 
 interface InfoSlideContentProps {
-    title: string
     content: string
     playerName?: string
     currentSlide?: number
@@ -12,7 +11,6 @@ interface InfoSlideContentProps {
 }
 
 export default function InfoSlideContent({
-    title,
     content,
     playerName = "Funny Crocodile",
     currentSlide = 1,
@@ -36,11 +34,6 @@ export default function InfoSlideContent({
 
                 {/* Info Slide Card */}
                 <div className="bg-card rounded-2xl border border-[#00F2FF] p-8 shadow-lg sm:p-12">
-                    {/* Title */}
-                    <h1 className="text-foreground mb-6 text-center text-2xl font-bold sm:text-3xl">
-                        {title}
-                    </h1>
-
                     {/* Content */}
                     <div className="text-muted-foreground max-w-none space-y-4 text-left text-sm leading-relaxed sm:text-base">
                         <MarkdownPageComponent content={content} />

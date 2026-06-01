@@ -19,7 +19,7 @@ import QuestionEditor from "../components/QuestionEditor"
 import QuestionSidebar from "../components/QuestionSidebar"
 import SettingsPanel from "../components/SettingsPanel"
 import QuizCreatorFeedback from "../components/QuizCreatorFeedback"
-import { restrictToVerticalAxis } from "./quiz/quizUtils"
+import { restrictToVerticalAxis, getQuestionPreviewText } from "./quiz/quizUtils"
 import useQuizEditor from "@/hooks/useQuizEditor"
 import { Button } from "@/shadcn/components/ui/button"
 import {
@@ -260,12 +260,17 @@ export default function QuizCreator(): JSX.Element {
                                                       <span className="text-lg">⋮⋮</span>
                                                   </div>
                                                   <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-                                                      Question
+                                                      {activeQuestion.type === "SLIDE"
+                                                          ? "Slide"
+                                                          : "Question"}
                                                   </span>
                                               </div>
 
                                               <p className="mb-4 line-clamp-2 min-h-10 text-sm font-semibold">
-                                                  {activeQuestion.question || "Untitled question"}
+                                                  {getQuestionPreviewText(
+                                                      activeQuestion.question,
+                                                      activeQuestion.type
+                                                  )}
                                               </p>
 
                                               {activeQuestion.type !== "SLIDE" ? (

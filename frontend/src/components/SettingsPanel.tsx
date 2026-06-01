@@ -128,8 +128,12 @@ export default function SettingsPanel({ question }: SettingsPanelProps): JSX.Ele
                                     />
                                 </div>
                             ) : (
-                                <div className="mt-2 text-sm leading-5 font-extrabold text-slate-900 dark:text-white">
-                                    {question.question?.trim() || "Type your question..."}
+                                <div className="mt-2 text-center text-slate-900 dark:text-white [&_p]:text-center [&_p]:text-3xl [&_p]:leading-tight [&_p]:font-bold md:[&_p]:text-4xl">
+                                    <MarkdownPageComponent
+                                        content={
+                                            question.question?.trim() || "Type your question..."
+                                        }
+                                    />
                                 </div>
                             )}
                         </div>
