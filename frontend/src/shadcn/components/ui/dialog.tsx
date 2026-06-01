@@ -42,7 +42,7 @@ function DialogContent({
     children,
     showCloseButton = true,
     ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+}: ComponentProps<typeof DialogPrimitive.Content> & {
     showCloseButton?: boolean
 }): JSX.Element {
     return (
@@ -85,7 +85,7 @@ function DialogFooter({
     showCloseButton = false,
     children,
     ...props
-}: React.ComponentProps<"div"> & {
+}: ComponentProps<"div"> & {
     showCloseButton?: boolean
 }): JSX.Element {
     return (
