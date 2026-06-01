@@ -12,6 +12,7 @@ import {
 } from "@/shadcn/components/ui/select"
 import { ScrollArea } from "@/shadcn/components/ui/scroll-area"
 import type { Question } from "@/types/quiz"
+import MarkdownPageComponent from "@/components/markdown/MarkdownPageComponent"
 
 interface SettingsPanelProps {
     question: Question
@@ -20,6 +21,7 @@ interface SettingsPanelProps {
 const getQuestionTypeLabel = (type?: string) => {
     if (type === "SINGLE_CHOICE") return "Single"
     if (type === "ORDER") return "Order"
+    if (type === "SLIDE") return "Slide"
     return "Multiple"
 }
 
@@ -114,17 +116,33 @@ export default function SettingsPanel({ question }: SettingsPanelProps): JSX.Ele
                         {/* Question */}
                         <div className="border-border mb-3 rounded-[1.25rem] border bg-white/90 p-4 text-center shadow-sm dark:bg-white/10">
                             <div className="text-[10px] font-bold tracking-[0.2em] text-[#FF8A00] uppercase">
-                                Question
+                                {question.type === "SLIDE" ? "Slide Content" : "Question"}
                             </div>
-                            <div className="mt-2 text-sm leading-5 font-extrabold text-slate-900 dark:text-white">
-                                {question.question?.trim() || "Type your question..."}
-                            </div>
+                            {question.type === "SLIDE" ? (
+                                <div className="mt-2 text-left text-xs leading-5 text-slate-900 dark:text-white">
+                                    <MarkdownPageComponent
+                                        content={
+                                            question.question?.trim() ||
+                                            "*Type your markdown here...*"
+                                        }
+                                    />
+                                </div>
+                            ) : (
+                                <div className="mt-2 text-sm leading-5 font-extrabold text-slate-900 dark:text-white">
+                                    {question.question?.trim() || "Type your question..."}
+                                </div>
+                            )}
                         </div>
 
                         {/* Answers */}
-                        <ScrollArea className="min-h-0 flex-1 pr-1">
-                            <AnswerPreviewGrid options={question.options} type={question.type} />
-                        </ScrollArea>
+                        {question.type !== "SLIDE" ? (
+                            <ScrollArea className="min-h-0 flex-1 pr-1">
+                                <AnswerPreviewGrid
+                                    options={question.options}
+                                    type={question.type}
+                                />
+                            </ScrollArea>
+                        ) : null}
                     </div>
                 </div>
             </div>

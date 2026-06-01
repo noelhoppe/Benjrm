@@ -61,33 +61,40 @@ export default function QuestionEditor({
                                 <SelectItem value="MULTIPLE_CHOICE">Multiple Choice</SelectItem>
                                 <SelectItem value="SINGLE_CHOICE">Single Choice</SelectItem>
                                 <SelectItem value="ORDER">Order</SelectItem>
+                                <SelectItem value="SLIDE">Slide</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     <Textarea
                         className="placeholder:text-muted-foreground/40 bg-muted/90 dark:bg-muted/25 min-h-40 resize-none border-none p-4 text-3xl leading-tight font-bold shadow-none focus-visible:ring-0 md:text-4xl"
-                        placeholder="Type your question here..."
                         value={question.question}
                         onChange={(e) =>
                             updateQuestion({
                                 question: e.target.value,
                             })
                         }
+                        placeholder={
+                            question.type === "SLIDE"
+                                ? "Type your slide content here (Markdown supported)..."
+                                : "Type your question here..."
+                        }
                     />
                 </div>
             </div>
 
             {/* Answers / Editor for choice-based questions */}
-            <QuestionAnswerOptions
-                onAddOption={onAddOption}
-                onChange={onChangeOption}
-                onDeleteOption={onDeleteOption}
-                onReorderOptions={onReorderOptions}
-                onToggleCorrect={onToggleCorrect}
-                options={question.options}
-                type={question.type}
-            />
+            {question.type !== "SLIDE" ? (
+                <QuestionAnswerOptions
+                    onAddOption={onAddOption}
+                    onChange={onChangeOption}
+                    onDeleteOption={onDeleteOption}
+                    onReorderOptions={onReorderOptions}
+                    onToggleCorrect={onToggleCorrect}
+                    options={question.options}
+                    type={question.type}
+                />
+            ) : null}
         </main>
     )
 }

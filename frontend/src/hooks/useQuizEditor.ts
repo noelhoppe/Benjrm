@@ -241,17 +241,20 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         for (let qi = 0; qi < questions.length; qi += 1) {
             const question = questions[qi]
             if (!question.question.trim()) return `Question ${qi + 1} is missing the question text.`
-            if (question.options.length < 2)
-                return `Question ${qi + 1} needs at least two answer options.`
-            for (let oi = 0; oi < question.options.length; oi += 1) {
-                if (!question.options[oi].answer.trim())
-                    return `Question ${qi + 1}, option ${oi + 1} is empty.`
+
+            if (question.type !== "SLIDE") {
+                if (question.options.length < 2)
+                    return `Question ${qi + 1} needs at least two answer options.`
+                for (let oi = 0; oi < question.options.length; oi += 1) {
+                    if (!question.options[oi].answer.trim())
+                        return `Question ${qi + 1}, option ${oi + 1} is empty.`
+                }
+                if (
+                    question.type !== "ORDER" &&
+                    !question.options.some((o) => (o as { correct?: boolean }).correct)
+                )
+                    return `Question ${qi + 1} needs at least one correct answer.`
             }
-            if (
-                question.type !== "ORDER" &&
-                !question.options.some((o) => (o as { correct?: boolean }).correct)
-            )
-                return `Question ${qi + 1} needs at least one correct answer.`
         }
 
         return null
@@ -342,7 +345,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     }
 
     const toggleOptionCorrect = (index: number) => {
-        if (currentQuestion.type === "ORDER") return
+        if (currentQuestion.type === "ORDER" || currentQuestion.type === "SLIDE") return
 
         markUnsavedChanges()
         const newOptions = currentQuestion.options.map((option, optionIndex) =>
@@ -429,6 +432,8 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     }
 
     const handleAddOption = () => {
+        if (currentQuestion.type === "SLIDE") return
+
         markUnsavedChanges()
         const newOption =
             currentQuestion.type === "ORDER"

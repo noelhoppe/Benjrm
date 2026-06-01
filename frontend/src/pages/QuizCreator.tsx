@@ -268,12 +268,14 @@ export default function QuizCreator(): JSX.Element {
                                                   {activeQuestion.question || "Untitled question"}
                                               </p>
 
-                                              <div className="grid grid-cols-2 gap-1.5 opacity-80">
-                                                  <div className="h-2 rounded-full bg-[#2d4cc9]" />
-                                                  <div className="h-2 rounded-full bg-[#ffa602]" />
-                                                  <div className="h-2 rounded-full bg-[#11c8d4]" />
-                                                  <div className="h-2 rounded-full bg-[#ff4949]" />
-                                              </div>
+                                              {activeQuestion.type !== "SLIDE" ? (
+                                                  <div className="grid grid-cols-2 gap-1.5 opacity-80">
+                                                      <div className="h-2 rounded-full bg-[#2d4cc9]" />
+                                                      <div className="h-2 rounded-full bg-[#ffa602]" />
+                                                      <div className="h-2 rounded-full bg-[#11c8d4]" />
+                                                      <div className="h-2 rounded-full bg-[#ff4949]" />
+                                                  </div>
+                                              ) : null}
                                           </div>
                                       )
                                   })()

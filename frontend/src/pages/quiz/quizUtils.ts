@@ -30,17 +30,21 @@ export function createEmptyQuestion(): Question {
 }
 
 export function questionToRequest(question: Question): QuestionApiRequest {
+    const getOptions = () => {
+        if (question.type === "SLIDE") return []
+        if (question.type === "ORDER")
+            return question.options.map((opt) => ({ answer: opt.answer }))
+        return question.options.map((opt) => ({
+            answer: opt.answer,
+            correct: Boolean((opt as { correct?: boolean }).correct),
+        }))
+    }
+
     return {
         question: question.question,
         type: question.type,
         hidden: question.hidden,
-        options:
-            question.type === "ORDER"
-                ? question.options.map((opt) => ({ answer: opt.answer }))
-                : question.options.map((opt) => ({
-                      answer: opt.answer,
-                      correct: Boolean((opt as { correct?: boolean }).correct),
-                  })),
+        options: getOptions(),
     }
 }
 

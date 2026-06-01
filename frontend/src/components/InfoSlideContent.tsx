@@ -1,6 +1,7 @@
 // frontend/src/components/InfoSlideContent.tsx
 
 import type { JSX } from "react"
+import MarkdownPageComponent from "@/components/markdown/MarkdownPageComponent"
 
 interface InfoSlideContentProps {
     title: string
@@ -41,8 +42,8 @@ export default function InfoSlideContent({
                     </h1>
 
                     {/* Content */}
-                    <div className="text-muted-foreground max-w-none space-y-4 text-center text-sm leading-relaxed sm:text-base">
-                        <p>{content}</p>
+                    <div className="text-muted-foreground max-w-none space-y-4 text-left text-sm leading-relaxed sm:text-base">
+                        <MarkdownPageComponent content={content} />
                     </div>
                 </div>
                 {/* Image would go here when backend supports it */}
