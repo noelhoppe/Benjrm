@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 schemathesis = "==4.21.0"
+pytest = "==9.0.3"
 
 [dev-packages]
 
