@@ -1,15 +1,8 @@
-export interface QueueStorageItem {
-    id: string
-    op: "create" | "update" | "delete" | "reorder"
-    quizId: string
-    questionId?: string
-    payload?: unknown
-    createdAt: string
-}
+import type { QueueItem } from "@/hooks/useQuestionChangeQueue"
 
 export interface QuestionQueueStorage {
-    getQueue: (quizId: string) => QueueStorageItem[]
-    setQueue: (quizId: string, queue: QueueStorageItem[]) => void
+    getQueue: (quizId: string) => QueueItem[]
+    setQueue: (quizId: string, queue: QueueItem[]) => void
     clearQueue: (quizId: string) => void
 }
 
@@ -21,18 +14,18 @@ function storageKey(quizId: string): string {
     return `quiz:queue:${quizId}`
 }
 
-function cloneQueue(queue: QueueStorageItem[]): QueueStorageItem[] {
+function cloneQueue(queue: QueueItem[]): QueueItem[] {
     return queue.map((item) => ({ ...item, payload: item.payload }))
 }
 
 export function createQuestionQueueStorage(): QuestionQueueStorage {
-    const memoryStore = new Map<string, QueueStorageItem[]>()
+    const memoryStore = new Map<string, QueueItem[]>()
 
-    const readFromMemory = (quizId: string): QueueStorageItem[] =>
+    const readFromMemory = (quizId: string): QueueItem[] =>
         cloneQueue(memoryStore.get(quizId) ?? [])
 
     return {
-        getQueue(quizId: string): QueueStorageItem[] {
+        getQueue(quizId: string): QueueItem[] {
             if (!isBrowserAvailable()) {
                 return readFromMemory(quizId)
             }
@@ -41,7 +34,7 @@ export function createQuestionQueueStorage(): QuestionQueueStorage {
                 const raw = localStorage.getItem(storageKey(quizId))
                 if (!raw) return readFromMemory(quizId)
 
-                const parsed = JSON.parse(raw) as QueueStorageItem[]
+                const parsed = JSON.parse(raw) as QueueItem[]
                 const queue = parsed ?? []
                 memoryStore.set(quizId, cloneQueue(queue))
                 return cloneQueue(queue)
@@ -50,7 +43,12 @@ export function createQuestionQueueStorage(): QuestionQueueStorage {
             }
         },
 
-        setQueue(quizId: string, queue: QueueStorageItem[]): void {
+        setQueue(quizId: string, queue: QueueItem[]): void {
+            if (queue.length === 0) {
+                this.clearQueue(quizId)
+                return
+            }
+
             const cloned = cloneQueue(queue)
             memoryStore.set(quizId, cloned)
 

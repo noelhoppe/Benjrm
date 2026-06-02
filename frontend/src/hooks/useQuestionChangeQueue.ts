@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from "react"
+import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import questionAdapterImpl from "@/api/questions/adapter/questionAdapterImpl"
 import type { QuestionApiRequest } from "@/api/questions/types/question.api.ts"
 import useQuestionQueueStorage from "@/api/questions/hooks/useQuestionQueueStorage.ts"
@@ -99,34 +99,94 @@ export interface UseQuestionChangeQueueReturn {
     queue: QueueItem[]
 }
 
+type ProcessResult =
+    | { status: "success"; createdId?: string }
+    | { status: "skipped"; reason?: string }
+
+async function processCreateOp(item: QueueItem): Promise<ProcessResult> {
+    const req = item.payload as QuestionApiRequest
+    const created = await questionAdapterImpl.createQuestion(item.quizId, req)
+    return { status: "success", createdId: created.id }
+}
+
+async function processUpdateOp(item: QueueItem): Promise<ProcessResult> {
+    if (!item.questionId) return { status: "skipped", reason: "no_question_id" }
+
+    if (String(item.questionId).startsWith("temp-")) {
+        return { status: "skipped", reason: "unresolved_temp_id" }
+    }
+
+    const req = item.payload as Partial<QuestionApiRequest>
+    await questionAdapterImpl.updateQuestion(item.quizId, item.questionId, req)
+    return { status: "success" }
+}
+
+async function processDeleteOp(item: QueueItem): Promise<ProcessResult> {
+    if (!item.questionId) return { status: "skipped", reason: "no_question_id" }
+
+    // If we are deleting a temp ID that was never mapped to a real ID,
+    // the question was never created on the server, so we can just consider it deleted.
+    if (String(item.questionId).startsWith("temp-")) {
+        return { status: "success" }
+    }
+
+    await questionAdapterImpl.deleteQuestion(item.quizId, item.questionId)
+    return { status: "success" }
+}
+
+async function processReorderOp(
+    item: QueueItem,
+    idMap: Record<string, string>
+): Promise<ProcessResult> {
+    const payload = item.payload as { order?: string[] } | undefined
+    let order = payload?.order ?? []
+
+    if (order.length > 0) {
+        // Resolve temp IDs to real IDs if they exist in the idMap
+        order = order.map((id) => idMap[id] ?? id)
+    }
+
+    // If any IDs remain unresolved, we skip the reorder for now
+    const hasUnresolvedTempIds = order.some((id) => String(id).startsWith("temp-"))
+    if (hasUnresolvedTempIds) {
+        return { status: "skipped", reason: "unresolved_temp_ids_in_order" }
+    }
+
+    await questionAdapterImpl.reorderQuestions(item.quizId, order)
+    return { status: "success" }
+}
+
 export default function useQuestionChangeQueue(quizId?: string): UseQuestionChangeQueueReturn {
     const queueStorage = useQuestionQueueStorage()
     const storageQuizId = quizId ?? "new"
     const [queue, dispatch] = useReducer(reducer, [] as QueueItem[])
-    const [hydratedStorageQuizId, setHydratedStorageQuizId] = useState<string | null>(null)
+    const hydratedStorageQuizIdRef = useRef<string | null>(null)
     const [isFlushing, setIsFlushing] = useState(false)
     const [lastError, setLastError] = useState<Error | null>(null)
 
-    if (hydratedStorageQuizId !== storageQuizId) {
-        setHydratedStorageQuizId(storageQuizId)
+    // Hydrate the queue from local storage when the quiz ID changes
+    useEffect(() => {
+        if (hydratedStorageQuizIdRef.current === storageQuizId) return
+
         try {
             const parsed = queueStorage.getQueue(storageQuizId)
             dispatch({ type: "replace", items: parsed })
         } catch {
             dispatch({ type: "clear" })
         }
-    }
+        hydratedStorageQuizIdRef.current = storageQuizId
+    }, [storageQuizId, queueStorage])
 
-    // persist
+    // Persist the queue to local storage whenever it changes
     useEffect(() => {
-        if (hydratedStorageQuizId !== storageQuizId) return
+        if (hydratedStorageQuizIdRef.current !== storageQuizId) return
 
         try {
             queueStorage.setQueue(storageQuizId, queue)
         } catch {
-            // ignore
+            // gracefully ignore persistence errors
         }
-    }, [queueStorage, storageQuizId, queue, hydratedStorageQuizId])
+    }, [queueStorage, storageQuizId, queue])
 
     const enqueue = useCallback((item: QueueItem) => {
         dispatch({ type: "enqueue", item })
@@ -174,6 +234,7 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         setIsFlushing(true)
         setLastError(null)
         try {
+            // Ensure operations are processed in the correct logical order
             const items = [...queue].sort((a, b) => {
                 const order: Record<string, number> = {
                     delete: 0,
@@ -183,137 +244,61 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
                 }
                 return (order[a.op] ?? 99) - (order[b.op] ?? 99)
             })
+
             const idMap: Record<string, string> = {}
-
             const succeededIds = new Set<string>()
-            await items.reduce(async (prevPromise, rawItem) => {
-                await prevPromise
 
-                const item = { ...rawItem }
-
-                if (!item.quizId) {
-                    await Promise.resolve()
-                    return undefined
-                }
-
-                try {
-                    // translate temporary question IDs if we have a mapping
-                    if (item.questionId && idMap[item.questionId]) {
-                        item.questionId = idMap[item.questionId]
-                    }
-
-                    if (item.op === "create") {
-                        const req = item.payload as QuestionApiRequest
-                        const created = await questionAdapterImpl.createQuestion(item.quizId, req)
-                        if (item.questionId) {
-                            idMap[item.questionId] = created.id
-                        }
-                        succeededIds.add(item.id)
-                    } else if (item.op === "update") {
-                        const req = item.payload as Partial<QuestionApiRequest>
-                        if (!item.questionId) {
-                            await Promise.resolve()
-                            return undefined
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
+            for (let i = 0; i < items.length; i += 1) {
+                const item = { ...items[i] }
+                if (item.quizId) {
+                    try {
+                        // Pre-translate ID if already mapped by a previous create operation
+                        if (item.questionId && idMap[item.questionId]) {
+                            item.questionId = idMap[item.questionId]
                         }
 
-                        const isTemp = String(item.questionId).startsWith("temp-")
-                        if (isTemp && !idMap[item.questionId]) {
-                            // Try to find a queued create for this temp id
-                            const queuedCreate = items.find(
-                                (x) => x.op === "create" && x.questionId === item.questionId
-                            )
-                            if (queuedCreate) {
-                                const createReq = queuedCreate.payload as QuestionApiRequest
-                                const created = await questionAdapterImpl.createQuestion(
-                                    item.quizId,
-                                    createReq
-                                )
-                                if (queuedCreate.questionId)
-                                    idMap[queuedCreate.questionId] = created.id
-                                // also map current item's questionId to the created id
-                                idMap[item.questionId] = created.id
-                                await Promise.resolve()
-                                return undefined
-                            }
+                        let result: ProcessResult = { status: "skipped" }
 
-                            const maybeCreate = req as QuestionApiRequest
-                            const opts = (maybeCreate as Partial<QuestionApiRequest>)?.options
-                            const hasOptions = Array.isArray(opts) && opts.length >= 2
-                            if (
-                                maybeCreate &&
-                                typeof maybeCreate.question === "string" &&
-                                maybeCreate.type &&
-                                hasOptions
-                            ) {
-                                const created = await questionAdapterImpl.createQuestion(
-                                    item.quizId,
-                                    maybeCreate
-                                )
-                                idMap[item.questionId] = created.id
-                                await Promise.resolve()
-                                return undefined
-                            }
-
-                            // otherwise, skip updating now and let queue handling
-                            // or a later flush handle creation first
-                            await Promise.resolve()
-                            return undefined
-                        }
-
-                        await questionAdapterImpl.updateQuestion(item.quizId, item.questionId, req)
-                        succeededIds.add(item.id)
-                    } else if (item.op === "delete") {
-                        if (!item.questionId) {
-                            await Promise.resolve()
-                            return undefined
-                        }
-                        await questionAdapterImpl.deleteQuestion(item.quizId, item.questionId)
-                        succeededIds.add(item.id)
-                    } else if (item.op === "reorder") {
-                        const payload = item.payload as { order?: string[] } | undefined
-                        let order = payload?.order ?? []
-                        if (order.length) {
-                            // Map known ids
-                            order = order.map((id) => idMap[id] ?? id)
-                            const tempIdPromises = order.map(async (id) => {
-                                if (String(id).startsWith("temp-") && !idMap[id]) {
-                                    const queuedCreate = items.find(
-                                        (x) => x.op === "create" && x.questionId === id
-                                    )
-                                    if (queuedCreate) {
-                                        const created = await questionAdapterImpl.createQuestion(
-                                            item.quizId,
-                                            queuedCreate.payload as QuestionApiRequest
-                                        )
-                                        if (queuedCreate.questionId) {
-                                            idMap[queuedCreate.questionId] = created.id
-                                        }
-                                        return created.id
-                                    }
+                        switch (item.op) {
+                            case "create":
+                                // eslint-disable-next-line no-await-in-loop
+                                result = await processCreateOp(item)
+                                if (
+                                    result.status === "success" &&
+                                    item.questionId &&
+                                    result.createdId
+                                ) {
+                                    // Record the mapping from temporary ID to real backend ID
+                                    idMap[item.questionId] = result.createdId
                                 }
-                                return id
-                            })
-                            order = await Promise.all(tempIdPromises)
+                                break
+                            case "update":
+                                // eslint-disable-next-line no-await-in-loop
+                                result = await processUpdateOp(item)
+                                break
+                            case "delete":
+                                // eslint-disable-next-line no-await-in-loop
+                                result = await processDeleteOp(item)
+                                break
+                            case "reorder":
+                                // eslint-disable-next-line no-await-in-loop
+                                result = await processReorderOp(item, idMap)
+                                break
+                            default:
+                                break
                         }
 
-                        const unmapped = order.find((id) => String(id).startsWith("temp-"))
-                        if (unmapped) {
-                            await Promise.resolve()
-                            return undefined
+                        if (result.status === "success") {
+                            succeededIds.add(item.id)
                         }
-
-                        await questionAdapterImpl.reorderQuestions(item.quizId, order)
-                        succeededIds.add(item.id)
+                    } catch (innerErr) {
+                        const e = innerErr instanceof Error ? innerErr : new Error(String(innerErr))
+                        setLastError(e)
+                        throw e
                     }
-
-                    await Promise.resolve()
-                    return undefined
-                } catch (innerErr) {
-                    const e = innerErr instanceof Error ? innerErr : new Error(String(innerErr))
-                    setLastError(e)
-                    throw e
                 }
-            }, Promise.resolve())
+            }
 
             // Remove only successfully processed items from the persisted queue.
             // Keep any skipped items (e.g., reorders with unmapped temp ids) for a later flush.
@@ -332,6 +317,10 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
                         }
                     })
                 dispatch({ type: "replace", items: remaining })
+
+                if (remaining.length === 0) {
+                    queueStorage.clearQueue(storageQuizId)
+                }
             } catch {
                 // ignore persistence errors here
             }
@@ -344,7 +333,7 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         } finally {
             setIsFlushing(false)
         }
-    }, [queue])
+    }, [queue, queueStorage, storageQuizId])
 
     return {
         enqueue,

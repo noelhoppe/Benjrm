@@ -109,7 +109,7 @@ export default function AnswerCard({
                             onClick={onToggleCorrect}
                             type="button"
                             variant="ghost"
-                            className={`h-8 w-full gap-2 rounded-full px-3 text-[10px] font-bold tracking-widest shadow-none transition-colors sm:w-auto ${
+                            className={`h-8 w-full gap-2 rounded-full px-3 text-[10px] font-bold tracking-widest shadow-none transition-colors sm:ml-auto sm:w-auto ${
                                 correct
                                     ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/25"
                                     : "border-red-400/40 bg-red-500/20 text-red-300 hover:bg-red-500/25"

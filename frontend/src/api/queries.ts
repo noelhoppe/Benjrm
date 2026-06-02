@@ -5,6 +5,7 @@ import type { UseQueryResult, UseMutationResult } from "@tanstack/react-query"
 
 import { getQuiz, getQuizzes, createQuiz, updateQuiz, deleteQuiz } from "@/api/quiz"
 import type { CreateQuizInput, Quiz } from "@/api/quiz"
+import { createQuestionQueueStorage } from "@/api/questions/storage/questionQueueStorage.ts"
 
 // Query Keys
 export const quizKeys = {
@@ -69,8 +70,10 @@ export function useDeleteQuiz(): UseMutationResult<void, Error, string> {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async (quizId: string): Promise<void> => deleteQuiz(quizId),
-        onSuccess: () => {
+        onSuccess: (_data, quizId) => {
             queryClient.invalidateQueries({ queryKey: quizKeys.lists() })
+            const queueStorage = createQuestionQueueStorage()
+            queueStorage.clearQueue(quizId)
         },
     })
 }

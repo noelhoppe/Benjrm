@@ -47,13 +47,14 @@ export default class QuestionApiAdapter implements QuestionAdapter {
             return
         }
 
-        const promises = order.map(async (id, i) => {
+        for (let i = 0; i < order.length; i += 1) {
+            const id = order[i]
             const prev = i > 0 ? order[i - 1] : null
             const next = i < order.length - 1 ? order[i + 1] : null
-
-            return apiPatch(`/quizzes/${quizId}/questions/${id}`, { prev, next })
-        })
-
-        await Promise.all(promises)
+            // disable eslint for this line because we need to ensure that the requests are sent in order, and sending them in parallel could
+            // will be altered in a later PR to use a more efficient approach, but for now this is the simplest way to ensure correct ordering without making assumptions about the backend implementation
+            // eslint-disable-next-line no-await-in-loop
+            await apiPatch(`/quizzes/${quizId}/questions/${id}`, { prev, next })
+        }
     }
 }

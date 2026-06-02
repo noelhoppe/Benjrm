@@ -1,7 +1,7 @@
 // frontend/src/components/QuestionEditor.tsx
 
 import type { JSX } from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import MDEditor from "@uiw/react-md-editor"
 import QuestionAnswerOptions from "./QuestionAnswerOptions"
 import {
@@ -40,15 +40,17 @@ export default function QuestionEditor({
     onReorderOptions,
 }: QuestionEditorProps): JSX.Element {
     const { theme } = useTheme()
-    const [isMdEditor, setIsMdEditor] = useState(question.type === "SLIDE")
-    const [prevQuestionId, setPrevQuestionId] = useState(question.id)
-    const [prevQuestionType, setPrevQuestionType] = useState(question.type)
+    const [isMdEditor, setIsMdEditor] = useState(() => {
+        const saved = localStorage.getItem("preferredEditorMode")
+        if (saved !== null) {
+            return saved === "markdown"
+        }
+        return question.type === "SLIDE"
+    })
 
-    if (question.id !== prevQuestionId || question.type !== prevQuestionType) {
-        setPrevQuestionId(question.id)
-        setPrevQuestionType(question.type)
-        setIsMdEditor(question.type === "SLIDE")
-    }
+    useEffect(() => {
+        localStorage.setItem("preferredEditorMode", isMdEditor ? "markdown" : "visual")
+    }, [isMdEditor])
 
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-6">

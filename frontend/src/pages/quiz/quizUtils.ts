@@ -1,29 +1,13 @@
 import type { Modifier } from "@dnd-kit/core"
 import type { Question } from "@/types/quiz"
-import type { QuestionApiRequest } from "@/api/questions/types/question.api"
+import type { QuestionApiRequest, QuestionApiResponse } from "@/api/questions/types/question.api"
 import tempId from "@/utils/tempId"
 import type { QueueItem } from "@/hooks/useQuestionChangeQueue"
 
-export interface QuestionApiResponse {
-    id: string
-    question: string
-    type: Question["type"]
-    hidden: boolean
-    options: {
-        id: string
-        answer?: string
-        correct: boolean
-    }[]
-}
-
 export function getQuestionPreviewText(text: string | undefined, type?: string): string {
-    if (!text?.trim()) {
-        return type === "SLIDE" ? "Untitled slide" : "Untitled question"
-    }
-
     const firstLine =
         text
-            .split("\n")
+            ?.split("\n")
             .map((l) => l.trim())
             .find((l) => l.length > 0) ?? ""
     const cleaned = firstLine
@@ -66,30 +50,20 @@ export function questionToRequest(question: Question): QuestionApiRequest {
     }
 }
 
-export function responseToQuestion(response: unknown): Question {
-    const resp = (response as Partial<QuestionApiResponse>) ?? {}
+export function responseToQuestion(response: QuestionApiResponse): Question {
+    const optionsRaw = Array.isArray(response.options) ? response.options : []
 
-    const optionsRaw = Array.isArray(resp.options) ? resp.options : []
-
-    const options = optionsRaw.map((opt) => {
-        const o = opt as Record<string, unknown>
-        const id = typeof o.id === "string" ? o.id : String(o.id ?? tempId())
-        const answer = typeof o.answer === "string" ? o.answer : String(o.answer ?? "")
-        const correct = typeof o.correct === "boolean" ? o.correct : Boolean(o.correct)
-        return { id, answer, correct }
-    })
-
-    const id = typeof resp.id === "string" ? resp.id : String(resp.id ?? tempId())
-    const questionText =
-        typeof resp.question === "string" ? resp.question : String(resp.question ?? "")
-    const type = (resp.type as Question["type"]) ?? "MULTIPLE_CHOICE"
-    const hidden = typeof resp.hidden === "boolean" ? resp.hidden : Boolean(resp.hidden)
+    const options = optionsRaw.map((opt) => ({
+        id: String(opt.id ?? tempId()),
+        answer: String(opt.answer ?? ""),
+        correct: Boolean((opt as { correct?: boolean }).correct),
+    }))
 
     return {
-        id,
-        question: questionText,
-        type,
-        hidden,
+        id: String(response.id ?? tempId()),
+        question: String(response.question ?? ""),
+        type: response.type ?? "MULTIPLE_CHOICE",
+        hidden: Boolean(response.hidden),
         options,
     }
 }
@@ -97,7 +71,6 @@ export function responseToQuestion(response: unknown): Question {
 export function applyQueueToQuestions(baseQuestions: Question[], queue: QueueItem[]): Question[] {
     if (queue.length === 0) return baseQuestions
 
-    const questionsById = new Map(baseQuestions.map((question) => [question.id, question]))
     let draftQuestions = [...baseQuestions]
 
     const applyRequest = (question: Question, request: QuestionApiRequest): Question => {
@@ -131,7 +104,7 @@ export function applyQueueToQuestions(baseQuestions: Question[], queue: QueueIte
 
             const orderSet = new Set(order)
             const orderedQuestions = order
-                .map((questionId) => questionsById.get(questionId))
+                .map((questionId) => draftQuestions.find((q) => q.id === questionId))
                 .filter((question): question is Question => Boolean(question))
             const remainingQuestions = draftQuestions.filter(
                 (question) => !orderSet.has(question.id)
@@ -145,7 +118,6 @@ export function applyQueueToQuestions(baseQuestions: Question[], queue: QueueIte
 
         if (item.op === "delete") {
             draftQuestions = draftQuestions.filter((question) => question.id !== item.questionId)
-            questionsById.delete(item.questionId)
             return
         }
 
@@ -170,7 +142,6 @@ export function applyQueueToQuestions(baseQuestions: Question[], queue: QueueIte
             } else {
                 draftQuestions.push(createdQuestion)
             }
-            questionsById.set(item.questionId, createdQuestion)
             return
         }
 
@@ -178,7 +149,7 @@ export function applyQueueToQuestions(baseQuestions: Question[], queue: QueueIte
             const request = item.payload as Partial<QuestionApiRequest> | undefined
             if (!request) return
 
-            const existing = questionsById.get(item.questionId)
+            const existing = draftQuestions.find((q) => q.id === item.questionId)
             if (!existing) return
 
             const updatedQuestion = applyRequest(existing, {
@@ -191,7 +162,6 @@ export function applyQueueToQuestions(baseQuestions: Question[], queue: QueueIte
             draftQuestions = draftQuestions.map((q) =>
                 q.id === item.questionId ? updatedQuestion : q
             )
-            questionsById.set(item.questionId, updatedQuestion)
         }
     })
 
@@ -208,3 +178,23 @@ export const restrictToVerticalAxis: Modifier = ({ transform }) => ({
     ...transform,
     x: 0,
 })
+
+export const restrictToParentElement: Modifier = ({
+    containerNodeRect,
+    draggingNodeRect,
+    transform,
+}) => {
+    if (!draggingNodeRect || !containerNodeRect) return transform
+
+    return {
+        ...transform,
+        x: Math.min(
+            Math.max(transform.x, containerNodeRect.left - draggingNodeRect.left),
+            containerNodeRect.right - draggingNodeRect.right
+        ),
+        y: Math.min(
+            Math.max(transform.y, containerNodeRect.top - draggingNodeRect.top),
+            containerNodeRect.bottom - draggingNodeRect.bottom
+        ),
+    }
+}

@@ -28,7 +28,8 @@ export interface QuestionApiRequest {
         | (SingleChoiceAnswerRequest | MultipleChoiceAnswerRequest | OrderAnswerRequest)[]
 }
 
-export interface QuestionApiResponse extends QuestionApiRequest, Identifier, ReadonlyMetadata {
+export interface QuestionApiResponse
+    extends Omit<QuestionApiRequest, "prev" | "next" | "options">, Identifier, ReadonlyMetadata {
     options:
         | SlideAnswerResponse
         | (SingleChoiceAnswerResponse | MultipleChoiceAnswerResponse | OrderAnswerResponse)[]

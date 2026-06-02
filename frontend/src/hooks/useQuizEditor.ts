@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { arrayMove } from "@dnd-kit/sortable"
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core"
 import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { useQuiz, useDeleteQuiz } from "@/api/queries"
 import { useQuestions } from "@/api/questions"
 import questionKeys from "@/api/questions/utils/questionKeys"
@@ -46,9 +47,6 @@ export interface UseQuizEditorResult {
     handleDeleteOption: (index: number) => void
     handleSaveQuestions: () => Promise<{ ok: boolean; error?: string }>
     isSavingQuestions: boolean
-    saveSuccess: string | null
-    saveError: string | null
-    isSaveSuccessVisible: boolean
     hasUnsavedChanges: boolean
     setHasUnsavedChanges: (b: boolean) => void
     enqueue: (item: QueueItem) => void
@@ -79,13 +77,8 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null)
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(!quizId)
     const [isSavingQuestions, setIsSavingQuestions] = useState(false)
-    const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
-    const [saveError, setSaveError] = useState<string | null>(null)
-    const [isSaveSuccessVisible, setIsSaveSuccessVisible] = useState(false)
 
     const saveTimeoutRef = useRef<number | null>(null)
-    const saveSuccessHideTimeoutRef = useRef<number | null>(null)
-    const saveSuccessCleanupTimeoutRef = useRef<number | null>(null)
     const reorderTimeoutRef = useRef<number | null>(null)
 
     const {
@@ -128,10 +121,6 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     useEffect(
         () => () => {
             if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current)
-            if (saveSuccessHideTimeoutRef.current)
-                window.clearTimeout(saveSuccessHideTimeoutRef.current)
-            if (saveSuccessCleanupTimeoutRef.current)
-                window.clearTimeout(saveSuccessCleanupTimeoutRef.current)
             if (reorderTimeoutRef.current) window.clearTimeout(reorderTimeoutRef.current)
         },
         []
@@ -139,33 +128,12 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
 
     const markUnsavedChanges = () => {
         setHasUnsavedChanges(true)
-        setIsSaveSuccessVisible(false)
-        setSaveSuccess(null)
-        setSaveError(null)
-
-        if (saveSuccessHideTimeoutRef.current) {
-            window.clearTimeout(saveSuccessHideTimeoutRef.current)
-            saveSuccessHideTimeoutRef.current = null
-        }
-
-        if (saveSuccessCleanupTimeoutRef.current) {
-            window.clearTimeout(saveSuccessCleanupTimeoutRef.current)
-            saveSuccessCleanupTimeoutRef.current = null
-        }
     }
 
     const discardChanges = () => {
         if (reorderTimeoutRef.current) {
             window.clearTimeout(reorderTimeoutRef.current)
             reorderTimeoutRef.current = null
-        }
-        if (saveSuccessHideTimeoutRef.current) {
-            window.clearTimeout(saveSuccessHideTimeoutRef.current)
-            saveSuccessHideTimeoutRef.current = null
-        }
-        if (saveSuccessCleanupTimeoutRef.current) {
-            window.clearTimeout(saveSuccessCleanupTimeoutRef.current)
-            saveSuccessCleanupTimeoutRef.current = null
         }
 
         clear()
@@ -178,7 +146,6 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         setQuestions(baseQs)
         setCurrentQuestionIndex((prev) => Math.min(prev, Math.max(baseQs.length - 1, 0)))
         setHasUnsavedChanges(false)
-        setSaveError(null)
     }
 
     const currentQuestion = questions[currentQuestionIndex] ?? questions[0] ?? createEmptyQuestion()
@@ -263,14 +230,14 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     const handleSaveQuestions = async () => {
         const validationError = validateQuestions()
         if (validationError) {
-            setSaveError(validationError)
+            toast.error(validationError)
             return { ok: false, error: validationError }
         }
-        if (!quizId)
-            return {
-                ok: false,
-                error: "Save the quiz first before persisting questions to the adapter.",
-            }
+        if (!quizId) {
+            const err = "Save the quiz first before persisting questions to the adapter."
+            toast.error(err)
+            return { ok: false, error: err }
+        }
 
         if (reorderTimeoutRef.current) {
             window.clearTimeout(reorderTimeoutRef.current)
@@ -289,23 +256,8 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
             }
 
             await queryClient.invalidateQueries({ queryKey: questionKeys.all(quizId) })
-            setSaveError(null)
             setHasUnsavedChanges(false)
-            setSaveSuccess("Quiz changes saved.")
-            setIsSaveSuccessVisible(true)
-
-            if (saveSuccessHideTimeoutRef.current)
-                window.clearTimeout(saveSuccessHideTimeoutRef.current)
-            if (saveSuccessCleanupTimeoutRef.current)
-                window.clearTimeout(saveSuccessCleanupTimeoutRef.current)
-
-            saveSuccessHideTimeoutRef.current = window.setTimeout(() => {
-                setIsSaveSuccessVisible(false)
-                saveSuccessCleanupTimeoutRef.current = window.setTimeout(
-                    () => setSaveSuccess(null),
-                    650
-                )
-            }, 5000)
+            toast.success("Quiz changes saved.")
 
             if (typeof window !== "undefined") {
                 if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current)
@@ -315,7 +267,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
             return { ok: true }
         } catch (err) {
             const message = toFriendlySaveError(err)
-            setSaveError(message)
+            toast.error(message)
             return { ok: false, error: message }
         } finally {
             setIsSavingQuestions(false)
@@ -483,9 +435,6 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         handleDeleteOption,
         handleSaveQuestions,
         isSavingQuestions,
-        saveSuccess,
-        saveError,
-        isSaveSuccessVisible,
         hasUnsavedChanges,
         setHasUnsavedChanges,
         enqueue,

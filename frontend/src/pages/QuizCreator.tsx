@@ -1,9 +1,10 @@
 // frontend/src/pages/QuizCreator.tsx
 
 import type { JSX } from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Edit2, Settings, Trash2 } from "lucide-react"
 import { useParams, useNavigate } from "react-router"
+import { toast, Toaster } from "sonner"
 import {
     closestCenter,
     DndContext,
@@ -18,8 +19,11 @@ import CreateQuizModal from "../components/CreateQuizModal"
 import QuestionEditor from "../components/QuestionEditor"
 import QuestionSidebar from "../components/QuestionSidebar"
 import SettingsPanel from "../components/SettingsPanel"
-import QuizCreatorFeedback from "../components/QuizCreatorFeedback"
-import { restrictToVerticalAxis, getQuestionPreviewText } from "./quiz/quizUtils"
+import {
+    restrictToVerticalAxis,
+    restrictToParentElement,
+    getQuestionPreviewText,
+} from "./quiz/quizUtils"
 import useQuizEditor from "@/hooks/useQuizEditor"
 import { Button } from "@/shadcn/components/ui/button"
 import {
@@ -62,23 +66,45 @@ export default function QuizCreator(): JSX.Element {
         handleDeleteOption,
         handleSaveQuestions,
         isSavingQuestions,
-        saveSuccess,
-        saveError,
-        isSaveSuccessVisible,
         hasUnsavedChanges,
         deleteQuizMutation,
         discardChanges,
         hasInitializedQuestions,
     } = useQuizEditor(quizId)
 
-    // normalize errors to strings to avoid nested ternaries in JSX
-    let questionLoadErrorStr: string | null = null
-    if (typeof questionLoadError === "string") questionLoadErrorStr = questionLoadError
-    else if (questionLoadError instanceof Error) questionLoadErrorStr = questionLoadError.message
+    useEffect(() => {
+        if (isLoading && quizId) {
+            toast.loading("Loading quiz...", { id: "quiz-loading" })
+        } else {
+            toast.dismiss("quiz-loading")
+            if (error && quizId) {
+                const msg = error instanceof Error ? error.message : String(error)
+                toast.error(msg, { id: "quiz-error" })
+            }
+        }
+    }, [isLoading, error, quizId])
 
-    let quizLoadErrorStr: string | null = null
-    if (typeof error === "string") quizLoadErrorStr = error
-    else if (error instanceof Error) quizLoadErrorStr = error.message
+    useEffect(() => {
+        if (isLoadingQuestions && quizId && !hasInitializedQuestions) {
+            toast.loading("Loading questions...", { id: "questions-loading" })
+        } else {
+            toast.dismiss("questions-loading")
+            if (questionLoadError) {
+                toast.error("Failed to load questions.", { id: "questions-error" })
+            }
+        }
+    }, [isLoadingQuestions, questionLoadError, quizId, hasInitializedQuestions])
+
+    useEffect(() => {
+        if (hasUnsavedChanges) {
+            toast.warning("There are still unsaved changes. Click Save Quiz to save them.", {
+                id: "unsaved-changes",
+                duration: Infinity,
+            })
+        } else {
+            toast.dismiss("unsaved-changes")
+        }
+    }, [hasUnsavedChanges])
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -88,18 +114,16 @@ export default function QuizCreator(): JSX.Element {
     // UI-only state
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-    const [deleteError, setDeleteError] = useState<string | null>(null)
 
     const handleDelete = async (): Promise<void> => {
         if (!quizId) return
 
         try {
-            setDeleteError(null)
             await deleteQuizMutation.mutateAsync(quizId)
             setIsConfirmOpen(false)
             navigate("/dashboard")
         } catch {
-            setDeleteError("Quiz could not be deleted. Please try again.")
+            toast.error("Quiz could not be deleted. Please try again.")
         }
     }
 
@@ -108,10 +132,10 @@ export default function QuizCreator(): JSX.Element {
     const handleConfirmClose = () => setIsConfirmOpen(false)
 
     return (
-        <div className="bg-background text-foreground min-h-screen overflow-x-hidden">
-            <div className="flex w-full flex-col px-4 py-8 sm:px-8">
+        <div className="bg-background text-foreground flex h-screen flex-col overflow-hidden">
+            <div className="flex w-full flex-1 flex-col overflow-hidden px-4 py-6 sm:px-8">
                 {/* Header */}
-                <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <header className="mb-6 flex shrink-0 flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3">
                             <h1 className="text-4xl font-extrabold md:text-5xl">{quizTitle}</h1>
@@ -209,32 +233,18 @@ export default function QuizCreator(): JSX.Element {
                     </div>
                 </header>
 
-                <QuizCreatorFeedback
-                    deleteError={deleteError}
-                    hasInitializedQuestions={hasInitializedQuestions}
-                    hasUnsavedChanges={hasUnsavedChanges}
-                    isLoading={isLoading}
-                    isLoadingQuestions={isLoadingQuestions}
-                    isSaveSuccessVisible={isSaveSuccessVisible}
-                    questionLoadError={questionLoadErrorStr}
-                    quizId={quizId}
-                    quizLoadError={quizLoadErrorStr}
-                    saveError={saveError}
-                    saveSuccess={saveSuccess}
-                />
-
                 {/* Layout */}
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[280px_1fr_320px]">
+                <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-hidden xl:grid-cols-[280px_1fr_320px]">
                     {/* Sidebar */}
                     <DndContext
                         collisionDetection={closestCenter}
-                        modifiers={[restrictToVerticalAxis]}
+                        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
                         onDragCancel={handleDragCancel}
                         onDragEnd={handleDragEnd}
                         onDragStart={handleDragStart}
                         sensors={sensors}
                     >
-                        <div className="bg-muted/30 border-border flex h-full min-h-0 flex-col rounded-3xl border p-4 shadow-xl backdrop-blur-sm">
+                        <div className="bg-muted/30 border-border custom-scrollbar flex h-full min-h-0 flex-col overflow-y-auto rounded-3xl border p-4 shadow-xl backdrop-blur-sm">
                             <QuestionSidebar
                                 activeIndex={currentQuestionIndex}
                                 onAdd={handleAddQuestion}
@@ -288,20 +298,22 @@ export default function QuizCreator(): JSX.Element {
                         </DragOverlay>
                     </DndContext>
 
-                    <QuestionEditor
-                        onAddOption={handleAddOption}
-                        onChangeOption={updateOption}
-                        onDeleteOption={handleDeleteOption}
-                        onReorderOptions={reorderOptions}
-                        onToggleCorrect={toggleOptionCorrect}
-                        question={currentQuestion}
-                        questionIndex={currentQuestionIndex}
-                        totalQuestions={questions.length}
-                        updateQuestion={updateQuestion}
-                    />
+                    <div className="custom-scrollbar h-full overflow-y-auto rounded-3xl px-1">
+                        <QuestionEditor
+                            onAddOption={handleAddOption}
+                            onChangeOption={updateOption}
+                            onDeleteOption={handleDeleteOption}
+                            onReorderOptions={reorderOptions}
+                            onToggleCorrect={toggleOptionCorrect}
+                            question={currentQuestion}
+                            questionIndex={currentQuestionIndex}
+                            totalQuestions={questions.length}
+                            updateQuestion={updateQuestion}
+                        />
+                    </div>
 
                     {/* Settings */}
-                    <div className="bg-muted/30 border-border rounded-3xl border p-4 shadow-xl backdrop-blur-sm">
+                    <div className="bg-muted/30 border-border custom-scrollbar h-full overflow-y-auto rounded-3xl border p-4 shadow-xl backdrop-blur-sm">
                         <SettingsPanel question={currentQuestion} />
                     </div>
                 </div>
@@ -315,6 +327,7 @@ export default function QuizCreator(): JSX.Element {
                 onSuccess={handleEditSuccess}
                 quizId={quizId}
             />
+            <Toaster richColors position="bottom-right" />
         </div>
     )
 }
