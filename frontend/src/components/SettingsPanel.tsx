@@ -4,7 +4,7 @@ import type { JSX } from "react"
 import AnswerPreviewGrid from "./AnswerPreviewGrid"
 import { ScrollArea } from "@/shadcn/components/ui/scroll-area"
 import type { Question } from "@/types/question"
-import MarkdownPageComponent from "@/components/markdown/MarkdownPageComponent"
+import MarkdownComponent from "@/components/markdown/MarkdownComponent"
 
 interface SettingsPanelProps {
     question: Question
@@ -34,7 +34,7 @@ export default function SettingsPanel({ question }: SettingsPanelProps): JSX.Ele
                             </div>
                             {question.type === "SLIDE" ? (
                                 <div className="mt-2 text-left text-xs leading-5 text-slate-900 dark:text-white">
-                                    <MarkdownPageComponent
+                                    <MarkdownComponent
                                         content={
                                             question.question?.trim() ||
                                             "*Type your markdown here...*"
@@ -42,8 +42,8 @@ export default function SettingsPanel({ question }: SettingsPanelProps): JSX.Ele
                                     />
                                 </div>
                             ) : (
-                                <div className="mt-2 text-center text-slate-900 dark:text-white [&_p]:text-center [&_p]:text-lg [&_p]:leading-tight [&_p]:font-bold md:[&_p]:text-xl">
-                                    <MarkdownPageComponent
+                                <div className="[&_p]:text-md mt-2 text-center text-slate-900 dark:text-white [&_p]:text-center [&_p]:leading-tight [&_p]:font-bold md:[&_p]:text-lg">
+                                    <MarkdownComponent
                                         content={
                                             question.question?.trim() || "Type your question..."
                                         }
