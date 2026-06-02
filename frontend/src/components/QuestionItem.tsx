@@ -47,6 +47,23 @@ export default function QuestionItem({
         onDelete(index)
     }
 
+    let previewOptions;
+    if (question.type === "SLIDE") {
+        previewOptions = null
+    } else if (question.type === "ORDER") {
+        previewOptions = (<div className="grid grid-cols-1 gap-1.5 opacity-80">
+            <div className="h-2 rounded-full bg-[#2d4cc9]" />
+            <div className="h-2 rounded-full bg-[#ffa602]" />
+        </div>)
+    } else {
+        previewOptions = (<div className="grid grid-cols-2 gap-1.5 opacity-80">
+            <div className="h-2 rounded-full bg-[#2d4cc9]" />
+            <div className="h-2 rounded-full bg-[#ffa602]" />
+            <div className="h-2 rounded-full bg-[#11c8d4]" />
+            <div className="h-2 rounded-full bg-[#ff4949]" />
+        </div>)
+    }
+
     return (
         <Button
             key={question.id}
@@ -108,14 +125,7 @@ export default function QuestionItem({
                 </p>
 
                 {/* Preview */}
-                {question.type !== "SLIDE" ? (
-                    <div className="grid grid-cols-2 gap-1.5 opacity-80">
-                        <div className="h-2 rounded-full bg-[#2d4cc9]" />
-                        <div className="h-2 rounded-full bg-[#ffa602]" />
-                        <div className="h-2 rounded-full bg-[#11c8d4]" />
-                        <div className="h-2 rounded-full bg-[#ff4949]" />
-                    </div>
-                ) : null}
+                {previewOptions}
             </div>
         </Button>
     )

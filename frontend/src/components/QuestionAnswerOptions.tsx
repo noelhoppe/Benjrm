@@ -13,6 +13,7 @@ interface QuestionAnswerOptionsProps {
     onReorderOptions: (activeId: string, overId: string) => void
     options: QuestionOption[]
     type?: Question["type"]
+    errorAffectedAnswers: number[]
 }
 
 export default function QuestionAnswerOptions({
@@ -23,10 +24,12 @@ export default function QuestionAnswerOptions({
     onReorderOptions,
     options,
     type,
+    errorAffectedAnswers,
 }: QuestionAnswerOptionsProps): JSX.Element {
     if (type === "ORDER") {
         return (
             <OrderOptions
+                errorAffectedAnswers={errorAffectedAnswers}
                 onAddOption={onAddOption}
                 onChange={onChange}
                 onDeleteOption={onDeleteOption}
@@ -38,6 +41,7 @@ export default function QuestionAnswerOptions({
 
     return (
         <StandardOptions
+            errorAffectedAnswers={errorAffectedAnswers}
             onAddOption={onAddOption}
             onChange={onChange}
             onDeleteOption={onDeleteOption}

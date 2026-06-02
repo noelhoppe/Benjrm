@@ -12,6 +12,7 @@ export interface AnswerCardProps {
     accent?: string
     glow?: string
     index?: number
+    error: boolean
 
     placeholder: string
     value: string
@@ -34,6 +35,7 @@ export default function AnswerCard({
     glow,
     canDelete = false,
     index,
+    error,
 }: AnswerCardProps): JSX.Element {
     // If any visual prop is provided, use provided (with defaults). Otherwise, derive from index when available.
     const hasProvidedVisuals = icon != null || accent != null || glow != null
@@ -80,12 +82,16 @@ export default function AnswerCard({
                     </div>
 
                     <Textarea
-                        className="placeholder:text-muted-foreground/60 bg-muted/90 dark:bg-muted/25 h-28 w-full resize-none overflow-y-auto border-none p-4 text-lg leading-7 font-semibold shadow-none focus-visible:ring-0 sm:h-24 sm:text-lg"
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={placeholder}
                         rows={2}
                         style={{ fieldSizing: "fixed" }}
                         value={value}
+                        className={`placeholder:text-muted-foreground/60 h-28 w-full resize-none overflow-y-auto p-4 text-lg leading-7 font-semibold shadow-none focus-visible:ring-0 sm:h-24 sm:text-lg ${
+                            error
+                                ? "border-red-400! bg-red-50 dark:border-red-400/30! dark:bg-red-500/10"
+                                : "bg-muted/90 dark:bg-muted/25 border-none"
+                        }`}
                     />
                 </div>
 

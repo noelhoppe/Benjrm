@@ -47,6 +47,10 @@ export default function QuizCreator(): JSX.Element {
         isLoadingQuestions,
         questionLoadError,
         error,
+        questionError,
+        showBigQuestionError,
+        errorIsQuestion,
+        errorAffectedAnswers,
         questions,
         currentQuestionIndex,
         setCurrentQuestionIndex,
@@ -300,13 +304,17 @@ export default function QuizCreator(): JSX.Element {
 
                     <div className="custom-scrollbar h-full overflow-y-auto rounded-3xl px-1">
                         <QuestionEditor
+                            errorAffectedAnswers={errorAffectedAnswers}
+                            errorIsQuestion={errorIsQuestion}
                             onAddOption={handleAddOption}
                             onChangeOption={updateOption}
                             onDeleteOption={handleDeleteOption}
                             onReorderOptions={reorderOptions}
                             onToggleCorrect={toggleOptionCorrect}
                             question={currentQuestion}
+                            questionError={questionError}
                             questionIndex={currentQuestionIndex}
+                            showBigQuestionError={showBigQuestionError}
                             totalQuestions={questions.length}
                             updateQuestion={updateQuestion}
                         />

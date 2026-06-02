@@ -20,6 +20,10 @@ interface QuestionEditorProps {
     question: Question
     questionIndex: number
     totalQuestions: number
+    questionError: string | null
+    showBigQuestionError: boolean
+    errorIsQuestion: boolean
+    errorAffectedAnswers: number[]
     updateQuestion: (data: Partial<Question>) => void
     onAddOption: () => void
     onChangeOption: (index: number, value: string) => void
@@ -32,6 +36,10 @@ export default function QuestionEditor({
     question,
     questionIndex,
     totalQuestions,
+    questionError,
+    showBigQuestionError,
+    errorIsQuestion,
+    errorAffectedAnswers,
     updateQuestion,
     onAddOption,
     onChangeOption,
@@ -54,6 +62,11 @@ export default function QuestionEditor({
 
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+            {questionError && showBigQuestionError ? (
+                <div className="text-black-950 dark:text-white-200 rounded-2xl border border-red-400 bg-red-50 px-4 py-3 text-sm font-medium shadow-sm dark:border-red-400/30 dark:bg-red-500/10">
+                    {questionError}
+                </div>
+            ) : null}
             {/* Question Card */}
             <div className="bg-background/90 dark:bg-muted/30 border-border relative overflow-hidden rounded-3xl border p-6 shadow-xl backdrop-blur-sm md:p-8">
                 <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-[#00F2FF]/10 blur-3xl" />
@@ -96,14 +109,23 @@ export default function QuestionEditor({
 
                     {isMdEditor ? (
                         <div
-                            className="border-border [&_.w-md-editor-toolbar]:!border-border [&_.w-md-editor]:!bg-muted/90 dark:[&_.w-md-editor]:!bg-muted/25 mt-4 overflow-hidden rounded-2xl border shadow-sm [&_.w-md-editor]:!shadow-none [&_.w-md-editor-toolbar]:!border-b [&_.w-md-editor-toolbar]:!bg-transparent"
                             data-color-mode={theme === "auto" ? "auto" : theme}
+                            className={`[&_.w-md-editor-toolbar]:!border-border mt-4 overflow-hidden rounded-xl border shadow-sm [&_.w-md-editor]:!shadow-none [&_.w-md-editor-toolbar]:!border-b [&_.w-md-editor-toolbar]:!bg-transparent [&_.wmde-markdown-color]:!bg-transparent ${
+                                errorIsQuestion
+                                    ? "border-red-400 dark:border-red-400/30"
+                                    : "border-border"
+                            }`}
                         >
                             <MDEditor
                                 height={question.type === "SLIDE" ? 320 : 200}
                                 onChange={(val) => updateQuestion({ question: val ?? "" })}
                                 preview="edit"
                                 value={question.question}
+                                className={
+                                    errorIsQuestion
+                                        ? "bg-red-50! dark:bg-red-500/10!"
+                                        : "bg-muted/90! dark:bg-muted/25!"
+                                }
                                 textareaProps={{
                                     placeholder:
                                         question.type === "SLIDE"
@@ -114,8 +136,12 @@ export default function QuestionEditor({
                         </div>
                     ) : (
                         <Textarea
-                            className="placeholder:text-muted-foreground/40 bg-muted/90 dark:bg-muted/25 min-h-40 resize-none border-none p-4 text-3xl leading-tight font-bold shadow-none focus-visible:ring-0 md:text-4xl"
                             value={question.question}
+                            className={`placeholder:text-muted-foreground/40 min-h-40 resize-none p-4 text-3xl leading-tight font-bold shadow-none focus-visible:ring-0 md:text-4xl ${
+                                errorIsQuestion
+                                    ? "border-red-400! bg-red-50 dark:border-red-400/30! dark:bg-red-500/10"
+                                    : "bg-muted/90 dark:bg-muted/25 border-none"
+                            }`}
                             onChange={(e) =>
                                 updateQuestion({
                                     question: e.target.value,
@@ -129,11 +155,18 @@ export default function QuestionEditor({
                         />
                     )}
                 </div>
+
+                {questionError ? (
+                    <div className="absolute right-0 bottom-0 left-0 px-6 pb-1 text-sm font-medium text-red-500 shadow-sm md:px-8">
+                        {questionError}
+                    </div>
+                ) : null}
             </div>
 
             {/* Answers / Editor for choice-based questions */}
             {question.type !== "SLIDE" ? (
                 <QuestionAnswerOptions
+                    errorAffectedAnswers={errorAffectedAnswers}
                     onAddOption={onAddOption}
                     onChange={onChangeOption}
                     onDeleteOption={onDeleteOption}

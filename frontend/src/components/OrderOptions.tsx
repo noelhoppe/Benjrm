@@ -20,6 +20,7 @@ import { restrictToVerticalAxis, restrictToParentElement } from "@/pages/quiz/qu
 
 interface OrderOptionsProps {
     options: QuestionOption[]
+    errorAffectedAnswers: number[]
     onChange: (index: number, value: string) => void
     onDeleteOption: (index: number) => void
     onReorderOptions: (activeId: string, overId: string) => void
@@ -28,6 +29,7 @@ interface OrderOptionsProps {
 
 export default function OrderOptions({
     options,
+    errorAffectedAnswers,
     onChange,
     onDeleteOption,
     onReorderOptions,
@@ -74,6 +76,7 @@ export default function OrderOptions({
                                 editable
                                 showDelete
                                 canDelete={options.length > 2}
+                                error={errorAffectedAnswers.includes(index)}
                                 id={option.id}
                                 index={index}
                                 onChange={(value) => onChange(index, value)}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { arrayMove } from "@dnd-kit/sortable"
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core"
 import { useQueryClient } from "@tanstack/react-query"
@@ -24,6 +24,10 @@ export interface UseQuizEditorResult {
     quizDescription: string
     isLoading: boolean
     error: unknown
+    questionError: string | null
+    showBigQuestionError: boolean
+    errorIsQuestion: boolean
+    errorAffectedAnswers: number[]
     isLoadingQuestions: boolean
     questionLoadError: unknown
     questions: Question[]
@@ -71,8 +75,14 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     const quizTitle = quiz?.title ?? "Untitled"
     const quizDescription = quiz?.description ?? ""
 
+    const [questionError, setQuestionError] = useState<string | null>(null)
+    const [showBigQuestionError, setShowBigQuestionError] = useState<boolean>(false)
+    const [errorIsQuestion, setErrorIsQuestion] = useState<boolean>(false)
+    const [errorAffectedAnswers, setErrorAffectedAnswers] = useState<number[]>([])
+
     const [questions, setQuestions] = useState<Question[]>([createEmptyQuestion()])
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0)
+    // eslint-disable-next-line react/hook-use-state
+    const [currentQuestionIndex, setCurrentQuestionIndexInternal] = useState<number>(0)
     const [hasInitializedQuestions, setHasInitializedQuestions] = useState(false)
     const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null)
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(!quizId)
@@ -91,6 +101,19 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         upsertReorder,
         upsertUpdate,
     } = useQuestionChangeQueue(quizId)
+
+    const setCurrentQuestionIndex = useCallback(
+        (value: number | ((number: number) => number)) => {
+            if (hasInitializedQuestions) {
+                if (questionError) {
+                    setShowBigQuestionError(true)
+                } else {
+                    setCurrentQuestionIndexInternal(value)
+                }
+            }
+        },
+        [hasInitializedQuestions, questionError]
+    )
 
     const queuedQuestions = useMemo(() => {
         if (!savedQuestions) return null
@@ -116,7 +139,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         }, 0)
 
         return () => window.clearTimeout(initTimeoutId)
-    }, [quizId, queuedQuestions, hasInitializedQuestions, queue.length])
+    }, [quizId, queuedQuestions, hasInitializedQuestions, queue.length, setCurrentQuestionIndex])
 
     useEffect(
         () => () => {
@@ -146,6 +169,10 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         setQuestions(baseQs)
         setCurrentQuestionIndex((prev) => Math.min(prev, Math.max(baseQs.length - 1, 0)))
         setHasUnsavedChanges(false)
+        setErrorIsQuestion(false)
+        setErrorAffectedAnswers([])
+        setQuestionError(null)
+        setShowBigQuestionError(false)
     }
 
     const currentQuestion = questions[currentQuestionIndex] ?? questions[0] ?? createEmptyQuestion()
@@ -200,27 +227,96 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         return "The changes could not be saved. Please try again."
     }
 
+    /**
+     * @returns [isQuestionAffected, affectedAnswer | null, errorMessage, quizErrorMessage] | null
+     */
+    const validateQuestion = (
+        question: Question,
+        index: number
+    ): [boolean, number[], string, string] | null => {
+        let questionAffected = false
+        const affectedAnswers = []
+        let firstError = null
+        if (!question.question.trim()) {
+            questionAffected = true
+            if (question.type === "SLIDE") {
+                firstError ??= [
+                    "The text is missing.",
+                    `Slide ${index + 1} is missing the text.`,
+                ]
+            } else {
+                firstError ??= [
+                    "The question text is missing.",
+                    `Question ${index + 1} is missing the question text.`,
+                ]
+            }
+        }
+
+        if (question.type !== "SLIDE") {
+            if (question.options.length < 2) {
+                firstError ??= [
+                    "At least two answer options are required.",
+                    `Question ${index + 1} needs at least two answer options.`,
+                ]
+            }
+            for (let oi = 0; oi < question.options.length; oi += 1) {
+                if (!question.options[oi].answer.trim()) {
+                    affectedAnswers.push(oi)
+                    firstError ??= [
+                        `Option ${oi + 1} is empty.`,
+                        `Question ${index + 1}, option ${oi + 1} is empty.`,
+                    ]
+                }
+            }
+            if (
+                question.type !== "ORDER" &&
+                !question.options.some((o) => (o as { correct?: boolean }).correct)
+            ) {
+                firstError ??= [
+                    "At least one correct answer is required.",
+                    `Question ${index + 1} needs at least one correct answer.`,
+                ]
+            }
+        }
+        if (firstError) {
+            return [questionAffected, affectedAnswers, firstError[0], firstError[1]]
+        }
+        return null
+    }
+
+    useEffect(() => {
+        if (hasInitializedQuestions) {
+            const timeout = window.setTimeout(() => {
+                const validationRes = validateQuestion(
+                    questions[currentQuestionIndex],
+                    currentQuestionIndex
+                )
+                if (validationRes) {
+                    setErrorIsQuestion(validationRes[0])
+                    setErrorAffectedAnswers(validationRes[1])
+                    setQuestionError(validationRes[2])
+                } else {
+                    setErrorIsQuestion(false)
+                    setErrorAffectedAnswers([])
+                    setQuestionError(null)
+                    setShowBigQuestionError(false)
+                }
+            }, 0)
+
+            return () => window.clearTimeout(timeout)
+        }
+        return undefined
+    }, [currentQuestionIndex, questions, hasInitializedQuestions])
+
     const validateQuestions = (): string | null => {
         if (!quizId)
             return "Please create or open a quiz first so the questions can be saved in the adapter."
         if (!questions.length) return "Add at least one question before saving."
 
         for (let qi = 0; qi < questions.length; qi += 1) {
-            const question = questions[qi]
-            if (!question.question.trim()) return `Question ${qi + 1} is missing the question text.`
-
-            if (question.type !== "SLIDE") {
-                if (question.options.length < 2)
-                    return `Question ${qi + 1} needs at least two answer options.`
-                for (let oi = 0; oi < question.options.length; oi += 1) {
-                    if (!question.options[oi].answer.trim())
-                        return `Question ${qi + 1}, option ${oi + 1} is empty.`
-                }
-                if (
-                    question.type !== "ORDER" &&
-                    !question.options.some((o) => (o as { correct?: boolean }).correct)
-                )
-                    return `Question ${qi + 1} needs at least one correct answer.`
+            const validationRes = validateQuestion(questions[qi], qi)
+            if (validationRes) {
+                return validationRes[3]
             }
         }
 
@@ -284,6 +380,17 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
                 upsertCreate(next.id, questionToRequest(next))
             } else {
                 upsertUpdate(next.id, questionToRequest(next))
+            }
+            const validationRes = validateQuestion(next, currentQuestionIndex)
+            if (validationRes) {
+                setErrorIsQuestion(validationRes[0])
+                setErrorAffectedAnswers(validationRes[1])
+                setQuestionError(validationRes[2])
+            } else {
+                setErrorIsQuestion(false)
+                setErrorAffectedAnswers([])
+                setQuestionError(null)
+                setShowBigQuestionError(false)
             }
             return updated
         })
@@ -360,6 +467,14 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     }
 
     const handleAddQuestion = () => {
+        const validationRes = validateQuestion(
+            questions[currentQuestionIndex],
+            currentQuestionIndex
+        )
+        if (validationRes) {
+            setShowBigQuestionError(true)
+            return
+        }
         markUnsavedChanges()
         const newQ = createEmptyQuestion()
         setQuestions((prev) => {
@@ -412,6 +527,10 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         quizDescription,
         isLoading,
         error,
+        questionError,
+        showBigQuestionError,
+        errorIsQuestion,
+        errorAffectedAnswers,
         isLoadingQuestions,
         questionLoadError,
         questions,

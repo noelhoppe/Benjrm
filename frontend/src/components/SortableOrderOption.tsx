@@ -16,6 +16,7 @@ interface SortableOrderOptionProps {
     canDelete?: boolean
     showDelete?: boolean
     editable?: boolean
+    error: boolean
 }
 
 export default function SortableOrderOption({
@@ -28,6 +29,7 @@ export default function SortableOrderOption({
     canDelete = false,
     showDelete = false,
     editable = false,
+    error,
 }: SortableOrderOptionProps): JSX.Element {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id,
@@ -61,10 +63,14 @@ export default function SortableOrderOption({
 
             {editable ? (
                 <Input
-                    className="border-border/40 bg-background/80 text-foreground h-12 rounded-xl text-base font-semibold shadow-none"
                     onChange={(event) => onChange?.(event.target.value)}
                     placeholder={placeholder}
                     value={value}
+                    className={`text-foreground h-12 rounded-xl text-base font-semibold shadow-none ${
+                        error
+                            ? "border-red-400! bg-red-50 dark:border-red-400/30! dark:bg-red-500/10"
+                            : "border-border/40 bg-background/80"
+                    }`}
                 />
             ) : (
                 <p className="text-foreground text-lg font-bold tracking-tight select-none sm:text-lg">
