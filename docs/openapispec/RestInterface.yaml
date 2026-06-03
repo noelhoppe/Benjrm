@@ -54,6 +54,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Quiz'
+          links:
+            CreateQuestion:
+              operationId: createQuestion
+              parameters:
+                quizId: '$response.body#/id'
+            GetQuestions:
+              operationId: getQuestions
+              parameters:
+                quizId: '$response.body#/id'
+            GetQuizById:
+              operationId: getQuizById
+              parameters:
+                quizId: '$response.body#/id'
+            UpdateQuizPartiallyById:
+              operationId: updateQuizPartiallyById
+              parameters:
+                quizId: '$response.body#/id'
+            UpdateQuizFullyById:
+              operationId: updateQuizFullyById
+              parameters:
+                quizId: '$response.body#/id'
+            DeleteQuizById:
+              operationId: deleteQuizById
+              parameters:
+                quizId: '$response.body#/id'
         '400':
           description: Bad Request
           content:
@@ -355,6 +380,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Question'
+          links:
+            GetQuestion:
+              operationId: getQuestion
+              parameters:
+                quizId: '$request.path.quizId'
+                questionId: '$response.body#/id'
+            UpdateQuestion:
+              operationId: updateQuestion
+              parameters:
+                quizId: '$request.path.quizId'
+                questionId: '$response.body#/id'
+            ReplaceQuestion:
+              operationId: replaceQuestion
+              parameters:
+                quizId: '$request.path.quizId'
+                questionId: '$response.body#/id'
+            DeleteQuestion:
+              operationId: deleteQuestion
+              parameters:
+                quizId: '$request.path.quizId'
+                questionId: '$response.body#/id'
         '400':
           description: Bad Request
           content:
@@ -1016,7 +1062,7 @@ components:
               default: false
         - $ref: '#/components/schemas/UpdateQuestionOptions'
         - $ref: '#/components/schemas/Position'
-    
+
     UpdateQuestionOptions:
       oneOf:
         - $ref: '#/components/schemas/UpdateSlideOptions'
