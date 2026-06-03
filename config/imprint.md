@@ -1,12 +1,12 @@
 # Impressum § 5 DDG
 
-*Vorname Nachname*
-*Strasse Hausnummer*
+*Vorname Nachname*  
+*Strasse Hausnummer*  
 *PLZ Ort*
 
 ## Kontaktmöglichkeiten
 
-Tel:
+Tel:  
 E-Mail:
 
 ## Rechtliche Pflichten
