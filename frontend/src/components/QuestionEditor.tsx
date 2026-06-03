@@ -16,15 +16,14 @@ import { Button } from "@/shadcn/components/ui/button"
 import { useTheme } from "@/context/ThemeContext"
 import type { Question } from "@/types/question"
 import { QuestionTypeEnum } from "@/api/questions/types/questionType"
+import type { QuestionError } from "@/hooks/useQuizEditor"
 
 interface QuestionEditorProps {
     question: Question
     questionIndex: number
     totalQuestions: number
-    questionError: string | null
-    showBigQuestionError: boolean
-    errorIsQuestion: boolean
-    errorAffectedAnswers: number[]
+    questionError: QuestionError
+    bigQuestionError: string | null
     updateQuestion: (data: Partial<Question>) => void
     onAddOption: () => void
     onChangeOption: (index: number, value: string) => void
@@ -38,9 +37,7 @@ export default function QuestionEditor({
     questionIndex,
     totalQuestions,
     questionError,
-    showBigQuestionError,
-    errorIsQuestion,
-    errorAffectedAnswers,
+    bigQuestionError,
     updateQuestion,
     onAddOption,
     onChangeOption,
@@ -63,9 +60,9 @@ export default function QuestionEditor({
 
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-            {questionError && showBigQuestionError ? (
+            {bigQuestionError ? (
                 <div className="text-black-950 dark:text-white-200 rounded-2xl border border-red-400 bg-red-50 px-4 py-3 text-sm font-medium shadow-sm dark:border-red-400/30 dark:bg-red-500/10">
-                    {questionError}
+                    {bigQuestionError}
                 </div>
             ) : null}
             {/* Question Card */}
@@ -115,58 +112,65 @@ export default function QuestionEditor({
                         </Select>
                     </div>
 
-                    {isMdEditor ? (
-                        <div
-                            data-color-mode={theme === "auto" ? "auto" : theme}
-                            className={`[&_.w-md-editor-toolbar]:!border-border mt-4 overflow-hidden rounded-xl border shadow-sm [&_.w-md-editor]:!shadow-none [&_.w-md-editor-text]:h-full [&_.w-md-editor-toolbar]:!border-b [&_.w-md-editor-toolbar]:!bg-transparent [&_.wmde-markdown-color]:!bg-transparent ${
-                                errorIsQuestion
-                                    ? "border-red-400 dark:border-red-400/30"
-                                    : "border-border"
-                            }`}
-                        >
-                            <MDEditor
-                                height={question.type === QuestionTypeEnum.SLIDE ? 320 : 200}
-                                onChange={(val) => updateQuestion({ question: val ?? "" })}
-                                preview="edit"
+                    <div className="relative w-full">
+                        {isMdEditor ? (
+                            <div
+                                data-color-mode={theme === "auto" ? "auto" : theme}
+                                className={`[&_.w-md-editor-toolbar]:!border-border mt-4 overflow-hidden rounded-xl border shadow-sm [&_.w-md-editor]:!shadow-none [&_.w-md-editor-text]:h-full [&_.w-md-editor-toolbar]:!border-b [&_.w-md-editor-toolbar]:!bg-transparent [&_.wmde-markdown-color]:!bg-transparent ${
+                                    questionError.missingQuestion
+                                        ? "border-red-400 dark:border-red-400/30"
+                                        : "border-border"
+                                }`}
+                            >
+                                <MDEditor
+                                    height={question.type === QuestionTypeEnum.SLIDE ? 320 : 200}
+                                    onChange={(val) => updateQuestion({ question: val ?? "" })}
+                                    preview="edit"
+                                    value={question.question}
+                                    className={
+                                        questionError.missingQuestion
+                                            ? "bg-red-50! dark:bg-red-500/10!"
+                                            : "bg-muted/90! dark:bg-muted/25!"
+                                    }
+                                    textareaProps={{
+                                        placeholder:
+                                            question.type === QuestionTypeEnum.SLIDE
+                                                ? "Type your slide content here (Markdown supported)..."
+                                                : "Type your question here (Markdown supported)...",
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <Textarea
                                 value={question.question}
-                                className={
-                                    errorIsQuestion
-                                        ? "bg-red-50! dark:bg-red-500/10!"
-                                        : "bg-muted/90! dark:bg-muted/25!"
+                                className={`placeholder:text-muted-foreground/40 min-h-40 resize-none p-4 text-3xl leading-tight font-bold shadow-none focus-visible:ring-0 md:text-4xl ${
+                                    questionError.missingQuestion
+                                        ? "border-red-400! bg-red-50 dark:border-red-400/30! dark:bg-red-500/10"
+                                        : "bg-muted/90 dark:bg-muted/25 border-none"
+                                }`}
+                                onChange={(e) =>
+                                    updateQuestion({
+                                        question: e.target.value,
+                                    })
                                 }
-                                textareaProps={{
-                                    placeholder:
-                                        question.type === QuestionTypeEnum.SLIDE
-                                            ? "Type your slide content here (Markdown supported)..."
-                                            : "Type your question here (Markdown supported)...",
-                                }}
+                                placeholder={
+                                    question.type === QuestionTypeEnum.SLIDE
+                                        ? "Type your slide content here..."
+                                        : "Type your question here..."
+                                }
                             />
-                        </div>
-                    ) : (
-                        <Textarea
-                            value={question.question}
-                            className={`placeholder:text-muted-foreground/40 min-h-40 resize-none p-4 text-3xl leading-tight font-bold shadow-none focus-visible:ring-0 md:text-4xl ${
-                                errorIsQuestion
-                                    ? "border-red-400! bg-red-50 dark:border-red-400/30! dark:bg-red-500/10"
-                                    : "bg-muted/90 dark:bg-muted/25 border-none"
-                            }`}
-                            onChange={(e) =>
-                                updateQuestion({
-                                    question: e.target.value,
-                                })
-                            }
-                            placeholder={
-                                question.type === QuestionTypeEnum.SLIDE
-                                    ? "Type your slide content here..."
-                                    : "Type your question here..."
-                            }
-                        />
-                    )}
+                        )}
+                        {questionError.missingQuestion ? (
+                            <div className="absolute right-0 bottom-0 left-0 mx-2 mb-1 text-sm font-medium text-red-500">
+                                This field is required
+                            </div>
+                        ) : null}
+                    </div>
                 </div>
 
-                {questionError ? (
+                {questionError.missingCorrectAnswer ? (
                     <div className="absolute right-0 bottom-0 left-0 px-6 pb-1 text-sm font-medium text-red-500 shadow-sm md:px-8">
-                        {questionError}
+                        At least one correct answer is required.
                     </div>
                 ) : null}
             </div>
@@ -174,7 +178,7 @@ export default function QuestionEditor({
             {/* Answers / Editor for choice-based questions */}
             {question.type !== QuestionTypeEnum.SLIDE ? (
                 <QuestionAnswerOptions
-                    errorAffectedAnswers={errorAffectedAnswers}
+                    errorMissingAnswers={questionError.missingAnswers}
                     onAddOption={onAddOption}
                     onChange={onChangeOption}
                     onDeleteOption={onDeleteOption}

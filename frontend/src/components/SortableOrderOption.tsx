@@ -62,16 +62,23 @@ export default function SortableOrderOption({
             </div>
 
             {editable ? (
-                <Input
-                    onChange={(event) => onChange?.(event.target.value)}
-                    placeholder={placeholder}
-                    value={value}
-                    className={`text-foreground h-12 rounded-xl text-base font-semibold shadow-none ${
-                        error
-                            ? "border-red-400! bg-red-50 dark:border-red-400/30! dark:bg-red-500/10"
-                            : "border-border/40 bg-background/80"
-                    }`}
-                />
+                <div className="relative w-full">
+                    <Input
+                        onChange={(event) => onChange?.(event.target.value)}
+                        placeholder={placeholder}
+                        value={value}
+                        className={`text-foreground h-12 rounded-xl text-base font-semibold shadow-none ${
+                            error
+                                ? "border-red-400! bg-red-50 dark:border-red-400/30! dark:bg-red-500/10"
+                                : "border-border/40 bg-background/80"
+                        }`}
+                    />
+                    {error ? (
+                        <div className="absolute right-0 bottom-0 mx-2 mb-1 text-sm font-medium text-red-500">
+                            This field is required
+                        </div>
+                    ) : null}
+                </div>
             ) : (
                 <p className="text-foreground text-lg font-bold tracking-tight select-none sm:text-lg">
                     {value}

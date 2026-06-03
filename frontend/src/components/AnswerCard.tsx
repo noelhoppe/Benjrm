@@ -81,18 +81,26 @@ export default function AnswerCard({
                         {usedIcon}
                     </div>
 
-                    <Textarea
-                        onChange={(e) => onChange(e.target.value)}
-                        placeholder={placeholder}
-                        rows={2}
-                        style={{ fieldSizing: "fixed" }}
-                        value={value}
-                        className={`placeholder:text-muted-foreground/60 h-28 w-full resize-none overflow-y-auto p-4 text-lg leading-7 font-semibold shadow-none focus-visible:ring-0 sm:h-24 sm:text-lg ${
-                            error
-                                ? "border-red-400! bg-red-50 dark:border-red-400/30! dark:bg-red-500/10"
-                                : "bg-muted/90 dark:bg-muted/25 border-none"
-                        }`}
-                    />
+                    <div className="relative w-full">
+                        <Textarea
+                            onChange={(e) => onChange(e.target.value)}
+                            placeholder={placeholder}
+                            rows={2}
+                            style={{ fieldSizing: "fixed" }}
+                            value={value}
+                            className={`placeholder:text-muted-foreground/60 h-28 w-full resize-none overflow-y-auto p-4 text-lg leading-7 font-semibold shadow-none focus-visible:ring-0 sm:h-24 sm:text-lg ${
+                                error
+                                    ? "border-red-400! bg-red-50 dark:border-red-400/30! dark:bg-red-500/10"
+                                    : "bg-muted/90 dark:bg-muted/25 border-none"
+                            }`}
+                        />
+
+                        {error ? (
+                            <div className="absolute right-0 bottom-0 left-0 mx-2 mb-1 text-sm font-medium text-red-500">
+                                This field is required
+                            </div>
+                        ) : null}
+                    </div>
                 </div>
 
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

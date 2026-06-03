@@ -24,16 +24,20 @@ import { getQuiz } from "@/api/quiz"
 import { ApiError } from "@/api/utils"
 import { QuestionTypeEnum } from "@/api/questions/types/questionType"
 
+export interface QuestionError {
+    missingQuestion: boolean
+    missingAnswers: number[]
+    missingCorrectAnswer: boolean
+}
+
 export interface UseQuizEditorResult {
     quiz: unknown
     quizTitle: string
     quizDescription: string
     isLoading: boolean
     error: unknown
-    questionError: string | null
-    showBigQuestionError: boolean
-    errorIsQuestion: boolean
-    errorAffectedAnswers: number[]
+    questionError: QuestionError
+    bigQuestionError: string | null
     isLoadingQuestions: boolean
     questionLoadError: unknown
     questions: Question[]
@@ -81,10 +85,12 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     const quizTitle = quiz?.title ?? "Untitled"
     const quizDescription = quiz?.description ?? ""
 
-    const [questionError, setQuestionError] = useState<string | null>(null)
-    const [showBigQuestionError, setShowBigQuestionError] = useState<boolean>(false)
-    const [errorIsQuestion, setErrorIsQuestion] = useState<boolean>(false)
-    const [errorAffectedAnswers, setErrorAffectedAnswers] = useState<number[]>([])
+    const [questionError, setQuestionError] = useState<QuestionError>({
+        missingQuestion: false,
+        missingAnswers: [],
+        missingCorrectAnswer: false,
+    })
+    const [bigQuestionError, setBigQuestionError] = useState<string | null>(null)
 
     const [questions, setQuestions] = useState<Question[]>([createEmptyQuestion()])
     // eslint-disable-next-line react/hook-use-state
@@ -127,8 +133,17 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     const setCurrentQuestionIndex = useCallback(
         (value: number | ((number: number) => number)) => {
             if (hasInitializedQuestions) {
-                if (questionError) {
-                    setShowBigQuestionError(true)
+                let errorMessage = null
+                if (questionError.missingQuestion) {
+                    errorMessage = "The question text is missing."
+                } else if (questionError.missingAnswers.length !== 0) {
+                    const option = questionError.missingAnswers[0]
+                    errorMessage = `Option ${option + 1} is empty.`
+                } else if (questionError.missingCorrectAnswer) {
+                    errorMessage = "At least one correct answer is required."
+                }
+                if (errorMessage) {
+                    setBigQuestionError(errorMessage)
                 } else {
                     setCurrentQuestionIndexInternal(value)
                 }
@@ -191,10 +206,12 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         setQuestions(baseQs)
         setCurrentQuestionIndex((prev) => Math.min(prev, Math.max(baseQs.length - 1, 0)))
         setHasUnsavedChanges(false)
-        setErrorIsQuestion(false)
-        setErrorAffectedAnswers([])
-        setQuestionError(null)
-        setShowBigQuestionError(false)
+        setQuestionError({
+            missingQuestion: false,
+            missingAnswers: [],
+            missingCorrectAnswer: false,
+        })
+        setBigQuestionError(null)
     }
 
     const currentQuestion = questions[currentQuestionIndex] ?? questions[0] ?? createEmptyQuestion()
@@ -250,53 +267,35 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     /**
      * @returns [isQuestionAffected, affectedAnswer | null, errorMessage, quizErrorMessage] | null
      */
-    const validateQuestion = (
-        question: Question,
-        index: number
-    ): [boolean, number[], string, string] | null => {
-        let questionAffected = false
-        const affectedAnswers = []
-        let firstError = null
+    const validateQuestion = (question: Question): QuestionError | null => {
+        const validationError: QuestionError = {
+            missingQuestion: false,
+            missingAnswers: [],
+            missingCorrectAnswer: false,
+        }
         if (!question.question.trim()) {
-            questionAffected = true
-            if (question.type === QuestionTypeEnum.SLIDE) {
-                firstError ??= ["The text is missing.", `Slide ${index + 1} is missing the text.`]
-            } else {
-                firstError ??= [
-                    "The question text is missing.",
-                    `Question ${index + 1} is missing the question text.`,
-                ]
-            }
+            validationError.missingQuestion = true
         }
 
         if (question.type !== QuestionTypeEnum.SLIDE) {
-            if (question.options.length < 2) {
-                firstError ??= [
-                    "At least two answer options are required.",
-                    `Question ${index + 1} needs at least two answer options.`,
-                ]
-            }
             for (let oi = 0; oi < question.options.length; oi += 1) {
                 if (!question.options[oi].answer.trim()) {
-                    affectedAnswers.push(oi)
-                    firstError ??= [
-                        `Option ${oi + 1} is empty.`,
-                        `Question ${index + 1}, option ${oi + 1} is empty.`,
-                    ]
+                    validationError.missingAnswers.push(oi)
                 }
             }
             if (
                 question.type !== QuestionTypeEnum.ORDER &&
                 !question.options.some((o) => (o as { correct?: boolean }).correct)
             ) {
-                firstError ??= [
-                    "At least one correct answer is required.",
-                    `Question ${index + 1} needs at least one correct answer.`,
-                ]
+                validationError.missingCorrectAnswer = true
             }
         }
-        if (firstError) {
-            return [questionAffected, affectedAnswers, firstError[0], firstError[1]]
+        if (
+            validationError.missingQuestion ||
+            validationError.missingAnswers.length !== 0 ||
+            validationError.missingCorrectAnswer
+        ) {
+            return validationError
         }
         return null
     }
@@ -304,19 +303,16 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     useEffect(() => {
         if (hasInitializedQuestions) {
             const timeout = window.setTimeout(() => {
-                const validationRes = validateQuestion(
-                    questions[currentQuestionIndex],
-                    currentQuestionIndex
-                )
+                const validationRes = validateQuestion(questions[currentQuestionIndex])
                 if (validationRes) {
-                    setErrorIsQuestion(validationRes[0])
-                    setErrorAffectedAnswers(validationRes[1])
-                    setQuestionError(validationRes[2])
+                    setQuestionError(validationRes)
                 } else {
-                    setErrorIsQuestion(false)
-                    setErrorAffectedAnswers([])
-                    setQuestionError(null)
-                    setShowBigQuestionError(false)
+                    setQuestionError({
+                        missingQuestion: false,
+                        missingAnswers: [],
+                        missingCorrectAnswer: false,
+                    })
+                    setBigQuestionError(null)
                 }
             }, 0)
 
@@ -331,9 +327,22 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         if (!questions.length) return "Add at least one question before saving."
 
         for (let qi = 0; qi < questions.length; qi += 1) {
-            const validationRes = validateQuestion(questions[qi], qi)
+            const validationRes = validateQuestion(questions[qi])
             if (validationRes) {
-                return validationRes[3]
+                if (validationRes.missingQuestion) {
+                    if (questions[qi].type === QuestionTypeEnum.SLIDE) {
+                        return `Slide ${qi + 1} is missing the text.`
+                    }
+                    return `Question ${qi + 1} is missing the question text.`
+                }
+                if (validationRes.missingAnswers.length !== 0) {
+                    const answer = validationRes.missingAnswers[0]
+                    return `Question ${qi + 1}, option ${answer + 1} is empty.`
+                }
+                if (validationRes.missingCorrectAnswer) {
+                    return `Question ${qi + 1} needs at least one correct answer.`
+                }
+                return `Question ${qi + 1} has an unknown validation error`
             }
         }
 
@@ -408,16 +417,16 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
             updated[currentQuestionIndex] = next
             return updated
         })
-        const validationRes = validateQuestion(next, currentQuestionIndex)
+        const validationRes = validateQuestion(next)
         if (validationRes) {
-            setErrorIsQuestion(validationRes[0])
-            setErrorAffectedAnswers(validationRes[1])
-            setQuestionError(validationRes[2])
+            setQuestionError(validationRes)
         } else {
-            setErrorIsQuestion(false)
-            setErrorAffectedAnswers([])
-            setQuestionError(null)
-            setShowBigQuestionError(false)
+            setQuestionError({
+                missingQuestion: false,
+                missingAnswers: [],
+                missingCorrectAnswer: false,
+            })
+            setBigQuestionError(null)
         }
     }
 
@@ -496,12 +505,9 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     }
 
     const handleAddQuestion = () => {
-        const validationRes = validateQuestion(
-            questions[currentQuestionIndex],
-            currentQuestionIndex
-        )
+        const validationRes = validateQuestion(questions[currentQuestionIndex])
         if (validationRes) {
-            setShowBigQuestionError(true)
+            setBigQuestionError(null)
             return
         }
         markUnsavedChanges()
@@ -557,9 +563,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         isLoading,
         error,
         questionError,
-        showBigQuestionError,
-        errorIsQuestion,
-        errorAffectedAnswers,
+        bigQuestionError,
         isLoadingQuestions,
         questionLoadError,
         questions,

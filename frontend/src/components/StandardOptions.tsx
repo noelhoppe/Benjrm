@@ -8,7 +8,7 @@ import type { QuestionOption } from "@/types/question"
 
 interface StandardOptionsProps {
     options: QuestionOption[]
-    errorAffectedAnswers: number[]
+    errorMissingAnswers: number[]
     onChange: (index: number, value: string) => void
     onDeleteOption: (index: number) => void
     onToggleCorrect: (index: number) => void
@@ -17,7 +17,7 @@ interface StandardOptionsProps {
 
 export default function StandardOptions({
     options,
-    errorAffectedAnswers,
+    errorMissingAnswers,
     onChange,
     onDeleteOption,
     onToggleCorrect,
@@ -31,7 +31,7 @@ export default function StandardOptions({
                         key={option.id}
                         canDelete={options.length > 2}
                         correct={(option as { correct?: boolean }).correct ?? false}
-                        error={errorAffectedAnswers.includes(index)}
+                        error={errorMissingAnswers.includes(index)}
                         index={index}
                         onChange={(value) => onChange(index, value)}
                         onDelete={options.length > 2 ? () => onDeleteOption(index) : undefined}
