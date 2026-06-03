@@ -17,6 +17,8 @@ import tempId from "@/utils/tempId"
 import useQuestionChangeQueue, { QuestionQueueError } from "@/hooks/useQuestionChangeQueue"
 import type { QueueItem } from "@/hooks/useQuestionChangeQueue"
 import type { QuestionApiRequest } from "@/api/questions/types/question.api.ts"
+import { getQuiz } from "@/api/quiz"
+import { ApiError } from "@/api/utils"
 
 export interface UseQuizEditorResult {
     quiz: unknown
@@ -94,6 +96,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     const {
         enqueue,
         clear,
+        cleanup,
         flush,
         queue,
         removeQuestion,
@@ -101,6 +104,21 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         upsertReorder,
         upsertUpdate,
     } = useQuestionChangeQueue(quizId)
+
+    useEffect(() => {
+        cleanup(async (id: string) => {
+            try {
+                await getQuiz(id)
+            } catch (err) {
+                if (err instanceof ApiError) {
+                    if (err.error === "not_found") {
+                        return false
+                    }
+                }
+            }
+            return true
+        })
+    }, [cleanup])
 
     const setCurrentQuestionIndex = useCallback(
         (value: number | ((number: number) => number)) => {

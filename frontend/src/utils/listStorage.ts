@@ -2,6 +2,7 @@ export interface ListStorage<T> {
     get: (id: string) => T[]
     set: (id: string, values: T[]) => void
     delete: (id: string) => void
+    cleanup: (isUsed: (id: string) => Promise<boolean>) => Promise<void>
 }
 
 export function createListStorage<T>(storageKey: string): ListStorage<T> {
@@ -43,7 +44,11 @@ export function createListStorage<T>(storageKey: string): ListStorage<T> {
             if (!isBrowserAvailable()) return
 
             try {
-                localStorage.setItem(getStorageKey(id), JSON.stringify(cloned))
+                if (cloned.length === 0) {
+                    localStorage.removeItem(getStorageKey(id))
+                } else {
+                    localStorage.setItem(getStorageKey(id), JSON.stringify(cloned))
+                }
             } catch {
                 // keep the in-memory copy even if browser storage fails
             }
@@ -56,6 +61,36 @@ export function createListStorage<T>(storageKey: string): ListStorage<T> {
 
             try {
                 localStorage.removeItem(getStorageKey(id))
+            } catch {
+                // ignore storage failures
+            }
+        },
+
+        async cleanup(isUsed: (id: string) => Promise<boolean>) {
+            if (!isBrowserAvailable()) return
+
+            const prefix = `${storageKey}:`
+
+            try {
+                const promises: Promise<void>[] = []
+                for (let i = 0; i < localStorage.length; i += 1) {
+                    const key = localStorage.key(i)
+                    if (key?.startsWith(prefix)) {
+                        const id = key.substring(prefix.length)
+                        promises.push(
+                            (async () => {
+                                if (!(await isUsed(id))) {
+                                    try {
+                                        localStorage.removeItem(key)
+                                    } catch {
+                                        // ignore storage failures
+                                    }
+                                }
+                            })()
+                        )
+                    }
+                }
+                await Promise.all(promises)
             } catch {
                 // ignore storage failures
             }

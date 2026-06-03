@@ -89,6 +89,7 @@ function reducer(state: QueueItem[], action: Action): QueueItem[] {
 export interface UseQuestionChangeQueueReturn {
     enqueue: (item: QueueItem) => void
     clear: () => void
+    cleanup: (isUsed: (id: string) => Promise<boolean>) => void
     flush: () => Promise<{ items: QueueItem[]; idMap: Record<string, string> }>
     removeQuestion: (questionId: string) => void
     upsertCreate: (questionId: string, payload: QuestionApiRequest) => void
@@ -240,6 +241,13 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         setLastError(null)
     }, [queueStorage, storageQuizId])
 
+    const cleanup = useCallback(
+        (isUsed: (id: string) => Promise<boolean>) => {
+            queueStorage.cleanup(isUsed)
+        },
+        [queueStorage]
+    )
+
     const flush = useCallback(async (): Promise<{
         items: QueueItem[]
         idMap: Record<string, string>
@@ -364,6 +372,7 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
     return {
         enqueue,
         clear,
+        cleanup,
         flush,
         removeQuestion,
         upsertCreate,
