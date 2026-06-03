@@ -7,12 +7,13 @@
 
 Verantwortlicher im Sinne der Datenschutz-Grundverordnung (DSGVO) und anderer nationaler Datenschutzgesetze sowie sonstiger datenschutzrechtlicher Bestimmungen ist:
 
-**[Name der Organisation / des Anbieters]** [Straße und Hausnummer]
-\[PLZ und Ort\]
+**[Name der Organisation / des Anbieters]**  
+[Straße und Hausnummer]  
+[PLZ und Ort]  
 Deutschland
 
-E-Mail: [datenschutz@beispiel.de]
-Website: [https://www.benjrm.de]
+E-Mail: [datenschutz@example.com]  
+Website: [https://www.example.com]
 
 ---
 
@@ -20,7 +21,8 @@ Website: [https://www.benjrm.de]
 
 Soweit gesetzlich vorgeschrieben (insbesondere bei Behörden, öffentlichen Stellen, Schulen in öffentlicher Trägerschaft oder einer umfangreichen Verarbeitung besonderer Datenkategorien), wurde ein betrieblicher Datenschutzbeauftragter bestellt:
 
-**[Name des Datenschutzbeauftragten oder: kein Datenschutzbeauftragter bestellt]** E-Mail: [dsb@beispiel.de]
+**[Name des Datenschutzbeauftragten oder: kein Datenschutzbeauftragter bestellt]**  
+ E-Mail: [dsb@example.com]
 
 *Hinweis: Datenschutzanfragen können jederzeit an die oben genannte Kontaktadresse des Verantwortlichen gerichtet werden.*
 
