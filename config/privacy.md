@@ -20,7 +20,7 @@ Website: [https://www.benjrm.de]
 
 Soweit gesetzlich vorgeschrieben (insbesondere bei Behörden, öffentlichen Stellen, Schulen in öffentlicher Trägerschaft oder einer umfangreichen Verarbeitung besonderer Datenkategorien), wurde ein betrieblicher Datenschutzbeauftragter bestellt:
 
-**[Name des Datenschutzbeauftragten oder: Kein Datenschutzbeauftragter bestellt]** E-Mail: [dsb@beispiel.de]
+**[Name des Datenschutzbeauftragten oder: kein Datenschutzbeauftragter bestellt]** E-Mail: [dsb@beispiel.de]
 
 *Hinweis: Datenschutzanfragen können jederzeit an die oben genannte Kontaktadresse des Verantwortlichen gerichtet werden.*
 
@@ -259,18 +259,18 @@ Hierzu gehören insbesondere:
 
 ## 15. Übersicht der Speicherfristen
 
-| Datenkategorie | Speicherdauer |
-|---|---|
-| Nutzerkontodaten (E-Mail, Benutzername) | Solange das Konto aktiv ist; nach Löschung endgültig binnen 30 Tagen |
-| Server-Protokolldaten (IP-Adresse, Zugriffsdaten) | 14 Tage, danach automatische Löschung/Anonymisierung |
+| Datenkategorie                                               | Speicherdauer                                                                                                         |
+|--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| Nutzerkontodaten (E-Mail, Benutzername)                      | Solange das Konto aktiv ist; nach Löschung endgültig binnen 30 Tagen                                                  |
+| Server-Protokolldaten (IP-Adresse, Zugriffsdaten)            | 14 Tage, danach automatische Löschung/Anonymisierung                                                                  |
 | Quiz-Sitzungsdaten und Spielergebnisse (registrierte Nutzer) | 90 Tage (automatische Löschung) bzw. bis zur Löschung durch den Nutzer oder des Kontos bei persönlicher Spielhistorie |
-| Gast-Sitzungsdaten (Spitzname, Ergebnisse) | Nur für Dauer der Sitzung; keine persistente Speicherung |
-| Nutzererstellte Inhalte (Quizze) | Bis zur Löschung durch den Nutzer oder Entfernung des Kontos |
-| Profilbilder | Bis zur Entfernung durch den Nutzer oder Kontolöschung |
-| Kontaktformular-Anfragen | Nach abschließender Bearbeitung, sofern keine gesetzlichen Aufbewahrungspflichten bestehen |
-| Datensicherungen (Backups) | Nach Ablauf eines angemessenen Sicherungszeitraums |
-| Session-Cookies und Authentifizierungs-Tokens | Automatisch nach Sitzungsende oder Token-Ablauf |
-| Daten mit gesetzlicher Aufbewahrungspflicht | Gemäß gesetzlicher Frist (z. B. 6 bzw. 10 Jahre nach AO/HGB) |
+| Gast-Sitzungsdaten (Spitzname, Ergebnisse)                   | Nur für Dauer der Sitzung; keine persistente Speicherung                                                              |
+| Nutzererstellte Inhalte (Quizze)                             | Bis zur Löschung durch den Nutzer oder Entfernung des Kontos                                                          |
+| Profilbilder                                                 | Bis zur Entfernung durch den Nutzer oder Kontolöschung                                                                |
+| Kontaktformular-Anfragen                                     | Nach abschließender Bearbeitung, sofern keine gesetzlichen Aufbewahrungspflichten bestehen                            |
+| Datensicherungen (Backups)                                   | Nach Ablauf eines angemessenen Sicherungszeitraums                                                                    |
+| Session-Cookies und Authentifizierungs-Tokens                | Automatisch nach Sitzungsende oder Token-Ablauf                                                                       |
+| Daten mit gesetzlicher Aufbewahrungspflicht                  | Gemäß gesetzlicher Frist (z. B. 6 bzw. 10 Jahre nach AO/HGB)                                                          |
 
 ---
 
