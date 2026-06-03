@@ -260,18 +260,19 @@ Hierzu gehören insbesondere:
 
 ## 15. Übersicht der Speicherfristen
 
-| Datenkategorie                                               | Speicherdauer                                                                                                         |
-|--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| Nutzerkontodaten (E-Mail, Benutzername)                      | Solange das Konto aktiv ist; nach Löschung endgültig binnen 30 Tagen                                                  |
-| Server-Protokolldaten (IP-Adresse, Zugriffsdaten)            | 14 Tage, danach automatische Löschung/Anonymisierung                                                                  |
-| Quiz-Sitzungsdaten und Spielergebnisse (registrierte Nutzer) | 90 Tage (automatische Löschung) bzw. bis zur Löschung durch den Nutzer oder des Kontos bei persönlicher Spielhistorie |
-| Gast-Sitzungsdaten (Spitzname, Ergebnisse)                   | Nur für Dauer der Sitzung; keine persistente Speicherung                                                              |
-| Nutzererstellte Inhalte (Quizze)                             | Bis zur Löschung durch den Nutzer oder Entfernung des Kontos                                                          |
-| Profilbilder                                                 | Bis zur Entfernung durch den Nutzer oder Kontolöschung                                                                |
-| Kontaktformular-Anfragen                                     | Nach abschließender Bearbeitung, sofern keine gesetzlichen Aufbewahrungspflichten bestehen                            |
-| Datensicherungen (Backups)                                   | Nach Ablauf eines angemessenen Sicherungszeitraums                                                                    |
-| Session-Cookies und Authentifizierungs-Tokens                | Automatisch nach Sitzungsende oder Token-Ablauf                                                                       |
-| Daten mit gesetzlicher Aufbewahrungspflicht                  | Gemäß gesetzlicher Frist (z. B. 6 bzw. 10 Jahre nach AO/HGB)                                                          |
+| Datenkategorie                                                 | Speicherdauer                                                                                                         |
+|----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| Nutzerkontodaten (E-Mail, Benutzername)                        | Solange das Konto aktiv ist; nach Löschung endgültig binnen 30 Tagen                                                  |
+| Server-Protokolldaten (IP-Adresse, Zugriffsdaten)              | 14 Tage, danach automatische Löschung/Anonymisierung                                                                  |
+| Quiz-Sitzungsdaten und Spielergebnisse (registrierte Nutzer)   | 90 Tage (automatische Löschung) bzw. bis zur Löschung durch den Nutzer oder des Kontos bei persönlicher Spielhistorie |
+| Gast-Sitzungsdaten (Spitzname, Ergebnisse)                     | Nur für Dauer der Sitzung; keine persistente Speicherung                                                              |
+| Nutzererstellte Inhalte (Quizze)                               | Bis zur Löschung durch den Nutzer oder Entfernung des Kontos                                                          |
+| Profilbilder                                                   | Bis zur Entfernung durch den Nutzer oder Kontolöschung                                                                |
+| Kontaktformular-Anfragen                                       | Nach abschließender Bearbeitung, sofern keine gesetzlichen Aufbewahrungspflichten bestehen                            |
+| Datensicherungen (Backups)                                     | Nach Ablauf eines angemessenen Sicherungszeitraums                                                                    |
+| Session-Cookies und Authentifizierungs-Tokens                  | Automatisch nach Sitzungsende oder Token-Ablauf                                                                       |
+| Lokale Browserspeicherung (Local Storage, z. B. Einstellungen) | Bis zur manuellen Löschung durch den Nutzer über die Browsereinstellungen                                             |
+| Daten mit gesetzlicher Aufbewahrungspflicht                    | Gemäß gesetzlicher Frist (z. B. 6 bzw. 10 Jahre nach AO/HGB)                                                          |
 
 ---
 
