@@ -31,7 +31,7 @@ export default function QuestionSidebar({
 
     return (
         <aside className="flex h-full max-h-[calc(100vh-180px)] min-h-0 flex-col overflow-hidden">
-            <div className="sm:hidden">
+            <div className="lg:hidden">
                 <Button
                     aria-expanded={isMobileOpen}
                     className="flex h-12 w-full items-center justify-between rounded-2xl border border-[#FF8A00]/20 bg-[#FF8A00]/10 px-4 font-bold text-[#FF8A00] shadow-none hover:bg-[#FF8A00]/15"
@@ -86,7 +86,7 @@ export default function QuestionSidebar({
                 ) : null}
             </div>
 
-            <div className="hidden h-full min-h-0 flex-col sm:flex">
+            <div className="hidden h-full min-h-0 flex-col lg:flex">
                 <div className="mb-5">
                     <div className="inline-flex items-center gap-2 rounded-full border border-[#FF8A00]/20 bg-[#FF8A00]/10 px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-[#FF8A00] uppercase">
                         <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF8A00]" />

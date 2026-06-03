@@ -138,8 +138,8 @@ export default function QuizCreator(): JSX.Element {
     const handleConfirmClose = () => setIsConfirmOpen(false)
 
     return (
-        <div className="bg-background text-foreground flex h-screen flex-col overflow-hidden">
-            <div className="flex w-full flex-1 flex-col overflow-hidden px-4 py-6 sm:px-8">
+        <div className="bg-background text-foreground flex flex-col overflow-hidden px-4 py-6 sm:px-8 lg:absolute lg:inset-0">
+            <div className="flex w-full flex-1 flex-col overflow-hidden">
                 {/* Header */}
                 <header className="mb-6 flex shrink-0 flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex-1 space-y-2">
@@ -251,7 +251,7 @@ export default function QuizCreator(): JSX.Element {
                 ) : null}
 
                 {/* Layout */}
-                <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-hidden xl:grid-cols-[280px_1fr_320px]">
+                <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-hidden lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_320px]">
                     {/* Sidebar */}
                     <DndContext
                         collisionDetection={closestCenter}
@@ -315,7 +315,7 @@ export default function QuizCreator(): JSX.Element {
                         </DragOverlay>
                     </DndContext>
 
-                    <div className="custom-scrollbar h-full overflow-y-auto rounded-3xl px-1">
+                    <div className="custom-scrollbar h-auto overflow-y-auto rounded-3xl px-1">
                         <QuestionEditor
                             errorAffectedAnswers={errorAffectedAnswers}
                             errorIsQuestion={errorIsQuestion}
@@ -334,7 +334,7 @@ export default function QuizCreator(): JSX.Element {
                     </div>
 
                     {/* Settings */}
-                    <div className="bg-muted/30 border-border custom-scrollbar h-full overflow-y-auto rounded-3xl border p-4 shadow-xl backdrop-blur-sm">
+                    <div className="bg-muted/30 border-border custom-scrollbar hidden h-auto overflow-y-auto rounded-3xl border p-4 shadow-xl backdrop-blur-sm xl:block">
                         <SettingsPanel question={currentQuestion} />
                     </div>
                 </div>

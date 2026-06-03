@@ -110,7 +110,7 @@ export default function QuestionEditor({
                     {isMdEditor ? (
                         <div
                             data-color-mode={theme === "auto" ? "auto" : theme}
-                            className={`[&_.w-md-editor-toolbar]:!border-border mt-4 overflow-hidden rounded-xl border shadow-sm [&_.w-md-editor]:!shadow-none [&_.w-md-editor-toolbar]:!border-b [&_.w-md-editor-toolbar]:!bg-transparent [&_.wmde-markdown-color]:!bg-transparent ${
+                            className={`[&_.w-md-editor-toolbar]:!border-border mt-4 overflow-hidden rounded-xl border shadow-sm [&_.w-md-editor]:!shadow-none [&_.w-md-editor-text]:h-full [&_.w-md-editor-toolbar]:!border-b [&_.w-md-editor-toolbar]:!bg-transparent [&_.wmde-markdown-color]:!bg-transparent ${
                                 errorIsQuestion
                                     ? "border-red-400 dark:border-red-400/30"
                                     : "border-border"
