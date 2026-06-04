@@ -82,6 +82,7 @@ Technisch notwendige Cookies werden insbesondere im Rahmen der Nutzer-Authentifi
 **Rechtsgrundlage:** Art. 6 Abs. 1 lit. b und lit. f DSGVO i. V. m. § 25 Abs. 2 TDDDG (Telekommunikation-Digitale-Dienste-Datenschutz-Gesetz). Für technisch notwendige Cookies und den Local Storage ist keine Einwilligung erforderlich.
 
 **Speicherdauer:** Session-Cookies werden automatisch gelöscht, wenn Sie den Browser schließen. Persistente Authentifizierungs-Tokens werden nach Ablauf der Sitzungsdauer oder nach dem Abmelden automatisch ungültig gemacht. Einstellungen, die im Local Storage Ihres Browsers gespeichert werden, bleiben auf Ihrem Endgerät bestehen, bis Sie diese manuell über Ihre Browsereinstellungen löschen.
+
 ---
 
 ## 6. Registrierung und Nutzerkonto
@@ -326,5 +327,7 @@ Sie haben gemäß Art. 77 DSGVO das Recht, sich bei einer Datenschutz-Aufsichtsb
 ## 18. Änderungen dieser Datenschutzerklärung
 
 Wir behalten uns vor, diese Datenschutzerklärung anzupassen, um sie an geänderte Rechtslagen, technische Weiterentwicklungen oder Änderungen unserer Dienste anzupassen. Die jeweils aktuelle Version ist stets auf unserer Website abrufbar. Bei wesentlichen Änderungen werden registrierte Nutzer per E-Mail an die hinterlegte E-Mail-Adresse informiert.
+
+---
 
 **Datum der letzten Aktualisierung:** 03.06.2026
