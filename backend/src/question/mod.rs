@@ -92,7 +92,7 @@ pub struct NewQuestion {
     pub question: String,
     #[serde(default = "bool::default")]
     pub hidden: bool,
-    #[serde(flatten)]
+    #[serde(flatten, deserialize_with = "Position::deserialize_optional")]
     pub position: Option<Position>,
     #[serde(flatten)]
     pub options: NewQuestionOptions,
@@ -125,7 +125,7 @@ pub struct UpdateQuestion {
     pub question: UpdateValue<String>,
     #[serde(default)]
     pub hidden: UpdateValue<bool>,
-    #[serde(flatten)]
+    #[serde(flatten, deserialize_with = "Position::deserialize_optional")]
     pub position: Option<Position>,
     #[serde(flatten)]
     pub options: Option<UpdateQuestionOptions>,
