@@ -3,7 +3,6 @@ use {
         AppData,
         auth::User,
         error::Result,
-        not_found_route,
         question::{NewQuestion, QuestionFilter, UpdateQuestion},
         quiz::entity::QuizModel,
     },
