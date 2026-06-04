@@ -33,6 +33,6 @@ jobs:
       - uses: schemathesis/action@v3
         with:
           schema: 'docs/openapispec/RestInterface.yaml'
-          config-file: 'schemathesis/schemathesis.toml'
+          config-file: 'api_tests/schemathesis.toml'
           version: '4.21.0'
           hooks: 'api_tests.src.hooks'
