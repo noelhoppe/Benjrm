@@ -1,5 +1,5 @@
 # Datenschutzerklärung
-**Stand: 03.06.2026**
+**Stand: 04.06.2026**
 
 ---
 
@@ -22,7 +22,7 @@ Website: [https://www.example.com]
 Soweit gesetzlich vorgeschrieben (insbesondere bei Behörden, öffentlichen Stellen, Schulen in öffentlicher Trägerschaft oder einer umfangreichen Verarbeitung besonderer Datenkategorien), wurde ein betrieblicher Datenschutzbeauftragter bestellt:
 
 **[Name des Datenschutzbeauftragten oder: kein Datenschutzbeauftragter bestellt]**  
- E-Mail: [dsb@example.com]
+E-Mail: [dsb@example.com]
 
 *Hinweis: Datenschutzanfragen können jederzeit an die oben genannte Kontaktadresse des Verantwortlichen gerichtet werden.*
 
@@ -44,6 +44,10 @@ Wir verarbeiten personenbezogene Daten unserer Nutzer grundsätzlich nur, soweit
 ### 3.3 Datenlöschung und Speicherdauer
 
 Personenbezogene Daten werden gelöscht oder gesperrt, sobald der Zweck der Speicherung entfällt. Eine längere Speicherung erfolgt nur, wenn dies durch gesetzliche Vorgaben (z. B. steuer- oder handelsrechtliche Aufbewahrungsfristen) vorgeschrieben ist.
+
+### 3.4 Automatisierte Entscheidungsfindung und Profiling (Art. 22 DSGVO)
+
+Es findet keine automatisierte Entscheidungsfindung einschließlich Profiling im Sinne des Art. 22 Abs. 1 und 4 DSGVO statt. Nutzerprofile werden nicht zu automatisierten Einzelentscheidungen herangezogen, die gegenüber betroffenen Personen rechtliche Wirkung entfalten oder sie in ähnlicher Weise erheblich beeinträchtigen.
 
 ---
 
@@ -75,7 +79,7 @@ Diese Daten werden zur Gewährleistung des sicheren und stabilen Betriebs der We
 
 ## 5. Cookies
 
-Unsere Webanwendung setzt ausschließlich technisch notwendige Cookies ein. Diese Cookies sind für den Betrieb der Anwendung zwingend erforderlich und können nicht deaktiviert werden, ohne die Funktionsfähigkeit der Seite wesentlich zu beeinträchtigen. Sie enthalten keine personenbezogenen Inhalte über Ihr Nutzungsverhalten und werden weder zu Tracking- noch zu Werbezwecken verwendet.
+Unsere Webanwendung setzt technisch notwendige Cookies ein. Diese Cookies sind für den Betrieb der Anwendung zwingend erforderlich und können nicht deaktiviert werden, ohne die Funktionsfähigkeit der Seite wesentlich zu beeinträchtigen. Sie enthalten keine personenbezogenen Inhalte über Ihr Nutzungsverhalten und werden weder zu Tracking- noch zu Werbezwecken verwendet.
 
 Technisch notwendige Cookies werden insbesondere im Rahmen der Nutzer-Authentifizierung über unseren selbst gehosteten Identity-Provider Keycloak eingesetzt, um Anmeldesitzungen aufrechtzuerhalten.
 
@@ -83,21 +87,31 @@ Technisch notwendige Cookies werden insbesondere im Rahmen der Nutzer-Authentifi
 
 **Speicherdauer:** Session-Cookies werden automatisch gelöscht, wenn Sie den Browser schließen. Persistente Authentifizierungs-Tokens werden nach Ablauf der Sitzungsdauer oder nach dem Abmelden automatisch ungültig gemacht. Einstellungen, die im Local Storage Ihres Browsers gespeichert werden, bleiben auf Ihrem Endgerät bestehen, bis Sie diese manuell über Ihre Browsereinstellungen löschen.
 
+Zusätzlich zu technisch notwendigen Cookies können technische Informationen zur Sitzungsverwaltung oder Speicherung von Benutzereinstellungen im Browser gespeichert werden. Hierfür können folgende browserseitige Speichertechnologien verwendet werden:
+
+* Session Storage
+* Local Storage
+
+Diese Speicherungen dienen ausschließlich technischen Zwecken und werden nicht für Tracking-, Analyse- oder Werbezwecke verwendet.
+
 ---
 
 ## 6. Registrierung und Nutzerkonto
 
 ### 6.1 Registrierungsvorgang
 
-Für die Nutzung bestimmter Funktionen der Webanwendung ist eine Registrierung erforderlich. Registrierung und Verwaltung von Nutzerkonten erfolgen ausschließlich über unseren selbst gehosteten Identity-Provider **Keycloak**, der auf unseren eigenen Servern in Deutschland betrieben wird. Eine Übermittlung von Anmeldedaten an externe Dritte findet nicht statt.
+Für die Nutzung bestimmter Funktionen der Webanwendung ist eine Registrierung erforderlich. Registrierung und Verwaltung von Nutzerkonten erfolgen ausschließlich über unseren selbst gehosteten Identity-Provider **Keycloak**, der auf eigenen Servern in Deutschland betrieben wird. Im Rahmen der Authentifizierung verarbeitet Keycloak insbesondere folgende Daten:
 
-Bei der Registrierung erheben wir folgende Daten:
+* E-Mail-Adresse
+* Benutzername
+* Passwort-Hash
+* Zeitpunkt der Kontoerstellung
+* Zeitpunkte erfolgreicher Anmeldungen
+* Technische Sitzungsinformationen
 
-* **E-Mail-Adresse:** Zur Identifikation des Nutzerkontos und für kontobezogene Benachrichtigungen (z. B. Passwort-Zurücksetzen).
-* **Benutzername:** Zur Identifikation innerhalb der Anwendung; wird anderen Teilnehmern einer Spielsitzung angezeigt.
-* **Zeitstempel der Kontoerstellung:** Wird intern protokolliert.
+Es werden keine Authentifizierungsdaten an externe Anbieter oder Drittunternehmen übermittelt. Insbesondere werden keine externen Identity-Provider oder Social-Login-Dienste wie Google, Microsoft, GitHub, Facebook oder vergleichbare Dienste verwendet.
 
-**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung; die Registrierung ist Voraussetzung zur Nutzung der Webanwendung).
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
 
 ### 6.2 Passwörter
 
@@ -109,6 +123,10 @@ Nach der Anmeldung stellt Keycloak kryptografisch gesicherte Sitzungs-Tokens aus
 
 **Speicherdauer Nutzerkonten:** Die Daten werden für die Dauer des aktiven Nutzerkontos gespeichert. Nach der Löschung des Kontos durch den Nutzer werden die Daten innerhalb von 30 Tagen vollständig aus den aktiven Systemen gelöscht.
 
+### 6.4 Pflichtangaben und Folgen der Nichtbereitstellung
+
+Die Angabe von E-Mail-Adresse und Benutzername ist für die Registrierung und die Nutzung des registrierungspflichtigen Funktionsumfangs der Plattform vertraglich erforderlich. Ohne diese Angaben kann kein Nutzerkonto erstellt werden und der entsprechende Funktionsumfang steht nicht zur Verfügung. Eine Nutzung der Plattform ohne Registrierung ist im Rahmen des anonymen Gast-Modus (siehe Abschnitt 7.2) möglich.
+
 ---
 
 ## 7. Nutzung der Quiz- und Spielfunktionen
@@ -117,13 +135,22 @@ Nach der Anmeldung stellt Keycloak kryptografisch gesicherte Sitzungs-Tokens aus
 
 Im Rahmen der Nutzung der interaktiven Quiz-Funktionen durch registrierte Nutzer werden folgende Daten verarbeitet:
 
-* **Spielergebnisse und Punkte:** Erzielte Punktzahlen und Platzierungen innerhalb einer Spielsitzung.
-* **Antworten auf Quizfragen:** Die ausgewählten Antworten während einer Spielsitzung.
-* **Sitzungsdaten:** Zuordnung der Teilnehmer zu einer Spielsitzung (z. B. anhand des Benutzernamens oder eines Sitzungscodes).
+* Spielergebnisse und Punkte
+* Platzierungen innerhalb von Spielsitzungen
+* Antworten auf Quizfragen
+* Teilnahmehistorie
+* Sitzungsdaten
 
-**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung; Bereitstellung der Kernanwendung).
+Kurzfristige technische Sitzungsdaten werden spätestens nach 90 Tagen gelöscht. Davon unabhängig kann eine persönliche Spielhistorie bereitgestellt werden. Diese kann insbesondere enthalten:
 
-**Speicherdauer:** Quiz-Sitzungsdaten und dazugehörige Spielergebnisse werden nach 90 Tagen automatisch gelöscht, sofern keine gesetzlichen Aufbewahrungspflichten bestehen. Zusätzlich können bei registrierten Nutzern vergangene Spielsitzungen, Spielergebnisse und beantwortete Quizfragen gespeichert werden, um eine persönliche Spielhistorie bereitzustellen. Die Historie bleibt gespeichert, bis das Nutzerkonto gelöscht wird oder der Nutzer die entsprechenden Daten selbst entfernt.
+* Vergangene Spielergebnisse
+* Platzierungen
+* Beantwortete Quizfragen
+* Erreichte Punktzahlen
+
+Die persönliche Spielhistorie bleibt gespeichert, bis sie durch den Nutzer gelöscht oder das Nutzerkonto entfernt wird.
+
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
 
 ### 7.2 Anonymer Gast-Modus
 
@@ -151,8 +178,7 @@ Hierbei werden insbesondere folgende Daten verarbeitet:
 * Erstellungs- und Änderungszeitpunkte
 * Zuordnung zum Nutzerkonto
 
-**Rechtsgrundlage:**
-Art. 6 Abs. 1 lit. b DSGVO. (Vertragserfüllung; Bereitstellung der Kernanwendung).
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung; Bereitstellung der Kernanwendung).
 
 Die Daten bleiben gespeichert, bis sie durch den Nutzer gelöscht werden oder das Nutzerkonto entfernt wird.
 
@@ -160,18 +186,38 @@ Die Daten bleiben gespeichert, bis sie durch den Nutzer gelöscht werden oder da
 
 ## 9. Profilbilder und Dateiuploads
 
-Registrierte Nutzer können freiwillig Profilbilder hochladen.
+Registrierte Nutzer können freiwillig Profilbilder hochladen. Profilbilder werden ausschließlich zur Darstellung innerhalb der Plattform verwendet und können anderen Nutzern im Rahmen der Nutzung der Plattform angezeigt werden. Profilbilder können personenbezogene Daten darstellen, sofern eine Person hierdurch identifizierbar ist. Der Upload eines Profilbildes erfolgt freiwillig und ist für die Nutzung der Plattform nicht erforderlich.
 
-Profilbilder werden ausschließlich zur Darstellung innerhalb der Plattform verwendet.
-
-**Rechtsgrundlage:**
-Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch Upload) sowie Art. 6 Abs. 1 lit. b DSGVO.
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch den freiwilligen Upload).
 
 Profilbilder werden gelöscht, sobald sie durch den Nutzer entfernt oder das Nutzerkonto gelöscht wird.
 
 ---
 
-## 10. Kontaktformular
+## 10. E-Mail-Kommunikation
+
+Für die Bereitstellung bestimmter Funktionen der Plattform werden E-Mails versendet. Dies betrifft insbesondere:
+
+* Passwort-Zurücksetzungen
+* Verifizierungs-E-Mails
+* Sicherheitsrelevante Benachrichtigungen
+* Kontobezogene Informationen
+
+Hierbei werden folgende Daten verarbeitet:
+
+* E-Mail-Adresse
+* Zeitpunkt des Versands
+* Technische Versandinformationen
+
+Der Versand erfolgt ausschließlich über einen selbst betriebenen SMTP-Server auf eigener Infrastruktur in Deutschland. Es erfolgt keine Übermittlung personenbezogener Daten an externe E-Mail-Dienstleister.
+
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
+
+**Speicherdauer:** Versandprotokolle werden ausschließlich zur Fehleranalyse und Missbrauchserkennung gespeichert und nach spätestens 30 Tagen gelöscht oder anonymisiert.
+
+---
+
+## 11. Kontaktformular
 
 Wenn Sie uns über das Kontaktformular kontaktieren, werden die von Ihnen eingegebenen Daten verarbeitet, um Ihre Anfrage zu bearbeiten.
 
@@ -185,19 +231,17 @@ Dabei können insbesondere folgende Daten verarbeitet werden:
 
 Die Verarbeitung erfolgt ausschließlich zur Bearbeitung und Beantwortung Ihrer Anfrage.
 
-**Rechtsgrundlage:**
-Art. 6 Abs. 1 lit. b DSGVO (bei vertragsbezogenen Anfragen) bzw. Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Bearbeitung sonstiger Anfragen).
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (bei vertragsbezogenen Anfragen) bzw. Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Bearbeitung sonstiger Anfragen).
 
-**Speicherdauer:**
-Anfragen werden nach abschließender Bearbeitung gelöscht, sofern keine gesetzlichen Aufbewahrungspflichten bestehen.
+**Speicherdauer:** Anfragen werden nach abschließender Bearbeitung gelöscht, sofern keine gesetzlichen Aufbewahrungspflichten bestehen.
 
 ---
 
-## 11. Besondere Hinweise zum Schutz von Minderjährigen
+## 12. Besondere Hinweise zum Schutz von Minderjährigen
 
 > ⚠️ **Dieser Abschnitt ist besonders wichtig für den Einsatz im schulischen und bildungsbezogenen Kontext.**
 
-### 11.1 Altersgrenze und elterliche Einwilligung (Art. 8 DSGVO)
+### 12.1 Altersgrenze und elterliche Einwilligung (Art. 8 DSGVO)
 
 Gemäß Art. 8 DSGVO ist die Einwilligung eines Kindes in die Verarbeitung personenbezogener Daten bei Nutzung von Diensten der Informationsgesellschaft in Deutschland erst ab dem vollendeten **16. Lebensjahr** rechtswirksam. Für Kinder unter 16 Jahren ist die Einwilligung bzw. Zustimmung eines Erziehungsberechtigten erforderlich.
 
@@ -207,21 +251,21 @@ Für die Nutzung der Plattform durch Minderjährige unter 16 Jahren gilt:
 * Lehr- und pädagogische Fachkräfte, die die Plattform im schulischen Kontext einsetzen, tragen die Verantwortung dafür, dass die erforderlichen rechtlichen Grundlagen bzw. Einwilligungen vorliegen, soweit personenbezogene Daten von Schülerinnen und Schülern unter 16 Jahren verarbeitet werden. Dies kann sich je nach Bundesland auch aus den jeweiligen Landesdatenschutzgesetzen und Schulgesetzen ergeben.
 * **Anonymer Gast-Modus als Standard:** Um den datenschutzkonformen Einsatz in Schulen maximal zu vereinfachen, unterstützen wir die Teilnahme an Spielsitzungen als anonymer Gast (ohne Registrierung) mittels eines frei wählbaren Spitznamens. Wir empfehlen ausdrücklich, für Minderjährige unter 16 Jahren keine eigenen Nutzerkonten anzulegen, sondern diese Funktion zu nutzen.
 
-### 11.2 Hinweis zur Auftragsverarbeitung im Schulkontext (Art. 28 DSGVO)
+### 12.2 Hinweis zur Auftragsverarbeitung im Schulkontext (Art. 28 DSGVO)
 
-Setzen Schulen oder andere Bildungseinrichtungen die Plattform im Rahmen ihres Unterrichts ein und werden dabei personenbezogene Daten von Schülerinnen und Schülern verarbeitet, kann zwischen der Schule (als Verantwortlicher) und dem Plattformbetreiber eine Auftragsverarbeitungsbeziehung im Sinne des Art. 28 DSGVO bestehen. Institutionelle Nutzer, die die Plattform im Namen einer Schule oder Bildungseinrichtung einsetzen, wenden sich bitte an die unter Abschnitt 1 genannte Kontaktadresse, um einen **Auftragsverarbeitungsvertrag (AVV)** abzuschließen, sofern dies nach den konkreten Umständen rechtlich erforderlich ist.
+Setzen Schulen oder andere Bildungseinrichtungen die Plattform im Rahmen ihres Unterrichts ein und werden dabei personenbezogene Daten von Schülerinnen und Schülern verarbeitet, kann zwischen der Schule (als Verantwortlicher) und dem Plattformbetreiber eine Auftragsverarbeitungsbeziehung im Sinne des Art. 28 DSGVO bestehen. Institutionelle Nutzer, die die Plattform im Namen einer Schule oder Bildungseinrichtung einsetzen, wenden sich bitte an die unter Abschnitt 1 genannte Kontaktadresse, um einen **Auftragsverarbeitungsvertrag (AVV)** abzuschließen, sofern dies nach den konkreten Umständen rechtlich erforderlich ist. Institutionellen Nutzern stellen wir auf Anfrage einen Auftragsverarbeitungsvertrag (AVV) gemäß Art. 28 DSGVO zur Verfügung, sofern die Nutzung der Plattform dies rechtlich erforderlich macht.
 
-### 11.3 Keine Profilbildung und kein Tracking von Kindern
+### 12.3 Keine Profilbildung und kein Tracking von Kindern
 
 Wir erstellen keine Profile über Minderjährige, führen kein Tracking durch und schalten keine Werbung. Personenbezogene Daten von Kindern werden weder an Dritte weitergegeben noch für andere Zwecke als den technischen Betrieb der Plattform genutzt.
 
-### 11.4 Recht auf Löschung von Kinderdaten
+### 12.4 Recht auf Löschung von Kinderdaten
 
 Erziehungsberechtigte können jederzeit Auskunft über die zu ihrem Kind gespeicherten Daten verlangen und deren Löschung beantragen. Hierfür wenden Sie sich bitte an die unter Abschnitt 1 genannte Kontaktadresse.
 
 ---
 
-## 12. Weitergabe von Daten an Dritte
+## 13. Weitergabe von Daten an Dritte
 
 Eine Übermittlung personenbezogener Daten an Dritte findet grundsätzlich nicht statt. Ausnahmen bestehen nur in folgenden Fällen:
 
@@ -233,17 +277,15 @@ Eine Übermittlung personenbezogener Daten an Dritte findet grundsätzlich nicht
 
 ---
 
-## 13. Datensicherungen (Backups)
+## 14. Datensicherungen (Backups)
 
-Zur Gewährleistung der Verfügbarkeit und Wiederherstellbarkeit der Plattform werden regelmäßig verschlüsselte Sicherungskopien der Datenbank erstellt.
+Zur Gewährleistung der Verfügbarkeit und Wiederherstellbarkeit der Plattform werden regelmäßig verschlüsselte Sicherungskopien der Datenbank erstellt. Backups werden ausschließlich auf eigenen Servern in Deutschland gespeichert. Backups werden ausschließlich zur Wiederherstellung von Daten im Fehlerfall verwendet. Die Sicherungskopien werden nach spätestens 30 Tagen automatisch gelöscht.
 
-Backups werden ausschließlich auf eigenen Servern in Deutschland gespeichert und nicht für andere Zwecke verwendet.
-
-Backups werden nach Ablauf eines angemessenen Sicherungszeitraums automatisch gelöscht.
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Gewährleistung der Datensicherheit und Verfügbarkeit).
 
 ---
 
-## 14. Technische und organisatorische Maßnahmen
+## 15. Technische und organisatorische Maßnahmen
 
 Wir treffen geeignete technische und organisatorische Maßnahmen gemäß Art. 32 DSGVO, um personenbezogene Daten zu schützen.
 
@@ -259,75 +301,77 @@ Hierzu gehören insbesondere:
 
 ---
 
-## 15. Übersicht der Speicherfristen
+## 16. Übersicht der Speicherfristen
 
-| Datenkategorie                                                 | Speicherdauer                                                                                                         |
-|----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| Nutzerkontodaten (E-Mail, Benutzername)                        | Solange das Konto aktiv ist; nach Löschung endgültig binnen 30 Tagen                                                  |
-| Server-Protokolldaten (IP-Adresse, Zugriffsdaten)              | 14 Tage, danach automatische Löschung/Anonymisierung                                                                  |
-| Quiz-Sitzungsdaten und Spielergebnisse (registrierte Nutzer)   | 90 Tage (automatische Löschung) bzw. bis zur Löschung durch den Nutzer oder des Kontos bei persönlicher Spielhistorie |
-| Gast-Sitzungsdaten (Spitzname, Ergebnisse)                     | Nur für Dauer der Sitzung; keine persistente Speicherung                                                              |
-| Nutzererstellte Inhalte (Quizze)                               | Bis zur Löschung durch den Nutzer oder Entfernung des Kontos                                                          |
-| Profilbilder                                                   | Bis zur Entfernung durch den Nutzer oder Kontolöschung                                                                |
-| Kontaktformular-Anfragen                                       | Nach abschließender Bearbeitung, sofern keine gesetzlichen Aufbewahrungspflichten bestehen                            |
-| Datensicherungen (Backups)                                     | Nach Ablauf eines angemessenen Sicherungszeitraums                                                                    |
-| Session-Cookies und Authentifizierungs-Tokens                  | Automatisch nach Sitzungsende oder Token-Ablauf                                                                       |
-| Lokale Browserspeicherung (Local Storage, z. B. Einstellungen) | Bis zur manuellen Löschung durch den Nutzer über die Browsereinstellungen                                             |
-| Daten mit gesetzlicher Aufbewahrungspflicht                    | Gemäß gesetzlicher Frist (z. B. 6 bzw. 10 Jahre nach AO/HGB)                                                          |
+| Datenkategorie                                               | Speicherdauer                                                                                                          |
+|--------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| Nutzerkontodaten (E-Mail, Benutzername)                      | Solange das Konto aktiv ist; nach Löschung endgültig binnen 30 Tagen                                                   |
+| Server-Protokolldaten (IP-Adresse, Zugriffsdaten)            | 14 Tage, danach automatische Löschung/Anonymisierung                                                                   |
+| Quiz-Sitzungsdaten und Spielergebnisse (registrierte Nutzer) | 90 Tage (automatische Löschung) bzw. bis zur Löschung durch den Nutzer oder des Kontos bei persönlicher Spielhistorie  |
+| Technische Sitzungsdaten                                     | Maximal 90 Tage                                                                                                        |
+| Gast-Sitzungsdaten (Spitzname, Ergebnisse)                   | Nur für Dauer der Sitzung; keine persistente Speicherung                                                               |
+| Nutzererstellte Inhalte (Quizze)                             | Bis zur Löschung durch den Nutzer oder Entfernung des Kontos                                                           |
+| Profilbilder                                                 | Bis zur Entfernung durch den Nutzer oder Kontolöschung                                                                 |
+| Kontaktformular-Anfragen                                     | Nach abschließender Bearbeitung, sofern keine gesetzlichen Aufbewahrungspflichten bestehen                             |
+| Datensicherungen (Backups)                                   | Maximal 30 Tage (automatische Löschung)                                                                                |
+| SMTP-Versandprotokolle                                       | 30 Tage                                                                                                                |
+| Session-Cookies und Authentifizierungs-Tokens                | Automatisch nach Sitzungsende oder Token-Ablauf                                                                        |
+| Local Storage / Session Storage                              | Bis zur Löschung durch den Nutzer                                                                                      |
+| Daten mit gesetzlicher Aufbewahrungspflicht                  | Gemäß gesetzlicher Frist (z. B. 6 bzw. 10 Jahre nach AO/HGB)                                                           |
 
 ---
 
-## 16. Ihre Rechte als betroffene Person
+## 17. Ihre Rechte als betroffene Person
 
 Sie können Ihre Rechte jederzeit durch eine formlose Nachricht an die unter Abschnitt 1 genannte Kontaktadresse geltend machen. Wir beantworten Anfragen in der Regel innerhalb von 30 Tagen.
 
-### 16.1 Auskunftsrecht (Art. 15 DSGVO)
+### 17.1 Auskunftsrecht (Art. 15 DSGVO)
 
 Sie haben das Recht, Auskunft darüber zu erhalten, ob und welche personenbezogenen Daten wir von Ihnen verarbeiten, einschließlich Zweck, Herkunft, Empfänger und geplante Speicherdauer.
 
-### 16.2 Recht auf Berichtigung (Art. 16 DSGVO)
+### 17.2 Recht auf Berichtigung (Art. 16 DSGVO)
 
 Sie haben das Recht, die unverzügliche Berichtigung unrichtiger oder unvollständiger Daten zu verlangen. Viele Daten können Sie direkt in Ihren Kontoeinstellungen selbst anpassen.
 
-### 16.3 Recht auf Löschung („Recht auf Vergessenwerden", Art. 17 DSGVO)
+### 17.3 Recht auf Löschung („Recht auf Vergessenwerden", Art. 17 DSGVO)
 
 Sie können die Löschung Ihrer personenbezogenen Daten verlangen, sofern kein gesetzlicher Aufbewahrungsgrund entgegensteht. Ihr Nutzerkonto können Sie jederzeit selbst löschen.
 
-### 16.4 Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)
+### 17.4 Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)
 
 Sie können die Einschränkung der Verarbeitung verlangen, wenn Sie die Richtigkeit der Daten bestreiten, die Verarbeitung unrechtmäßig ist, Sie die Daten zur Rechtsverfolgung benötigen oder Sie Widerspruch eingelegt haben.
 
-### 16.5 Recht auf Datenübertragbarkeit (Art. 20 DSGVO)
+### 17.5 Recht auf Datenübertragbarkeit (Art. 20 DSGVO)
 
 Sie haben das Recht, die von Ihnen bereitgestellten personenbezogenen Daten in einem gängigen, maschinenlesbaren Format zu erhalten (z. B. JSON), sofern die Verarbeitung auf einer Einwilligung oder einem Vertrag beruht und automatisiert erfolgt.
 
-### 16.6 Widerspruchsrecht (Art. 21 DSGVO)
+### 17.6 Widerspruchsrecht (Art. 21 DSGVO)
 
 Soweit Daten auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse) verarbeitet werden, können Sie jederzeit Widerspruch einlegen. Wir stellen die Verarbeitung dann ein, sofern keine zwingenden schutzwürdigen Gründe dagegenstehen.
 
-### 16.7 Widerruf einer Einwilligung (Art. 7 Abs. 3 DSGVO)
+### 17.7 Widerruf einer Einwilligung (Art. 7 Abs. 3 DSGVO)
 
 Soweit die Verarbeitung auf einer Einwilligung beruht, können Sie diese jederzeit mit Wirkung für die Zukunft widerrufen. Die Rechtmäßigkeit der bis zum Widerruf erfolgten Verarbeitung bleibt unberührt.
 
 ---
 
-## 17. Beschwerderecht bei der Datenschutz-Aufsichtsbehörde
+## 18. Beschwerderecht bei der Datenschutz-Aufsichtsbehörde
 
 Sie haben gemäß Art. 77 DSGVO das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren, wenn Sie der Ansicht sind, dass die Verarbeitung der Sie betreffenden personenbezogenen Daten gegen die DSGVO verstößt.
 
 **Zuständige Aufsichtsbehörde:**
 
-[Name der zuständigen Landesdatenschutzbehörde des Bundeslandes, in dem der Anbieter seinen Sitz hat, z. B. Der Hessische Beauftragte für Datenschutz und Informationsfreiheit]
-\[Straße und Hausnummer\]
-[PLZ und Ort]
-\[Website der Behörde\]
+[Name der zuständigen Landesdatenschutzbehörde des Bundeslandes, in dem der Anbieter seinen Sitz hat, z. B. Der Hessische Beauftragte für Datenschutz und Informationsfreiheit]  
+[Straße und Hausnummer]  
+[PLZ und Ort]  
+[Website der Behörde]
 
 ---
 
-## 18. Änderungen dieser Datenschutzerklärung
+## 19. Änderungen dieser Datenschutzerklärung
 
 Wir behalten uns vor, diese Datenschutzerklärung anzupassen, um sie an geänderte Rechtslagen, technische Weiterentwicklungen oder Änderungen unserer Dienste anzupassen. Die jeweils aktuelle Version ist stets auf unserer Website abrufbar. Bei wesentlichen Änderungen werden registrierte Nutzer per E-Mail an die hinterlegte E-Mail-Adresse informiert.
 
 ---
 
-**Datum der letzten Aktualisierung:** 03.06.2026
+**Datum der letzten Aktualisierung:** 04.06.2026
