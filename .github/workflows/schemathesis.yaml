@@ -30,8 +30,6 @@ jobs:
         uses: hoverkraft-tech/compose-action@v2.6.0
         with:
           compose-file: 'compose.dev.yaml'
-      - name: Test hook import
-        run: python -c "import api_tests.src.hooks; print('OK')"
       - uses: schemathesis/action@v3
         with:
           schema: 'docs/openapispec/RestInterface.yaml'
