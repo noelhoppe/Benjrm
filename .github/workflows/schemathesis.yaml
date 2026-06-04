@@ -36,4 +36,4 @@ jobs:
         with:
           schema: 'docs/openapispec/RestInterface.yaml'
           config-file: 'schemathesis/schemathesis.toml'
-          version: '4.20.3'
+          version: '4.21.0'
