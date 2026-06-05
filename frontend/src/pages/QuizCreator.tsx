@@ -52,7 +52,7 @@ export default function QuizCreator(): JSX.Element {
         bigQuestionError,
         questions,
         currentQuestionIndex,
-        setCurrentQuestionIndex,
+        handleSelectQuestion,
         currentQuestion,
         questionIds,
         activeQuestionId,
@@ -265,7 +265,7 @@ export default function QuizCreator(): JSX.Element {
                                 activeIndex={currentQuestionIndex}
                                 onAdd={handleAddQuestion}
                                 onDelete={deleteQuestion}
-                                onSelect={setCurrentQuestionIndex}
+                                onSelect={handleSelectQuestion}
                                 questionIds={questionIds}
                                 questions={questions}
                             />

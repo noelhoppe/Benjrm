@@ -42,7 +42,7 @@ export interface UseQuizEditorResult {
     questionLoadError: unknown
     questions: Question[]
     currentQuestionIndex: number
-    setCurrentQuestionIndex: (n: number) => void
+    handleSelectQuestion: (n: number) => void
     currentQuestion: Question
     questionIds: string[]
     activeQuestionId: string | null
@@ -224,6 +224,27 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         },
         [hasInitializedQuestions, currentQuestion]
     )
+
+    const handleSelectQuestion = (index: number) => {
+        const validationResCurrentQuestion = validateQuestion(currentQuestion)
+        if (validationResCurrentQuestion) {
+            showBigQuestionError(validationResCurrentQuestion)
+        } else {
+            setCurrentQuestionIndexInternal(index)
+            const validationRes = validateQuestion(questions[index])
+            if (validationRes) {
+                setQuestionError(validationRes)
+                showBigQuestionError(validationRes)
+            } else {
+                setQuestionError({
+                    missingQuestion: false,
+                    missingAnswers: [],
+                    missingCorrectAnswer: false,
+                })
+                setBigQuestionError(null)
+            }
+        }
+    }
 
     const queuedQuestions = useMemo(() => {
         if (!savedQuestions) return null
@@ -469,8 +490,23 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
                 upsertReorder(nextQuestions.map((question) => question.id))
             }
 
-            if (currentQuestionIndex >= indexToDelete && currentQuestionIndex > 0) {
-                setCurrentQuestionIndex((prev) => prev - 1)
+            let questionIndex = currentQuestionIndex
+            if (questionIndex >= nextQuestions.length && questionIndex > 0) {
+                questionIndex -= 1
+                setCurrentQuestionIndexInternal(questionIndex)
+            }
+
+            const validationRes = validateQuestion(nextQuestions[questionIndex])
+            if (validationRes) {
+                setQuestionError(validationRes)
+                showBigQuestionError(validationRes)
+            } else {
+                setQuestionError({
+                    missingQuestion: false,
+                    missingAnswers: [],
+                    missingCorrectAnswer: false,
+                })
+                setBigQuestionError(null)
             }
         }
 
@@ -553,7 +589,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         questionLoadError,
         questions,
         currentQuestionIndex,
-        setCurrentQuestionIndex,
+        handleSelectQuestion,
         currentQuestion,
         questionIds,
         activeQuestionId,
