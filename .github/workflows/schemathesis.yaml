@@ -8,11 +8,13 @@ on:
       - 'docs/openapispec/**'
       - 'backend/**'
       - '.github/workflows/schemathesis.yaml'
+      - 'api_tests/**'
   pull_request:
     paths:
       - 'docs/openapispec/**'
       - 'backend/**'
       - '.github/workflows/schemathesis.yaml'
+      - 'api_tests/**'
   workflow_dispatch:
 
 jobs:
