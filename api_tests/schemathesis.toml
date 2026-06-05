@@ -10,9 +10,13 @@ hooks = "api_tests.src.hooks"
 # https://schemathesis.readthedocs.io/en/stable/reference/configuration/#seed
 seed = 42
 
-# https://schemathesis.readthedocs.io/en/stable/reference/configuration/#generationallow-extra-parameters
 [generation]
+# https://schemathesis.readthedocs.io/en/stable/reference/configuration/#generationallow-extra-parameters
 allow-extra-parameters = false
+# https://schemathesis.readthedocs.io/en/stable/reference/configuration/#generationallow-x00
+allow-x00 = false
+# https://schemathesis.readthedocs.io/en/stable/reference/configuration/#generationdeterministic
+deterministic = true
 
 [phases.examples]
 enabled = true
