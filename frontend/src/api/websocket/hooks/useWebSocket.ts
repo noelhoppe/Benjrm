@@ -10,13 +10,15 @@ export default function useWebSocket(code: number | string | undefined, path = "
     const websocketService = useWebSocketContext()
 
     useEffect(() => {
-        if (!code) return
+        if (!code) return undefined
 
         const protocol = window.location.protocol === "https:" ? "wss" : "ws"
         const { host } = window.location
         const wsUrl = `${protocol}://${host}/api/v1/sessions/${code}/${path}`
 
         websocketService.connect(wsUrl)
-        return () => websocketService.disconnect()
+        return () => {
+            websocketService.disconnect()
+        }
     }, [code, path, websocketService])
 }

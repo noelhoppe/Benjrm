@@ -9,7 +9,14 @@ import useWebSocketContext from "@/api/websocket/hooks/useWebSocketContext.ts"
 import WebSocketContext from "@/api/websocket/context/WebSocketContext.ts"
 import websocketService from "@/api/websocket/service/singleton.ts"
 
-export { useWebSocket, useHostWebSocket, useSocketEvent, useWebSocketContext, WebSocketContext, websocketService }
+export {
+    useWebSocket,
+    useHostWebSocket,
+    useSocketEvent,
+    useWebSocketContext,
+    WebSocketContext,
+    websocketService,
+}
 
 // How to import:
 // import { useWebSocket } from "@/api/websocket"

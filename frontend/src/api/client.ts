@@ -17,7 +17,7 @@ export class ApiError extends Error {
     }
 }
 
-function createFriendlyApiError(status: number = 500): ApiError {
+function createFriendlyApiError(status = 500): ApiError {
     const message = `The backend is currently unavailable. Please try again later.`
     return new ApiError(status, message)
 }

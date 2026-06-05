@@ -95,8 +95,8 @@ export default function WaitingRoom(): JSX.Element {
                 <div className="w-full rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-500">
                     <h1 className="text-base font-bold">Quiz lobby not found</h1>
                     <p className="mt-1 text-sm">
-                        No lobby with the code <span className="font-mono font-bold">{code}</span> was found.
-                        Please check the invitation code and try again.
+                        No lobby with the code <span className="font-mono font-bold">{code}</span>{" "}
+                        was found. Please check the invitation code and try again.
                     </p>
                 </div>
             </section>
