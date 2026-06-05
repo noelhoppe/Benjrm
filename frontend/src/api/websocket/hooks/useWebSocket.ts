@@ -2,18 +2,21 @@ import { useEffect } from "react"
 import useWebSocketContext from "@/api/websocket/hooks/useWebSocketContext.ts"
 
 /**
- * Custom hook that connects to ws(s)://{host}/api/v1/sessions/{code}/ws and handles connection lifecycle management.
+ * Custom hook that connects to ws(s)://{host}/api/v1/sessions/{code}/{path} and handles connection lifecycle management.
  * @param code The session code to connect to.
+ * @param path The WebSocket path segment appended after the session code. Defaults to "ws".
  */
-export default function useWebSocket(code: number): void {
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws"
-    const { host } = window.location
-    const wsUrl = `${protocol}://${host}/api/v1/sessions/${code}/ws`
-
+export default function useWebSocket(code: number | string | undefined, path = "ws"): void {
     const websocketService = useWebSocketContext()
 
     useEffect(() => {
+        if (!code) return
+
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws"
+        const { host } = window.location
+        const wsUrl = `${protocol}://${host}/api/v1/sessions/${code}/${path}`
+
         websocketService.connect(wsUrl)
         return () => websocketService.disconnect()
-    }, [wsUrl, websocketService])
+    }, [code, path, websocketService])
 }

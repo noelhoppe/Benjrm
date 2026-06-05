@@ -7,9 +7,19 @@ export interface FetchOptions {
     signal?: AbortSignal
 }
 
-function createFriendlyApiError(): Error {
+export class ApiError extends Error {
+    public readonly status: number
+
+    constructor(status: number, message: string) {
+        super(message)
+        this.status = status
+        this.name = "ApiError"
+    }
+}
+
+function createFriendlyApiError(status: number = 500): ApiError {
     const message = `The backend is currently unavailable. Please try again later.`
-    return new Error(message)
+    return new ApiError(status, message)
 }
 
 export async function fetcher<T>(path: string, opts: FetchOptions = {}): Promise<T> {
@@ -37,7 +47,7 @@ export async function fetcher<T>(path: string, opts: FetchOptions = {}): Promise
     const res = await fetch(url, init)
 
     if (!res.ok) {
-        throw createFriendlyApiError()
+        throw createFriendlyApiError(res.status)
     }
 
     // Wenn der Status 204 (No Content) ist, geben wir explizit undefined als Typ T zurück
@@ -48,13 +58,13 @@ export async function fetcher<T>(path: string, opts: FetchOptions = {}): Promise
 
     const contentType = res.headers.get("content-type") ?? ""
     if (!contentType.includes("application/json")) {
-        throw createFriendlyApiError()
+        throw createFriendlyApiError(res.status)
     }
 
     try {
         return JSON.parse(responseText) as T
     } catch {
-        throw createFriendlyApiError()
+        throw createFriendlyApiError(res.status)
     }
 }
 

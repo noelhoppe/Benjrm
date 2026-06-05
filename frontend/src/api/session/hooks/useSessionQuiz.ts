@@ -9,6 +9,7 @@ import type { Quiz } from "@/api/quiz"
 
 /**
  * Hook to get the quiz in a session.
+ * Note: GET /api/v1/sessions/{code}/quiz is also host-only. (403 Client is not the host)
  * @param code The session code.
  * @returns The quiz.
  */

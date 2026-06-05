@@ -4,8 +4,9 @@ import type { JSX } from "react"
 import { useState } from "react"
 import { useSearchParams } from "react-router"
 import ProfilePicker from "../components/ProfilePicker"
-import useSession from "@/api/session/hooks/useSession"
+import useSessionStatus from "@/api/session/hooks/useSessionStatus"
 import useSessionQuiz from "@/api/session/hooks/useSessionQuiz"
+import { useHostWebSocket } from "@/api/websocket"
 import { Button } from "@/shadcn/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog"
 
@@ -48,11 +49,14 @@ export default function WaitingRoom(): JSX.Element {
     const [searchParams] = useSearchParams()
     const code = searchParams.get("code") ?? undefined
 
-    const { isLoading: isLoadingSession, isError: isErrorSession } = useSession(code)
-    const { data: quiz, isLoading: isLoadingQuiz, isError: isErrorQuiz } = useSessionQuiz(code)
+    const { isLoading: isLoadingSession, isHost, isInvalidCode } = useSessionStatus(code)
 
-    // MOCK
-    const isHost = true
+    // Fetch quiz data only if host
+    const { data: quiz, isLoading: isLoadingQuiz } = useSessionQuiz(isHost ? code : undefined)
+
+    // Connect to the host WebSocket
+    useHostWebSocket(isHost ? code : undefined)
+
     const [players, setPlayers] = useState<Player[]>([
         { id: "1", name: "Funny Crocodile (you)", emoji: "🦎" },
         { id: "2", name: "Smart Giraffe", emoji: "🦒" },
@@ -80,19 +84,19 @@ export default function WaitingRoom(): JSX.Element {
         return (
             <section className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-4 py-24">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/10 border-t-[#00D4E8]" />
-                <p className="text-muted-foreground text-sm">Quiz-Lobby wird geladen…</p>
+                <p className="text-muted-foreground text-sm">Loading the quiz lobby…</p>
             </section>
         )
     }
 
-    if (isErrorQuiz || isErrorSession) {
+    if (isInvalidCode || !code) {
         return (
             <section className="mx-auto flex w-full max-w-md flex-col items-center justify-center py-24">
                 <div className="w-full rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-500">
-                    <h1 className="text-base font-bold">Quiz-Lobby konnte nicht geladen werden</h1>
+                    <h1 className="text-base font-bold">Quiz lobby not found</h1>
                     <p className="mt-1 text-sm">
-                        Das Quiz konnte nicht gefunden werden, bitte überprüfe den Einladungscode
-                        und versuche es erneut.
+                        No lobby with the code <span className="font-mono font-bold">{code}</span> was found.
+                        Please check the invitation code and try again.
                     </p>
                 </div>
             </section>
@@ -149,7 +153,7 @@ export default function WaitingRoom(): JSX.Element {
 
                     <div className="mb-4">
                         <h1 className="text-xl font-extrabold tracking-tight sm:text-2xl">
-                            {quiz?.title ?? (isLoadingQuiz ? "Wird geladen..." : "Kein Titel")}
+                            {quiz?.title ?? "Kein Titel"}
                         </h1>
                         <p className="text-muted-foreground mt-1 text-sm">
                             Players joined:{" "}
