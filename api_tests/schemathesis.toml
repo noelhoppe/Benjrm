@@ -17,6 +17,10 @@ allow-extra-parameters = false
 allow-x00 = false
 # https://schemathesis.readthedocs.io/en/stable/reference/configuration/#generationdeterministic
 deterministic = true
+# https://schemathesis.readthedocs.io/en/stable/reference/configuration/#generationdatabase
+# note: deterministic = true requires database = "none" to avoid non-deterministic test generation due to the use of a database
+database = "none"
+
 
 [phases.examples]
 enabled = true
