@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import useSession from "./useSession"
-import { ApiError } from "@/api/client"
 import type { Session } from "@/api/session"
+import { ApiError } from "@/api/utils"
 
 export interface SessionStatus {
     isLoading: boolean
