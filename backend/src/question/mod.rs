@@ -49,7 +49,7 @@ impl_err! {
 }
 
 #[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Question {
     #[serde(flatten)]
     pub model: QuestionModel,
@@ -87,7 +87,7 @@ impl QuestionOptions {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct NewQuestion {
     pub question: String,
     #[serde(default = "bool::default")]
@@ -99,7 +99,7 @@ pub struct NewQuestion {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(tag = "type", deny_unknown_fields, rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum NewQuestionOptions {
     Slide,
     SingleChoice { options: Vec<NewAnswerChoice> },
@@ -119,7 +119,7 @@ impl NewQuestionOptions {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct UpdateQuestion {
     #[serde(default)]
     pub question: UpdateValue<String>,
@@ -143,7 +143,7 @@ impl From<NewQuestion> for UpdateQuestion {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(tag = "type", deny_unknown_fields, rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum UpdateQuestionOptions {
     Slide,
     SingleChoice {
@@ -222,7 +222,7 @@ pub fn sort_linked_items<T: LinkedItem>(mut items: Vec<T>) -> Option<Vec<T>> {
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
-#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct QuestionFilter {
     hidden: Option<bool>,
 }
