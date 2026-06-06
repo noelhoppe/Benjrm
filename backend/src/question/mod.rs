@@ -12,7 +12,8 @@ use {
         update_value::UpdateValue,
     },
     sea_orm::DbErr,
-    serde::{Deserialize, Serialize},
+    serde::{Deserialize, Deserializer, Serialize},
+    std::collections::BTreeMap,
     uuid::Uuid,
 };
 
@@ -131,7 +132,10 @@ pub struct UpdateQuestion {
     pub hidden: UpdateValue<bool>,
     #[serde(flatten, deserialize_with = "Position::deserialize_optional")]
     pub position: Option<Position>,
-    #[serde(flatten)]
+    #[serde(
+        flatten,
+        deserialize_with = "UpdateQuestionOptions::deserialize_optional"
+    )]
     pub options: Option<UpdateQuestionOptions>,
 }
 
@@ -167,6 +171,23 @@ impl UpdateQuestionOptions {
             Self::SingleChoice { .. } => QuestionType::SingleChoice,
             Self::MultipleChoice { .. } => QuestionType::MultipleChoice,
             Self::Order { .. } => QuestionType::Order,
+        }
+    }
+
+    pub fn deserialize_optional<'de, D>(deserializer: D) -> Result<Option<Self>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let map: BTreeMap<serde_value::Value, serde_value::Value> =
+            Deserialize::deserialize(deserializer)?;
+        if map.contains_key(&serde_value::Value::String(String::from("type")))
+            || map.contains_key(&serde_value::Value::String(String::from("options")))
+        {
+            let value = Self::deserialize(serde_value::Value::Map(map))
+                .map_err(serde::de::Error::custom)?;
+            Ok(Some(value))
+        } else {
+            Ok(None)
         }
     }
 }
