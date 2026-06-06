@@ -750,6 +750,7 @@ components:
 
     NewQuiz:
       type: object
+      additionalProperties: false
       required:
         - title
       properties:
@@ -766,6 +767,7 @@ components:
 
     UpdateQuiz:
       type: object
+      additionalProperties: false
       properties:
         title:
           type: string
@@ -949,6 +951,8 @@ components:
           example: 'Testing fonts'
 
     NewQuestion:
+      type: object
+      additionalProperties: false
       allOf:
         - type: object
           required:
@@ -1051,6 +1055,8 @@ components:
           example: 'Testing fonts'
 
     UpdateQuestion:
+      type: object
+      additionalProperties: false
       allOf:
         - type: object
           properties:
