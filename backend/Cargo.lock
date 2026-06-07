@@ -613,6 +613,7 @@ dependencies = [
  "rand 0.10.1",
  "sea-orm",
  "serde",
+ "serde-value",
  "serde_json",
  "static-files",
  "thiserror 2.0.18",

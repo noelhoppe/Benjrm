@@ -118,7 +118,12 @@ pub trait Command: Sized {
 pub enum HostMessage {}
 
 #[derive(Debug, Deserialize)]
-#[serde(tag = "command", content = "payload", rename_all = "camelCase")]
+#[serde(
+    tag = "command",
+    content = "payload",
+    rename_all = "camelCase",
+    deny_unknown_fields
+)]
 pub enum HostCommand {
     Pong { id: u32, timestamp: DateTime<Utc> },
 }

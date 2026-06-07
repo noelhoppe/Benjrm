@@ -8,6 +8,7 @@ mod rest;
 pub mod ws;
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct NewSession {
     quiz: Option<Uuid>,
 }

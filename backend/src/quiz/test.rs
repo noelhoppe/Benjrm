@@ -198,74 +198,66 @@ async fn test_get_complete() {
             question: "single choice".into(),
             hidden: false,
             position: None,
-            options: NewQuestionOptions::SingleChoice {
-                options: vec![
-                    NewAnswerChoice {
-                        answer: "true".into(),
-                        correct: true,
-                    },
-                    NewAnswerChoice {
-                        answer: "false".into(),
-                        correct: false,
-                    },
-                ],
-            },
+            options: NewQuestionOptions::SingleChoice(vec![
+                NewAnswerChoice {
+                    answer: "true".into(),
+                    correct: true,
+                },
+                NewAnswerChoice {
+                    answer: "false".into(),
+                    correct: false,
+                },
+            ]),
         },
         NewQuestion {
             question: "hidden single choice".into(),
             hidden: true,
             position: None,
-            options: NewQuestionOptions::SingleChoice {
-                options: vec![
-                    NewAnswerChoice {
-                        answer: "true".into(),
-                        correct: true,
-                    },
-                    NewAnswerChoice {
-                        answer: "false".into(),
-                        correct: false,
-                    },
-                ],
-            },
+            options: NewQuestionOptions::SingleChoice(vec![
+                NewAnswerChoice {
+                    answer: "true".into(),
+                    correct: true,
+                },
+                NewAnswerChoice {
+                    answer: "false".into(),
+                    correct: false,
+                },
+            ]),
         },
         NewQuestion {
             question: "multiple choice".into(),
             hidden: false,
             position: None,
-            options: NewQuestionOptions::MultipleChoice {
-                options: vec![
-                    NewAnswerChoice {
-                        answer: "true1".into(),
-                        correct: true,
-                    },
-                    NewAnswerChoice {
-                        answer: "true2".into(),
-                        correct: true,
-                    },
-                    NewAnswerChoice {
-                        answer: "false".into(),
-                        correct: false,
-                    },
-                ],
-            },
+            options: NewQuestionOptions::MultipleChoice(vec![
+                NewAnswerChoice {
+                    answer: "true1".into(),
+                    correct: true,
+                },
+                NewAnswerChoice {
+                    answer: "true2".into(),
+                    correct: true,
+                },
+                NewAnswerChoice {
+                    answer: "false".into(),
+                    correct: false,
+                },
+            ]),
         },
         NewQuestion {
             question: "order".into(),
             hidden: false,
             position: None,
-            options: NewQuestionOptions::Order {
-                options: vec![
-                    NewAnswerOrder {
-                        answer: "item1".into(),
-                    },
-                    NewAnswerOrder {
-                        answer: "item2".into(),
-                    },
-                    NewAnswerOrder {
-                        answer: "item3".into(),
-                    },
-                ],
-            },
+            options: NewQuestionOptions::Order(vec![
+                NewAnswerOrder {
+                    answer: "item1".into(),
+                },
+                NewAnswerOrder {
+                    answer: "item2".into(),
+                },
+                NewAnswerOrder {
+                    answer: "item3".into(),
+                },
+            ]),
         },
     ];
     for question in questions.clone() {
@@ -297,16 +289,12 @@ async fn test_get_complete() {
             match (&question.options, quiz_question.options) {
                 (NewQuestionOptions::Slide, QuestionOptions::Slide) => (),
                 (
-                    NewQuestionOptions::SingleChoice {
-                        options: new_options,
-                    },
-                    QuestionOptions::SingleChoice { options },
+                    NewQuestionOptions::SingleChoice(new_options),
+                    QuestionOptions::SingleChoice(options),
                 )
                 | (
-                    NewQuestionOptions::MultipleChoice {
-                        options: new_options,
-                    },
-                    QuestionOptions::MultipleChoice { options },
+                    NewQuestionOptions::MultipleChoice(new_options),
+                    QuestionOptions::MultipleChoice(options),
                 ) => {
                     assert_eq!(new_options.len(), options.len());
                     for (new, current) in new_options.iter().zip(options.iter()) {
@@ -314,12 +302,7 @@ async fn test_get_complete() {
                         assert_eq!(new.correct, current.correct);
                     }
                 }
-                (
-                    NewQuestionOptions::Order {
-                        options: new_options,
-                    },
-                    QuestionOptions::Order { options },
-                ) => {
+                (NewQuestionOptions::Order(new_options), QuestionOptions::Order(options)) => {
                     assert_eq!(new_options.len(), options.len());
                     for (new, current) in new_options.iter().zip(options.iter()) {
                         assert_eq!(new.answer, current.answer);
