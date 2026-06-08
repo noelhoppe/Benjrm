@@ -4,7 +4,7 @@ use {
         error::Error,
         game_session::{
             Channel, GameSession, GameSessionError, GameSessionStatus, GameSessions, HostMessage,
-            Message,
+            Message, SessionCode,
         },
         question::{Question, QuestionFilter},
         quiz::Quiz,
@@ -26,9 +26,9 @@ impl GameSessions {
     pub async fn create_session(
         &self,
         conn: &impl ConnectionTrait,
-        host: &User,
+        host: User,
         quiz: Option<Uuid>,
-    ) -> Result<(u32, Arc<Mutex<GameSession>>), Error> {
+    ) -> Result<(SessionCode, Arc<Mutex<GameSession>>), Error> {
         let quiz = match quiz {
             Some(quiz_id) => {
                 let quiz = Quiz::<Question>::get(
@@ -51,7 +51,7 @@ impl GameSessions {
 
             let mut rng = rand::rng();
             for _ in 0..10 {
-                let new_code: u32 = rng.random_range(0..=9999_9999);
+                let new_code: SessionCode = rng.random_range(0..=9999_9999);
                 if !sessions.contains_key(&new_code) {
                     code = Some(new_code);
                     break;
@@ -75,7 +75,7 @@ impl GameSessions {
 
     pub async fn get_session(
         &self,
-        code: u32,
+        code: SessionCode,
     ) -> Result<Arc<Mutex<GameSession>>, GameSessionError> {
         let map = self.sessions.read().await;
         if let Some(game) = map.get(&code) {
@@ -85,7 +85,11 @@ impl GameSessions {
         }
     }
 
-    pub async fn delete_session(&self, user: &User, code: u32) -> Result<(), GameSessionError> {
+    pub async fn delete_session(
+        &self,
+        user: &User,
+        code: SessionCode,
+    ) -> Result<(), GameSessionError> {
         let mut sessions = self.sessions.write().await;
         let session = match sessions.get(&code) {
             Some(session) => Arc::clone(session),
@@ -93,7 +97,7 @@ impl GameSessions {
         };
 
         let mut session = session.lock().await;
-        if session.host.id != user.id {
+        if &session.host.user != user {
             return Err(GameSessionError::Forbidden);
         }
 
@@ -128,38 +132,25 @@ impl GameSession {
         if self.is_closed() {
             return Err(GameSessionError::InvalidCode);
         }
-        if self.host.id != user.id {
+        if &self.host.user != user {
             return Err(GameSessionError::Forbidden);
         }
         Ok(())
     }
 
-    pub async fn set_host_channel<T: Channel<HostMessage> + 'static>(
-        &mut self,
-        user: &User,
-        channel: T,
-    ) -> Result<(), GameSessionError> {
+    pub async fn set_host_channel<T: Channel<HostMessage> + 'static>(&mut self, channel: T) {
         let channel = Box::new(channel);
-        match self.check_set_host_channel(user) {
-            Ok(_) => (),
-            Err(err) => {
-                channel.close().await;
-                return Err(err);
-            }
-        }
         if let Some(old_channel) = self.host.channel.take() {
             old_channel.close().await;
         }
         self.host.channel = Some(channel);
-        Ok(())
     }
 
     pub async fn notify_host(&mut self, msg: Message<HostMessage>) {
-        #[allow(clippy::collapsible_if)]
-        if let Some(channel) = &mut self.host.channel {
-            if let Err(err) = channel.send(msg).await {
-                log::error!("notify host error: {err:?}");
-            }
+        if let Some(channel) = &mut self.host.channel
+            && let Err(err) = channel.send(msg).await
+        {
+            log::error!("notify host error: {err:?}");
         }
     }
 }

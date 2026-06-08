@@ -20,12 +20,12 @@ async fn create_get_session() {
     {
         let (code, _) = data
             .game_sessions
-            .create_session(&data.db, &user, None)
+            .create_session(&data.db, user.clone(), None)
             .await
             .unwrap();
         let session = data.game_sessions.get_session(code).await.unwrap();
         let session = session.lock().await;
-        assert_eq!(session.host.id, user.id);
+        assert_eq!(session.host.user.id, user.id);
         assert!(session.quiz.is_none());
     }
 
@@ -35,13 +35,13 @@ async fn create_get_session() {
             .unwrap();
         let (code, _) = data
             .game_sessions
-            .create_session(&data.db, &user, Some(quiz.id))
+            .create_session(&data.db, user.clone(), Some(quiz.id))
             .await
             .unwrap();
         let session = data.game_sessions.get_session(code).await.unwrap();
         let session = session.lock().await;
 
-        assert_eq!(session.host.id, user.id);
+        assert_eq!(session.host.user.id, user.id);
         let session_quiz = session.quiz.as_ref().unwrap();
         assert_eq!(session_quiz.model.id, quiz.id);
     }
@@ -70,40 +70,26 @@ async fn check_set_host_channel() {
 
     let (_, session) = data
         .game_sessions
-        .create_session(&data.db, &user, None)
+        .create_session(&data.db, user.clone(), None)
         .await
         .unwrap();
     let mut session = session.lock().await;
 
     session.check_set_host_channel(&user).unwrap();
     session
-        .set_host_channel(
-            &user,
-            DummyChanel(DummyChanel::generate_id(), closed.clone()),
-        )
-        .await
-        .unwrap();
+        .set_host_channel(DummyChanel(DummyChanel::generate_id(), closed.clone()))
+        .await;
     session.check_set_host_channel(&user).unwrap();
     assert!(!closed.load(Ordering::Relaxed));
     session
-        .set_host_channel(
-            &user,
-            DummyChanel(DummyChanel::generate_id(), closed2.clone()),
-        )
-        .await
-        .unwrap();
+        .set_host_channel(DummyChanel(DummyChanel::generate_id(), closed2.clone()))
+        .await;
     assert!(closed.load(Ordering::Relaxed));
     assert!(!closed2.load(Ordering::Relaxed));
 
     let user2 = data.dummy_user().await;
     assert!(matches!(
         session.check_set_host_channel(&user2),
-        Err(GameSessionError::Forbidden)
-    ));
-    assert!(matches!(
-        session
-            .set_host_channel(&user2, DummyChanel(DummyChanel::generate_id(), closed))
-            .await,
         Err(GameSessionError::Forbidden)
     ));
 }
@@ -116,7 +102,7 @@ async fn create_session_invalid_quiz() {
 
     let res = data
         .game_sessions
-        .create_session(&data.db, &user, Some(Uuid::new_v4()))
+        .create_session(&data.db, user.clone(), Some(Uuid::new_v4()))
         .await;
     assert!(matches!(res, Err(Error::Quiz(QuizError::NotFound))));
 
@@ -125,7 +111,7 @@ async fn create_session_invalid_quiz() {
         .unwrap();
     let res = data
         .game_sessions
-        .create_session(&data.db, &user2, Some(quiz.id))
+        .create_session(&data.db, user2, Some(quiz.id))
         .await;
     assert!(matches!(res, Err(Error::Quiz(QuizError::Forbidden))));
 }

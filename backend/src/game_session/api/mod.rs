@@ -1,5 +1,5 @@
 use {
-    crate::game_session::GameSession,
+    crate::game_session::{GameSession, SessionCode},
     serde::{Deserialize, Serialize},
     uuid::Uuid,
 };
@@ -15,12 +15,12 @@ struct NewSession {
 
 #[derive(Serialize)]
 pub struct GameSessionDto {
-    code: u32,
+    code: SessionCode,
     quiz: Option<Uuid>,
 }
 
 impl GameSession {
-    pub fn to_dto(&self, code: u32) -> GameSessionDto {
+    pub fn to_dto(&self, code: SessionCode) -> GameSessionDto {
         GameSessionDto {
             code,
             quiz: self.quiz.as_ref().map(|x| x.model.id),

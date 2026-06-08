@@ -14,7 +14,6 @@ use {
         },
     },
     tokio::sync::{Mutex, RwLock},
-    uuid::Uuid,
 };
 
 mod api;
@@ -23,6 +22,8 @@ mod core;
 mod test;
 
 pub use api::init;
+
+pub type SessionCode = u32;
 
 impl_err! {
     enum GameSessionError {
@@ -36,7 +37,7 @@ impl_err! {
 }
 
 pub struct GameSessions {
-    sessions: RwLock<HashMap<u32, Arc<Mutex<GameSession>>>>,
+    sessions: RwLock<HashMap<SessionCode, Arc<Mutex<GameSession>>>>,
 }
 
 pub struct GameSession {
@@ -52,14 +53,14 @@ pub enum GameSessionStatus {
 }
 
 pub struct GameSessionHost {
-    id: Uuid,
+    user: User,
     channel: Option<Box<dyn Channel<HostMessage>>>,
 }
 
-impl From<&User> for GameSessionHost {
-    fn from(value: &User) -> Self {
+impl From<User> for GameSessionHost {
+    fn from(value: User) -> Self {
         Self {
-            id: value.id,
+            user: value,
             channel: None,
         }
     }

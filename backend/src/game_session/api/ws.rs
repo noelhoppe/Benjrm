@@ -3,7 +3,9 @@ use {
         AppData,
         auth::User,
         error::Error,
-        game_session::{Channel, ChannelError, Command, GameSession, HostCommand, Message},
+        game_session::{
+            Channel, ChannelError, Command, GameSession, HostCommand, Message, SessionCode,
+        },
     },
     actix_web::{HttpRequest, HttpResponse, rt, web},
     actix_ws::{CloseCode, Closed, MessageStream},
@@ -24,12 +26,13 @@ async fn get_host_ws(
     req: HttpRequest,
     body: web::Payload,
     user: User,
-    code: web::Path<u32>,
+    code: web::Path<SessionCode>,
     app_data: web::Data<AppData>,
 ) -> Result<HttpResponse, actix_web::Error> {
+    let code = code.into_inner();
     let session = app_data
         .game_sessions
-        .get_session(code.into_inner())
+        .get_session(code)
         .await
         .map_err(Error::from)?;
     let (res, tx, rx) = actix_ws::handle(&req, body)?;
@@ -38,31 +41,49 @@ async fn get_host_ws(
     let mut session = session.lock().await;
 
     session.check_set_host_channel(&user).map_err(Error::from)?;
-    let channel = WsChannel::new::<HostCommand, _, _, _>(
+    let channel = WsChannel::new::<HostCommand, _, _>(
         rx,
         tx,
+        app_data,
         session_arc,
+        code,
         handle_host_cmd,
         remove_host_ws,
     );
-    session
-        .set_host_channel(&user, channel)
-        .await
-        .map_err(Error::from)?;
+    session.set_host_channel(channel).await;
 
     Ok(res)
 }
 
-async fn handle_host_cmd(_session: &Arc<Mutex<GameSession>>, cmd: HostCommand) {
+async fn handle_host_cmd(_session: Arc<Mutex<GameSession>>, cmd: HostCommand) {
     log::debug!("host cmd: {cmd:?}");
 }
 
-async fn remove_host_ws(session: &Arc<Mutex<GameSession>>, id: u64) {
-    let mut session = session.lock().await;
-    if let Some(channel) = &session.host.channel
-        && channel.id() == id
+async fn remove_host_ws(
+    app_data: web::Data<AppData>,
+    session: Arc<Mutex<GameSession>>,
+    id: u64,
+    code: SessionCode,
+) {
     {
+        let session = session.lock().await;
+        match &session.host.channel {
+            Some(channel) if channel.id() == id => (),
+            _ => return,
+        }
+    }
+
+    sleep(Duration::from_mins(15)).await;
+    log::info!("Deleting session {code} due to inactivity");
+
+    let user = {
+        let mut session = session.lock().await;
         session.host.channel = None;
+        session.host.user.clone()
+    };
+
+    if let Err(e) = app_data.game_sessions.delete_session(&user, code).await {
+        log::warn!("Unable to delete inactive session: {e:?}");
     }
 }
 
@@ -76,22 +97,25 @@ pub struct WsChannel {
 impl WsChannel {
     pub fn new<
         Cmd: Command + 'static,
-        Payload: Send + 'static,
-        HandleCmd: AsyncFn(&Payload, Cmd) + Send + 'static,
-        HandleDelete: AsyncFn(&Payload, u64) + Send + 'static,
+        HandleCmd: AsyncFn(Arc<Mutex<GameSession>>, Cmd) + Send + 'static,
+        HandleDelete: AsyncFn(web::Data<AppData>, Arc<Mutex<GameSession>>, u64, SessionCode) + Send + 'static,
     >(
         rx: MessageStream,
         tx: actix_ws::Session,
-        payload: Payload,
+        app_data: web::Data<AppData>,
+        session: Arc<Mutex<GameSession>>,
+        session_code: SessionCode,
         handle_cmd: HandleCmd,
         handle_delete: HandleDelete,
     ) -> Self {
         let id = <Self as Channel<()>>::generate_id();
         let time_delta_ms = Arc::new(AtomicI64::new(0));
-        let handle = rt::spawn(ws_listener::<Cmd, _, _, _>(
+        let handle = rt::spawn(ws_listener::<Cmd, _, _>(
             rx,
             tx.clone(),
-            payload,
+            app_data,
+            session,
+            session_code,
             handle_cmd,
             handle_delete,
             id,
@@ -106,15 +130,17 @@ impl WsChannel {
     }
 }
 
+#[allow(clippy::too_many_arguments)] // Only relevant for readability
 async fn ws_listener<
     Cmd: Command,
-    Payload: Send,
-    HandleCmd: AsyncFn(&Payload, Cmd) + Send,
-    HandleDelete: AsyncFn(&Payload, u64) + Send,
+    HandleCmd: AsyncFn(Arc<Mutex<GameSession>>, Cmd) + Send,
+    HandleDelete: AsyncFn(web::Data<AppData>, Arc<Mutex<GameSession>>, u64, SessionCode) + Send,
 >(
     mut rx: MessageStream,
     mut tx: actix_ws::Session,
-    payload: Payload,
+    app_data: web::Data<AppData>,
+    session: Arc<Mutex<GameSession>>,
+    session_code: SessionCode,
     handle_cmd: HandleCmd,
     handle_delete: HandleDelete,
     socket_id: u64,
@@ -171,7 +197,7 @@ async fn ws_listener<
                         time_delta_ms.store(ring_delta.avg().num_milliseconds(), Ordering::Relaxed);
                     }
 
-                    handle_cmd(&payload, cmd).await;
+                    handle_cmd(Arc::clone(&session), cmd).await;
                 }
                 Some(Err(err)) => {
                     log::error!("error parsing websocket command: {err:?}");
@@ -196,7 +222,7 @@ async fn ws_listener<
 
     loop {
         if let Err(Closed) = receive_msg().await {
-            handle_delete(&payload, socket_id).await;
+            handle_delete(app_data, Arc::clone(&session), socket_id, session_code).await;
             return;
         }
     }

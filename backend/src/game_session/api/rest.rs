@@ -3,7 +3,7 @@ use {
         AppData,
         auth::User,
         error::Result,
-        game_session::{GameSessionError, api::NewSession},
+        game_session::{GameSessionError, SessionCode, api::NewSession},
     },
     actix_web::{HttpResponse, web},
     std::sync::Arc,
@@ -16,7 +16,7 @@ async fn create_one(
 ) -> Result<HttpResponse> {
     let (code, session) = app_data
         .game_sessions
-        .create_session(&app_data.db, &user, create.quiz)
+        .create_session(&app_data.db, user, create.quiz)
         .await?;
     let session = session.lock().await;
     Ok(HttpResponse::Created().json(session.to_dto(code)))
@@ -25,13 +25,13 @@ async fn create_one(
 async fn get_one(
     app_data: web::Data<AppData>,
     user: User,
-    code: web::Path<u32>,
+    code: web::Path<SessionCode>,
 ) -> Result<HttpResponse> {
     let code = code.into_inner();
     let session = app_data.game_sessions.get_session(code).await?;
 
     let session = session.lock().await;
-    if session.host.id != user.id {
+    if session.host.user != user {
         return Err(GameSessionError::Forbidden.into());
     }
     Ok(HttpResponse::Ok().json(session.to_dto(code)))
@@ -40,7 +40,7 @@ async fn get_one(
 async fn delete(
     app_data: web::Data<AppData>,
     user: User,
-    code: web::Path<u32>,
+    code: web::Path<SessionCode>,
 ) -> Result<HttpResponse> {
     app_data
         .game_sessions
@@ -53,7 +53,7 @@ async fn delete(
 async fn get_quiz(
     app_data: web::Data<AppData>,
     user: User,
-    code: web::Path<u32>,
+    code: web::Path<SessionCode>,
 ) -> Result<HttpResponse> {
     let session = app_data
         .game_sessions
@@ -61,7 +61,7 @@ async fn get_quiz(
         .await?;
 
     let session = session.lock().await;
-    if session.host.id != user.id {
+    if session.host.user != user {
         return Err(GameSessionError::Forbidden.into());
     }
 
