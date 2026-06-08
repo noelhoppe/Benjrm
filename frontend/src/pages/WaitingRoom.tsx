@@ -2,7 +2,7 @@
 
 import type { JSX } from "react"
 import { useState } from "react"
-import { useSearchParams } from "react-router"
+import { useParams } from "react-router"
 import ProfilePicker from "../components/ProfilePicker"
 import useSessionStatus from "@/api/session/hooks/useSessionStatus"
 import useSessionQuiz from "@/api/session/hooks/useSessionQuiz"
@@ -46,8 +46,7 @@ const AVAILABLE_EMOJIS = [
 
 export default function WaitingRoom(): JSX.Element {
     // get quiz code from url for join session
-    const [searchParams] = useSearchParams()
-    const codeParam = searchParams.get("code")
+    const { code: codeParam } = useParams()
     const code = codeParam ? Number(codeParam) : undefined
 
     const { isLoading: isLoadingSession, isHost, isInvalidCode } = useSessionStatus(code)
