@@ -46,7 +46,10 @@ async fn create_get_session() {
         assert_eq!(session_quiz.model.id, quiz.id);
     }
 
-    assert!(matches!(data.game_sessions.get_session(u32::MAX).await, Err(GameSessionError::InvalidCode)))
+    assert!(matches!(
+        data.game_sessions.get_session(u32::MAX).await,
+        Err(GameSessionError::InvalidCode)
+    ))
 }
 
 #[actix_web::test]
@@ -123,16 +126,25 @@ async fn delete_session() {
     let data = TestAppData::test().await;
     let user = data.dummy_user().await;
     let wrong_user = data.dummy_user().await;
-    
+
     let (code, _) = data
         .game_sessions
         .create_session(&data.db, user.clone(), None)
         .await
         .unwrap();
-    
-    assert!(matches!(data.game_sessions.delete_session(&wrong_user, code).await, Err(GameSessionError::Forbidden)));
-    assert!(matches!(data.game_sessions.get_session(code).await, Ok(_)));
-    
-    data.game_sessions.delete_session(&user, code).await.unwrap();
-    assert!(matches!(data.game_sessions.get_session(code).await, Err(GameSessionError::InvalidCode)));
+
+    assert!(matches!(
+        data.game_sessions.delete_session(&wrong_user, code).await,
+        Err(GameSessionError::Forbidden)
+    ));
+    assert!(data.game_sessions.get_session(code).await.is_ok());
+
+    data.game_sessions
+        .delete_session(&user, code)
+        .await
+        .unwrap();
+    assert!(matches!(
+        data.game_sessions.get_session(code).await,
+        Err(GameSessionError::InvalidCode)
+    ));
 }
