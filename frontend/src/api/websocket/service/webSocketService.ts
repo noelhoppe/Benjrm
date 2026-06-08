@@ -45,6 +45,7 @@ export default class WebSocketService {
             return
         }
 
+        this.listeners.clear()
         this.socket = new WebSocket(url)
 
         this.socket.onopen = () => {

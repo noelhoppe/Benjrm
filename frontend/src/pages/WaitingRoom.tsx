@@ -57,6 +57,7 @@ export default function WaitingRoom(): JSX.Element {
     // Connect to the host WebSocket
     useHostWebSocket(isHost ? code : undefined)
 
+    // TODO: replace Mock Data with actual Data later
     const [players, setPlayers] = useState<Player[]>([
         { id: "1", name: "Funny Crocodile (you)", emoji: "🦎" },
         { id: "2", name: "Smart Giraffe", emoji: "🦒" },
