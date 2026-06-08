@@ -7,6 +7,6 @@ export type ServerMessage = {
     [K in keyof ServerEvents]: {
         command: K
         payload: ServerEvents[K]
-        timing: string
+        timing?: string | null
     }
 }[keyof ServerEvents]

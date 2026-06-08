@@ -8,9 +8,8 @@ export interface CreateSessionInput {
 }
 
 export interface Session {
-    code: string
-    quizId: string
-    created?: string
+    code: number
+    quiz?: string
 }
 
 export function getSessionErrorMessage(error: Error | null | undefined): string | null {
@@ -22,14 +21,14 @@ export async function createSession(data: CreateSessionInput): Promise<Session> 
     return apiPost<Session>("/sessions", data)
 }
 
-export async function getSession(code: string): Promise<Session> {
+export async function getSession(code: number): Promise<Session> {
     return apiGet<Session>(`/sessions/${code}`)
 }
 
-export async function deleteSession(code: string): Promise<void> {
+export async function deleteSession(code: number): Promise<void> {
     return apiDelete(`/sessions/${code}`)
 }
 
-export async function getSessionQuiz(code: string): Promise<Quiz> {
+export async function getSessionQuiz(code: number): Promise<Quiz> {
     return apiGet<Quiz>(`/sessions/${code}/quiz`)
 }

@@ -13,14 +13,14 @@ import type { Quiz } from "@/api/quiz"
  * @param code The session code.
  * @returns The quiz.
  */
-export default function useSessionQuiz(code: string | undefined): UseQueryResult<Quiz> {
+export default function useSessionQuiz(code: number | undefined): UseQueryResult<Quiz> {
     return useQuery({
-        queryKey: code ? sessionKeys.quiz(code) : [],
+        queryKey: code !== undefined ? sessionKeys.quiz(code) : [],
         queryFn: async (): Promise<Quiz> => {
-            if (!code) throw new Error("No session code provided")
+            if (code === undefined) throw new Error("No session code provided")
             return getSessionQuiz(code)
         },
-        enabled: !!code,
+        enabled: code !== undefined,
         staleTime: 5 * 60 * 1000, // 5 minutes
     })
 }

@@ -66,6 +66,7 @@ export default class WebSocketService {
                     typeof raw.command !== "string"
                 ) {
                     console.error("Received invalid WebSocket message:", raw)
+                    return
                 }
                 const data = raw as ServerMessage
                 const handlers = this.listeners.get(data.command)

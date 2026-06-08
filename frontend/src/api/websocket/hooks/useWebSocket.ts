@@ -17,7 +17,7 @@ export default function useWebSocket(code: number | string | undefined, path = "
         const wsUrl = `${protocol}://${host}/api/v1/sessions/${code}/${path}`
 
         websocketService.connect(wsUrl)
-        websocketService.subscribe("ping", (payload: { id: number }) => {
+        const unsubscribe = websocketService.subscribe("ping", (payload: { id: number }) => {
             websocketService.send({
                 command: "pong",
                 payload: {
@@ -27,6 +27,7 @@ export default function useWebSocket(code: number | string | undefined, path = "
             })
         })
         return () => {
+            unsubscribe()
             websocketService.disconnect()
         }
     }, [code, path, websocketService])

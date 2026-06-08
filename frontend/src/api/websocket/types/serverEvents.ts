@@ -10,7 +10,7 @@ export interface ServerEvents {
         id: string
         question: string
         type: "SINGLE_CHOICE" | "MULTIPLE_CHOICE"
-        options: object
+        options: unknown
     }
     questionResult: {
         question: string

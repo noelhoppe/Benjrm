@@ -12,7 +12,7 @@ import { deleteSession, getSessionErrorMessage } from "@/api/session"
  * Hook to delete a session.
  * @returns The mutation result.
  */
-export default function useDeleteSession(): UseMutationResult<void, Error, string> {
+export default function useDeleteSession(): UseMutationResult<void, Error, number> {
     const queryClient = useQueryClient()
     const navigate = useNavigate()
 
