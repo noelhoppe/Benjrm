@@ -36,6 +36,7 @@ paths:
             text/plain:
               schema:
                 type: string
+                const: "OK"
 
   /api/v1/quizzes:
     post:
@@ -142,7 +143,6 @@ paths:
         - Quizzes
 
   /api/v1/quizzes/{quizId}:
-
     get:
       description: Retrieve a quiz by its unique identifier.
       operationId: getQuizById
@@ -425,6 +425,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -604,6 +610,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -616,7 +628,7 @@ paths:
     put:
       summary: Replace a question
       operationId: replaceQuestion
-      description: 'Relace a question'
+      description: 'Replace a question'
       parameters:
         - name: quizId
           in: path
@@ -663,6 +675,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable Entity
           content:
             application/json:
               schema:
@@ -764,6 +782,7 @@ components:
         hidden:
           type: boolean
           default: false
+          example: false
 
     UpdateQuiz:
       type: object
@@ -808,6 +827,8 @@ components:
     Position:
       oneOf:
         - type: object
+        - type: object
+          additionalProperties: false
           required:
             - prev
           properties:
@@ -815,6 +836,7 @@ components:
               type: string
               format: uuid
         - type: object
+          additionalProperties: false
           required:
             - next
           properties:
@@ -922,6 +944,7 @@ components:
     
     AnswerChoice:
       type: object
+      additionalProperties: false
       required: 
         - id
         - correct
@@ -939,6 +962,7 @@ components:
 
     AnswerOrder:
       type: object
+      additionalProperties: false
       required: 
         - id
         - answer
@@ -951,8 +975,6 @@ components:
           example: 'Testing fonts'
 
     NewQuestion:
-      type: object
-      additionalProperties: false
       allOf:
         - type: object
           required:
@@ -966,6 +988,7 @@ components:
               default: false
         - $ref: '#/components/schemas/NewQuestionOptions'
         - $ref: '#/components/schemas/Position'
+          nullable: true
     
     NewQuestionOptions:
       oneOf:
@@ -1004,6 +1027,8 @@ components:
           minItems: 2
           items:
             $ref: '#/components/schemas/NewAnswerChoice'
+          contains:
+            $ref: '#/components/schemas/NewCorrectAnswerChoice'
     
     NewMultipleChoiceOptions:
       type: object
@@ -1019,6 +1044,8 @@ components:
           minItems: 2
           items:
             $ref: '#/components/schemas/NewAnswerChoice'
+          contains:
+            $ref: '#/components/schemas/NewCorrectAnswerChoice'
     
     NewOrderOptions:
       type: object
@@ -1036,6 +1063,8 @@ components:
             $ref: '#/components/schemas/NewAnswerOrder'
 
     NewAnswerChoice:
+      type: object
+      additionalProperties: false
       required:
         - answer
       properties:
@@ -1046,7 +1075,17 @@ components:
           type: boolean
           default: false
 
+    NewCorrectAnswerChoice:
+      type: object
+      properties:
+        correct:
+          const: true
+      required:
+        - correct
+
     NewAnswerOrder:
+      type: object
+      additionalProperties: false
       required:
         - answer
       properties:
@@ -1063,14 +1102,21 @@ components:
             question:
               type: string
               example: 'Why did the quick brown fox jump over the lazy dog?'
+              nullable: true
             hidden:
               type: boolean
-              default: false
         - $ref: '#/components/schemas/UpdateQuestionOptions'
+          nullable: true
         - $ref: '#/components/schemas/Position'
+          nullable: true
 
     UpdateQuestionOptions:
       oneOf:
+        - type: object
+          properties:
+            type:
+              type: object
+              nullable: true
         - $ref: '#/components/schemas/UpdateSlideOptions'
         - $ref: '#/components/schemas/UpdateSingleChoiceOptions'
         - $ref: '#/components/schemas/UpdateMultipleChoiceOptions'
@@ -1080,7 +1126,7 @@ components:
         mapping:
           SLIDE: '#/components/schemas/UpdateSlideOptions'
           SINGLE_CHOICE: '#/components/schemas/UpdateSingleChoiceOptions'
-          MULTIPLE_CHOICE: '#/components/schemas/UpdateOrderOptions'
+          MULTIPLE_CHOICE: '#/components/schemas/UpdateMultipleChoiceOptions'
           ORDER: '#/components/schemas/UpdateOrderOptions'
     
     UpdateSlideOptions:
@@ -1105,7 +1151,7 @@ components:
           type: array
           minItems: 2
           items:
-            $ref: '#/components/schemas/UpdateAnswerChoiceEnum'
+            $ref: '#/components/schemas/UpdateAnswerChoice'
     
     UpdateMultipleChoiceOptions:
       type: object
@@ -1120,7 +1166,7 @@ components:
           type: array
           minItems: 2
           items:
-            $ref: '#/components/schemas/UpdateAnswerChoiceEnum'
+            $ref: '#/components/schemas/UpdateAnswerChoice'
     
     UpdateOrderOptions:
       type: object
@@ -1135,38 +1181,37 @@ components:
           type: array
           minItems: 2
           items:
-            $ref: '#/components/schemas/UpdateAnswerOrderEnum'
-
-    UpdateAnswerChoiceEnum:
-      oneOf:
-        - $ref: '#/components/schemas/NewAnswerChoice'
-        - $ref: '#/components/schemas/UpdateAnswerChoice'
+            $ref: '#/components/schemas/UpdateAnswerOrder'
 
     UpdateAnswerChoice:
-      required:
-        - id
+      type: object
+      additionalProperties: false
+      anyOf:
+        - required: [id]
+        - required: [answer]
       properties:
         id:
           type: string
           format: uuid
+          nullable: true
         answer:
           type: string
           example: 'Testing fonts'
         correct:
           type: boolean
-   
-    UpdateAnswerOrderEnum:
-      oneOf:
-        - $ref: '#/components/schemas/NewAnswerOrder'
-        - $ref: '#/components/schemas/UpdateAnswerOrder'
+          nullable: true
 
     UpdateAnswerOrder:
-      required:
-        - id
+      type: object
+      additionalProperties: false
+      anyOf:
+        - required: [id]
+        - required: [answer]
       properties:
         id:
           type: string
           format: uuid
+          nullable: true
         answer:
           type: string
           example: 'Testing fonts'
