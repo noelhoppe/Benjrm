@@ -65,25 +65,16 @@ async fn remove_host_ws(
     id: u64,
     code: SessionCode,
 ) {
-    {
-        let session = session.lock().await;
-        match &session.host.channel {
-            Some(channel) if channel.id() == id => (),
-            _ => return,
-        }
-    }
-
     sleep(Duration::from_mins(15)).await;
-    log::info!("Deleting session {code} due to inactivity");
+    let mut session = session.lock().await;
 
-    let user = {
-        let mut session = session.lock().await;
+    if let Some(channel) = &session.host.channel
+        && channel.id() == id
+    {
+        log::info!("Deleting session {code} due to inactivity");
+        app_data.game_sessions.drop_session(code).await;
         session.host.channel = None;
-        session.host.user.clone()
-    };
-
-    if let Err(e) = app_data.game_sessions.delete_session(&user, code).await {
-        log::warn!("Unable to delete inactive session: {e:?}");
+        session.close().await;
     }
 }
 
