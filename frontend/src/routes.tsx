@@ -96,7 +96,7 @@ const routes: RouteObject[] = [
                 element: <InfoSlide />,
             },
             {
-                path: "/quiz/waiting",
+                path: "/play/:code",
                 element: <WaitingRoom />,
             },
         ],

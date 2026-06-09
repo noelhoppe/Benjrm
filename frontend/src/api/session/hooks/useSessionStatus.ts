@@ -15,7 +15,7 @@ export interface SessionStatus {
  * A hook that loads the session and determines the user's role (host or player).
  * @param code The session code
  */
-export default function useSessionStatus(code: string | undefined): SessionStatus {
+export default function useSessionStatus(code: number | undefined): SessionStatus {
     const { data: session, isLoading, error: sessionError } = useSession(code)
 
     return useMemo(() => {

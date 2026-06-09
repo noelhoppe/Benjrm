@@ -13,14 +13,14 @@ import type { Session } from "@/api/session"
  * @param code The session code.
  * @returns The session.
  */
-export default function useSession(code: string | undefined): UseQueryResult<Session> {
+export default function useSession(code: number | undefined): UseQueryResult<Session> {
     return useQuery({
-        queryKey: code ? sessionKeys.detail(code) : [],
+        queryKey: code !== undefined ? sessionKeys.detail(code) : [],
         queryFn: async (): Promise<Session> => {
-            if (!code) throw new Error("No session code provided")
+            if (code === undefined) throw new Error("No session code provided")
             return getSession(code)
         },
-        enabled: !!code,
+        enabled: code !== undefined,
         staleTime: 5 * 60 * 1000, // 5 minutes
     })
 }
