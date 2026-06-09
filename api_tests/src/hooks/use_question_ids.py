@@ -18,6 +18,8 @@ def use_question_ids(ctx, case: Case, response: Response):
         )
 
     if operation.method == "delete" and response.status_code == 204:
+        if not "questionId" in case.path_parameters:
+            return
         question_id = case.path_parameters["questionId"]
 
         if quiz_id not in quiz_id_to_question_ids:
