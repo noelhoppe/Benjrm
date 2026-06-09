@@ -51,7 +51,8 @@ const AVAILABLE_EMOJIS = [
 
 export default function WaitingRoom(): JSX.Element {
     const [searchParams] = useSearchParams()
-    const code = searchParams.get("code") ?? undefined
+    const codeParam = searchParams.get("code")
+    const code = codeParam !== null ? Number(codeParam) || undefined : undefined
 
     const { isLoading: isLoadingSession, isHost, isInvalidCode } = useSessionStatus(code)
     const { data: quiz, isLoading: isLoadingQuiz } = useSessionQuiz(isHost ? code : undefined)
