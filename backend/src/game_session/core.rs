@@ -87,6 +87,11 @@ impl GameSessions {
         }
     }
 
+    pub async fn drop_session(&self, code: SessionCode) {
+        let mut sessions = self.sessions.write().await;
+        sessions.remove(&code);
+    }
+
     pub async fn delete_session(
         &self,
         user: &User,
