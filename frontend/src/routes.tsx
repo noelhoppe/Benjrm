@@ -52,6 +52,10 @@ const routes: RouteObject[] = [
                 path: "/auth/login",
                 element: <LoginRedirect />,
             },
+            {
+                path: "/play/:code",
+                element: <WaitingRoom />,
+            },
         ],
     },
     {
@@ -94,10 +98,6 @@ const routes: RouteObject[] = [
             {
                 path: "/infoslide",
                 element: <InfoSlide />,
-            },
-            {
-                path: "/play/:code",
-                element: <WaitingRoom />,
             },
         ],
     },

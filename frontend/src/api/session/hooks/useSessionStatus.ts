@@ -22,8 +22,10 @@ export default function useSessionStatus(code: number | undefined): SessionStatu
         // If we have session data, the user is the host
         const isHost = !!session
 
-        // A 403 error indirectly indicates that the user is a player
-        const isPlayer = sessionError instanceof ApiError && sessionError.status === 403
+        // A 403 or 401 error indirectly indicates that the user is a player
+        const isPlayer =
+            sessionError instanceof ApiError &&
+            (sessionError.status === 403 || sessionError.status === 401)
 
         const isInvalidCode = !!sessionError && !isPlayer
 

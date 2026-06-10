@@ -2,7 +2,7 @@
 
 import type { JSX } from "react"
 import { useRef, useState } from "react"
-import { useSearchParams } from "react-router"
+import { useParams } from "react-router"
 import { X } from "lucide-react"
 import ProfilePicker from "../components/ProfilePicker"
 import useSessionStatus from "@/api/session/hooks/useSessionStatus"
@@ -50,8 +50,7 @@ const AVAILABLE_EMOJIS = [
 ]
 
 export default function WaitingRoom(): JSX.Element {
-    const [searchParams] = useSearchParams()
-    const codeParam = searchParams.get("code")
+    const codeParam = useParams().code
     const code = codeParam !== null ? Number(codeParam) || undefined : undefined
 
     const { isLoading: isLoadingSession, isHost, isInvalidCode } = useSessionStatus(code)
@@ -187,34 +186,12 @@ export default function WaitingRoom(): JSX.Element {
                                         <ProfilePicker
                                             emoji={emoji}
                                             name={name}
+                                            nameError={nameError}
                                             onNameChange={setName}
                                             onOpenEmoji={() => setIsEmojiOpen(true)}
+                                            onSaveName={() => onSaveName()}
+                                            pending={pendingId != null}
                                         />
-                                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-                                            {nameError ? (
-                                                <p className="text-xs text-red-400">{nameError}</p>
-                                            ) : null}
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <Button
-                                                    className="border-white/20 bg-[#242424] text-white hover:bg-[#2f2f2f]"
-                                                    type="button"
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        // Name generation is implemented in a separate PR.
-                                                    }}
-                                                >
-                                                    Generate Name
-                                                </Button>
-                                                <Button
-                                                    className="border-0 bg-[#00D4E8] font-semibold text-black shadow-[0_0_20px_-6px_rgba(0,212,232,0.75)] hover:bg-[#00BDD0]"
-                                                    disabled={!name.trim() || pendingId !== null}
-                                                    onClick={() => onSaveName()}
-                                                    type="button"
-                                                >
-                                                    {pendingId !== null ? "Saving…" : "Save"}
-                                                </Button>
-                                            </div>
-                                        </div>
                                     </div>
                                 </>
                             )}
