@@ -23,6 +23,12 @@ tags:
     description: Operations related to sessions.
   - name: Health
     description: Server health related checks
+  - name: WebSocket
+    description: Endpoints used to connect to a WebSocket.
+  - name: SchemathesisSkip
+    description: Endpoints that should not be checked by schemathesis.
+  - name: Dummy
+    description: Endpoints that primarily exist to tell schemathesis how to check the API. You can use these endpoints, but in most cases it will be better to use the non-dummy version of the endpoint.
 
 paths:
   /api/health:
@@ -80,6 +86,10 @@ paths:
                 quizId: '$response.body#/id'
             DeleteQuizById:
               operationId: deleteQuizById
+              parameters:
+                quizId: '$response.body#/id'
+            CreateSession:
+              operationId: createSessionWithQuiz
               parameters:
                 quizId: '$response.body#/id'
         '400':
@@ -767,6 +777,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
+          links:
+            GetSession:
+              operationId: getSession
+              parameters:
+                session: '$response.body#/code'
+            GetSessionQuiz:
+              operationId: getSessionQuiz
+              parameters:
+                session: '$response.body#/code'
+            DeleteSession:
+              operationId: deleteSession
+              parameters:
+                session: '$response.body#/code'
+            ConnectHostWs:
+              operationId: getSessionHostWs
+              parameters:
+                session: '$response.body#/code'
         '400':
           description: Bad Request
           content:
@@ -800,6 +827,75 @@ paths:
       tags:
         - Sessions
   
+  /api/v1/quizzes/{quizId}/sessions:
+    post:
+      summary: Create a session
+      operationId: createSessionWithQuiz
+      description: 'Create a new session'
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          links:
+            GetSession:
+              operationId: getSessionWithQuiz
+              parameters:
+                quizId: '$request.path.quizId'
+                session: '$response.body#/code'
+            GetSessionQuiz:
+              operationId: getSessionQuizWithQuiz
+              parameters:
+                quizId: '$request.path.quizId'
+                session: '$response.body#/code'
+            DeleteSession:
+              operationId: deleteSessionWithQuiz
+              parameters:
+                quizId: '$request.path.quizId'
+                session: '$response.body#/code'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Sessions
+        - Dummy
+  
   /api/v1/sessions/{session}:
     get:
       summary: Get a single session
@@ -810,8 +906,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
-            example: 12345678
+            $ref: '#/components/schemas/SessionCode'
       responses:
         '200':
           description: Session
@@ -851,7 +946,8 @@ paths:
                 $ref: '#/components/schemas/Error'
       tags:
         - Sessions
-
+        - SchemathesisSkip
+  
     delete:
       summary: Close a session
       operationId: deleteSession
@@ -861,8 +957,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
-            example: 12345678
+            $ref: '#/components/schemas/SessionCode'
       responses:
         '204':
           description: No content
@@ -898,6 +993,7 @@ paths:
                 $ref: '#/components/schemas/Error'
       tags:
         - Sessions
+        - SchemathesisSkip
   
   /api/v1/sessions/{session}/quiz:
     get:
@@ -909,8 +1005,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
-            example: 12345678
+            $ref: '#/components/schemas/SessionCode'
       responses:
         '200':
           description: Quiz
@@ -952,6 +1047,7 @@ paths:
         - Sessions
         - Quizzes
         - Questions
+        - SchemathesisSkip
   
   /api/v1/sessions/{session}/ws/host:
     get:
@@ -963,8 +1059,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
-            example: 12345678
+            $ref: '#/components/schemas/SessionCode'
       responses:
         '101':
           description: Switching Protocols
@@ -1000,6 +1095,179 @@ paths:
                 $ref: '#/components/schemas/Error'
       tags:
         - Sessions
+        - WebSocket
+        - SchemathesisSkip
+
+  /api/v1/quizzes/{quizId}/sessions/{session}:
+    get:
+      summary: Get a single session
+      operationId: getSessionWithQuiz
+      description: 'Get a single session'
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: session
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/SessionCode'
+      responses:
+        '200':
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Sessions
+        - Dummy
+
+    delete:
+      summary: Close a session
+      operationId: deleteSessionWithQuiz
+      description: Close a session
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: session
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/SessionCode'
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Sessions
+        - Dummy
+  
+  /api/v1/quizzes/{quizId}/sessions/{session}/quiz:
+    get:
+      summary: Get the quiz from a session
+      operationId: getSessionQuizWithQuiz
+      description: 'Get the quiz from a session'
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: session
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/SessionCode'
+      responses:
+        '200':
+          description: Quiz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompleteQuiz'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Sessions
+        - Quizzes
+        - Questions
+        - Dummy
 
 components:
   schemas:
@@ -1480,17 +1748,29 @@ components:
           type: string
           example: 'Testing fonts'
     
+    SessionCode:
+      type: integer
+      example: 12345678
+      minimum: 0
+      maximum: 99999999
+    
     NewSession:
+      type: object
+      additionalProperties: false
       properties:
         quiz:
           type: string
           format: uuid
+          nullable: true
     
     Session:
+      type: object
+      required:
+        - code
       properties:
         code:
-          type: integer
-          example: 12345678
+          $ref: '#/components/schemas/SessionCode'
         quiz:
           type: string
           format: uuid
+          nullable: true
