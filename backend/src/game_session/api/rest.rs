@@ -126,7 +126,7 @@ async fn get_quiz(
     }
 }
 
-async fn get_quiz_with_quiz(
+async fn get_quiz_with_quiz_id(
     app_data: web::Data<AppData>,
     user: User,
     path: web::Path<(Uuid, SessionCode)>,
@@ -167,6 +167,6 @@ pub fn init(cfg: &mut actix_web::web::ServiceConfig) {
     cfg.service(web::resource("/sessions/{code}/quiz").route(web::get().to(get_quiz)));
     cfg.service(
         web::resource("/quizzes/{quiz}/sessions/{code}/quiz")
-            .route(web::get().to(get_quiz_with_quiz)),
+            .route(web::get().to(get_quiz_with_quiz_id)),
     );
 }
