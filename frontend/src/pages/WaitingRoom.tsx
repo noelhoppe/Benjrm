@@ -95,7 +95,7 @@ export default function WaitingRoom(): JSX.Element {
     const [nameError, setNameError] = useState<string | null>(null)
     const [pendingId, setPendingId] = useState<number | null>(null)
 
-    useSocketEvent("ok", (payload, timing, id) => {
+    useSocketEvent("ok", (_payload, _timing, id) => {
         if (pendingId === id) {
             setPendingId(null)
             // TODO: add command specific response handling when there are more commands (maybe add it globally)
@@ -103,7 +103,7 @@ export default function WaitingRoom(): JSX.Element {
         }
     })
 
-    useSocketEvent("error", (payload, timing, id) => {
+    useSocketEvent("error", (payload, _timing, id) => {
         if (pendingId === id) {
             setPendingId(null)
             setNameError(payload.message)

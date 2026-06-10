@@ -8,6 +8,6 @@ export type ServerMessage = {
         id?: number
         command: K
         payload: ServerEvents[K]
-        timing?: string | null
+        timing?: string
     }
 }[keyof ServerEvents]
