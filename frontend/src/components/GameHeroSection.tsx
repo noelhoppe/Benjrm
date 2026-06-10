@@ -15,9 +15,9 @@ export default function GameHeroSection({ onAddQuizClick }: GameHeroSectionProps
     const navigate = useNavigate()
 
     function onJoinClick(): void {
-        const trimmed = code.trim()
+        const trimmed = code.trim().replaceAll("-", "")
         if (!trimmed) return
-        navigate(`/quiz/waiting?code=${encodeURIComponent(trimmed)}`)
+        navigate(`/play/${encodeURIComponent(trimmed)}`)
     }
 
     return (

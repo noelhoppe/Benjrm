@@ -53,6 +53,13 @@ const AVAILABLE_EMOJIS = [
 export default function WaitingRoom(): JSX.Element {
     const codeParam = useParams().code
     const code = codeParam !== null ? Number(codeParam) || undefined : undefined
+    const codeWithDash =
+        code !== undefined
+            ? ((s) => {
+                  const mid = Math.floor(s.length / 2)
+                  return `${s.slice(0, mid)}-${s.slice(mid)}`
+              })(String(code))
+            : undefined
 
     const { isLoading: isLoadingSession, isHost, isInvalidCode } = useSessionStatus(code)
     const { data: quiz, isLoading: isLoadingQuiz } = useSessionQuiz(isHost ? code : undefined)
@@ -136,8 +143,9 @@ export default function WaitingRoom(): JSX.Element {
                 <div className="w-full rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-500">
                     <h1 className="text-base font-bold">Quiz lobby not found</h1>
                     <p className="mt-1 text-sm">
-                        No lobby with the code <span className="font-mono font-bold">{code}</span>{" "}
-                        was found. Please check the invitation code and try again.
+                        No lobby with the code{" "}
+                        <span className="font-mono font-bold">{codeWithDash}</span> was found.
+                        Please check the invitation code and try again.
                     </p>
                 </div>
             </section>
@@ -151,7 +159,9 @@ export default function WaitingRoom(): JSX.Element {
                     <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF8A00]" />
                     Waiting Lobby
                 </div>
-                <p className="text-muted-foreground text-sm">Game Pin: {code ?? "No active PIN"}</p>
+                <p className="text-muted-foreground text-sm">
+                    Game Pin: {codeWithDash ?? "No active PIN"}
+                </p>
             </div>
 
             <div className="dark:text-foreground overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl dark:border-white/10 dark:bg-[#111318]">
