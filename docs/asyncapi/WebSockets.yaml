@@ -59,8 +59,6 @@ channels:
         $ref: "#/components/messages/pong"
       setName:
         $ref: "#/components/messages/setName"
-      displayQuestion:
-        $ref: "#/components/messages/displayQuestion"
     tags:
       - name: Sessions
 
@@ -184,16 +182,6 @@ operations:
       $ref: "#/channels/sessionPlayer"
     messages:
       - $ref: "#/channels/sessionPlayer/messages/setName"
-    tags:
-      - name: Sessions
-
-  sendDisplayQuestion:
-    description: "Send display question command to player"
-    action: send
-    channel:
-      $ref: "#/channels/sessionPlayer"
-    messages:
-      - $ref: "#/channels/sessionPlayer/messages/displayQuestion"
     tags:
       - name: Sessions
 
@@ -350,42 +338,3 @@ components:
               emoji:
                 type: string
                 example: "😀"
-
-    displayQuestion:
-      payload:
-        type: object
-        properties:
-          command:
-            type: string
-            const: "displayQuestion"
-          timing:
-            type: string
-            format: date-time
-            description: >
-              Server timestamp adjusted for client latency. Subtract from the
-              current client time to get elapsed ms; use with secondsToAnswer
-              to synchronize the countdown timer across clients.
-          payload:
-            type: object
-            required:
-              - id
-              - question
-              - type
-              - options
-              - secondsToAnswer
-            properties:
-              id:
-                type: string
-                format: uuid
-              question:
-                type: string
-              type:
-                type: string
-                enum:
-                  - SINGLE_CHOICE
-                  - MULTIPLE_CHOICE
-              options:
-                type: object
-              secondsToAnswer:
-                type: integer
-                description: Seconds available to answer the question
