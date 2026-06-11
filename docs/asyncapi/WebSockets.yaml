@@ -6,15 +6,19 @@ info:
   contact:
     name: Benjrm
     url: "https://benjrm.de"
-    email: 'info@benjrm.de'
+    email: "info@benjrm.de"
   tags:
     - name: WebSocket
       description: WebSocket related commands such as ping and pong
     - name: Sessions
+    - name: Questions
 
 servers:
-  dev:
+  dev_8080:
     host: "localhost:8080"
+    protocol: ws
+  dev_80:
+    host: "localhost"
     protocol: ws
 
 channels:
@@ -40,6 +44,14 @@ channels:
         $ref: "#/components/messages/removePlayer"
       kickPlayer:
         $ref: "#/components/messages/kickPlayer"
+      start:
+        $ref: "#/components/messages/start"
+      nextQuestion:
+        $ref: "#/components/messages/nextQuestion"
+      showQuestion:
+        $ref: "#/components/messages/showQuestion"
+      displayQuestion:
+        $ref: "#/components/messages/displayQuestion"
     tags:
       - name: Sessions
   
@@ -59,6 +71,10 @@ channels:
         $ref: "#/components/messages/pong"
       setName:
         $ref: "#/components/messages/setName"
+      start:
+        $ref: "#/components/messages/start"
+      displayQuestion:
+        $ref: "#/components/messages/displayQuestion"
     tags:
       - name: Sessions
 
@@ -184,6 +200,66 @@ operations:
       - $ref: "#/channels/sessionPlayer/messages/setName"
     tags:
       - name: Sessions
+  
+  receiveStart:
+    description: "Receive start command from host"
+    action: receive
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/start"
+    tags:
+      - name: Sessions
+  
+  sendStart:
+    description: "Send start command to player"
+    action: send
+    channel:
+      $ref: "#/channels/sessionPlayer"
+    messages:
+      - $ref: "#/channels/sessionPlayer/messages/start"
+    tags:
+      - name: Sessions
+  
+  receiveNextQuestion:
+    description: "Receive nextQuestion command from host"
+    action: receive
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/nextQuestion"
+    tags:
+      - name: Questions
+
+  receiveShowQuestion:
+    description: "Receive showQuestion command from host"
+    action: receive
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/showQuestion"
+    tags:
+      - name: Questions
+
+  sendDisplayQuestionToHost:
+    description: "Send displayQuestion command to Host"
+    action: send
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/displayQuestion"
+    tags:
+      - name: Questions
+  
+  sendDisplayQuestionToPlayer:
+    description: "Send displayQuestion command to Player"
+    action: send
+    channel:
+      $ref: "#/channels/sessionPlayer"
+    messages:
+      - $ref: "#/channels/sessionPlayer/messages/displayQuestion"
+    tags:
+      - name: Questions    
 
 components:
   messages:
@@ -338,3 +414,126 @@ components:
               emoji:
                 type: string
                 example: "😀"
+
+    start:
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            const: "start"
+
+    nextQuestion:
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            const: "nextQuestion"
+    
+    showQuestion:
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            const: "showQuestion"
+          payload:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+    
+    displayQuestion:
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            const: "displayQuestion"
+          payload:
+            allOf:
+              - type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  question:
+                    type: string
+                  seconds:
+                    type: integer
+                    format: uint32
+                    nullable: true
+              - $ref: "#/components/schemas/DisplayQuestionOptions"
+  
+  schemas:
+    DisplayQuestionOptions:
+      oneOf:
+        - $ref: "#/components/schemas/DisplaySlideOptions"
+        - $ref: "#/components/schemas/DisplaySingleChoiceOptions"
+        - $ref: "#/components/schemas/DisplayMultipleChoiceOptions"
+        - $ref: "#/components/schemas/DisplayOrderOptions"
+      discriminator: type
+    
+    DisplaySlideOptions:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [SLIDE]
+    
+    DisplaySingleChoiceOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [SINGLE_CHOICE]
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/AnswerOption"
+    
+    DisplayMultipleChoiceOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [MULTIPLE_CHOICE]
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/AnswerOption"
+    
+    DisplayOrderOptions:
+      type: object
+      required:
+        - type
+        - options
+      properties:
+        type:
+          type: string
+          enum: [ORDER]
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/AnswerOption"
+    
+    AnswerOption:
+      type: object
+      required:
+        - answer
+      properties:
+        answer:
+          type: string
