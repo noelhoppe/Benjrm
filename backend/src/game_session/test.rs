@@ -62,7 +62,7 @@ async fn check_set_host_channel() {
     struct DummyChanel(u64, Arc<AtomicBool>);
     #[async_trait::async_trait]
     impl Channel<HostMessage> for DummyChanel {
-        async fn send(&mut self, _msg: Message<HostMessage>) -> Result<(), ChannelError> {
+        async fn send(&mut self, _msg: Message<'_, HostMessage>) -> Result<(), ChannelError> {
             Ok(())
         }
         async fn close(self: Box<Self>) {
