@@ -48,16 +48,16 @@ jobs:
 
   lint:
     name: Linting
-    uses: ./.github/workflows/lint.yml
+    uses: ./.github/workflows/lint.yaml
 
   security:
     name: Security Scans
-    uses: ./.github/workflows/security.yml
+    uses: ./.github/workflows/security.yaml
     secrets: inherit
 
   tests:
     name: Tests
-    uses: ./.github/workflows/tests.yml
+    uses: ./.github/workflows/tests.yaml
 
   api_lint:
     name: API Linting (Spectral)
@@ -80,5 +80,5 @@ jobs:
       !contains(needs.*.result, 'failure') && 
       !contains(needs.*.result, 'cancelled') &&
       github.event_name != 'pull_request'
-    uses: ./.github/workflows/build_push_container.yml
+    uses: ./.github/workflows/build_push_container.yaml
     secrets: inherit
