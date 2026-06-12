@@ -158,7 +158,8 @@ impl GameSession {
             HostCommand::Pong { .. } => (),
             HostCommand::KickPlayer { id } => {
                 if let Some(pos) = self.players.iter().position(|v| v.id == id) {
-                    let player = self.players.swap_remove(pos);
+                    let mut player = self.players.swap_remove(pos);
+                    player.msg(PlayerMessage::Kick.into()).await;
                     player.channel.close().await;
                     if player.name.is_some() {
                         self.host.ok(cmd.id).await;

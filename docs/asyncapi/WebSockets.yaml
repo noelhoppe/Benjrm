@@ -59,6 +59,8 @@ channels:
         $ref: "#/components/messages/pong"
       setName:
         $ref: "#/components/messages/setName"
+      kick:
+        $ref: "#/components/messages/kick"
     tags:
       - name: Sessions
 
@@ -182,6 +184,16 @@ operations:
       $ref: "#/channels/sessionPlayer"
     messages:
       - $ref: "#/channels/sessionPlayer/messages/setName"
+    tags:
+      - name: Sessions
+  
+  sendKick:
+    description: "Send kick command to player"
+    action: send
+    channel:
+      $ref: "#/channels/sessionPlayer"
+    messages:
+      - $ref: "#/channels/sessionPlayer/messages/kick"
     tags:
       - name: Sessions
 
@@ -338,3 +350,11 @@ components:
               emoji:
                 type: string
                 example: "😀"
+    
+    kick:
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            const: "kick"

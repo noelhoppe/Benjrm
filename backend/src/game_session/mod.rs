@@ -197,6 +197,7 @@ impl CommandTrait for Command<HostCommand> {
 pub enum PlayerMessage {
     Ok,
     Error(ErrorResponse),
+    Kick,
 }
 
 #[derive(Debug, Deserialize)]
