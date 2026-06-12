@@ -1,12 +1,14 @@
 // frontend/src/pages/WaitingRoom.tsx
 
 import type { JSX } from "react"
-import { useState } from "react"
-import { useParams } from "react-router"
+import { useEffect, useRef, useState } from "react"
+import { useNavigate, useParams } from "react-router"
 import { X } from "lucide-react"
+import { Toaster, toast } from "sonner"
 import ProfilePicker from "../components/ProfilePicker"
 import useSessionStatus from "@/api/session/hooks/useSessionStatus"
 import useSessionQuiz from "@/api/session/hooks/useSessionQuiz"
+import useSessionPlayers from "@/api/session/hooks/useSessionPlayers"
 import {
     useHostWebSocket,
     usePlayerWebSocket,
@@ -63,6 +65,7 @@ export default function WaitingRoom(): JSX.Element {
 
     const { isLoading: isLoadingSession, isHost, isInvalidCode } = useSessionStatus(code)
     const { data: quiz, isLoading: isLoadingQuiz } = useSessionQuiz(isHost ? code : undefined)
+    const { data: initialPlayers } = useSessionPlayers(isHost ? code : undefined)
 
     // Delay WS connection until role is determined
     // (which would disconnect mid-render and wipe all event subscriptions via listeners.clear())
@@ -72,8 +75,15 @@ export default function WaitingRoom(): JSX.Element {
 
     const websocket = useWebSocketContext()
 
-    // Live player list
+    // Live player list — seeded from the REST endpoint on mount so state survives a reload
     const [players, setPlayers] = useState<Player[]>([])
+    const playersInitialized = useRef(false)
+    useEffect(() => {
+        if (initialPlayers && !playersInitialized.current) {
+            playersInitialized.current = true
+            setPlayers(initialPlayers)
+        }
+    }, [initialPlayers])
 
     useSocketEvent("addPlayer", ({ id, name, emoji }) => {
         setPlayers((prev) => [...prev, { id, name, emoji }])
@@ -85,15 +95,75 @@ export default function WaitingRoom(): JSX.Element {
         setPlayers((prev) => prev.filter((p) => p.id !== id))
     })
 
-    // Player name-setting state
-    const [name, setName] = useState("")
-    const [emoji, setEmoji] = useState<string>(
-        () => AVAILABLE_EMOJIS[Math.floor(Math.random() * AVAILABLE_EMOJIS.length)]
-    )
+    // sessionStorage key scoped to this session code.
+    const storageKey = code !== undefined ? `waitingRoom:${code}` : null
+
+    // Player name-setting state — lazy initialisers read from sessionStorage so a reload
+    // restores the pre-filled form without calling setState inside an effect.
+    const [name, setName] = useState<string>(() => {
+        if (!storageKey) return ""
+        try {
+            const raw = sessionStorage.getItem(storageKey)
+            return raw ? (JSON.parse(raw) as { name: string }).name : ""
+        } catch {
+            return ""
+        }
+    })
+    const [emoji, setEmoji] = useState<string>(() => {
+        const fallback = AVAILABLE_EMOJIS[Math.floor(Math.random() * AVAILABLE_EMOJIS.length)]
+        if (!storageKey) return fallback
+        try {
+            const raw = sessionStorage.getItem(storageKey)
+            return raw ? (JSON.parse(raw) as { emoji: string }).emoji : fallback
+        } catch {
+            return fallback
+        }
+    })
     const [isEmojiOpen, setIsEmojiOpen] = useState(false)
     const [nameSaved, setNameSaved] = useState(false)
     const [nameError, setNameError] = useState<string | null>(null)
     const [pendingId, setPendingId] = useState<number | null>(null)
+
+    // Once the WebSocket is open, automatically re-send setName so the server
+    // recognises the player without them having to type their name again.
+    // Reads directly from sessionStorage inside the effect to avoid ref-during-render.
+    useEffect(() => {
+        if (!wsCode || isHost || !storageKey) return undefined
+        const savedRaw = sessionStorage.getItem(storageKey)
+        if (!savedRaw) return undefined
+        let saved: { name: string; emoji: string }
+        try {
+            saved = JSON.parse(savedRaw) as { name: string; emoji: string }
+        } catch {
+            return undefined
+        }
+        const unsub = websocket.onConnect(() => {
+            const id = Date.now() % 1_000_000
+            setPendingId(id)
+            websocket.send({
+                id,
+                command: "setName",
+                payload: { name: saved.name, emoji: saved.emoji },
+            })
+        })
+        return (): void => {
+            unsub()
+        }
+    }, [wsCode, isHost, storageKey, websocket])
+
+    const navigate = useNavigate()
+
+    useSocketEvent("kick", () => {
+        if (storageKey) sessionStorage.removeItem(storageKey)
+        toast.error("You have been removed from the lobby by the host.")
+        setTimeout(async () => {
+            try {
+                await navigate("/")
+            } catch {
+                // ignore navigation errors
+            }
+        }, 2000)
+    })
 
     useSocketEvent("ok", (_payload, _timing, id) => {
         if (pendingId === id) {
@@ -117,6 +187,7 @@ export default function WaitingRoom(): JSX.Element {
         setPendingId(id)
         setNameError(null)
         websocket.send({ id, command: "setName", payload: { name: trimmed, emoji } })
+        if (storageKey) sessionStorage.setItem(storageKey, JSON.stringify({ name: trimmed, emoji }))
     }
 
     function onKickPlayer(playerId: string): void {
@@ -220,7 +291,7 @@ export default function WaitingRoom(): JSX.Element {
                                     <div>
                                         <p className="text-sm font-semibold">{name}</p>
                                         <p className="text-muted-foreground text-xs">
-                                            You&apos;re in! Waiting for the host to start.
+                                            You&apos;re in!.
                                         </p>
                                     </div>
                                 </div>
@@ -269,6 +340,8 @@ export default function WaitingRoom(): JSX.Element {
                     </div>
                 </div>
             </div>
+
+            <Toaster richColors />
 
             <Dialog onOpenChange={setIsEmojiOpen} open={isEmojiOpen}>
                 <DialogContent className="border-white/10 bg-[#111318] text-white sm:max-w-lg">
