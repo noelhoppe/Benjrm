@@ -3,8 +3,9 @@ use {
         auth::User,
         error::Error,
         game_session::{
-            Channel, GameSession, GameSessionError, GameSessionStatus, GameSessions, HostMessage,
-            Message, SessionCode,
+            Channel, Command, GameSession, GameSessionError, GameSessionHost, GameSessionPlayer,
+            GameSessionStatus, GameSessions, HostCommand, HostMessage, Message, PlayerCommand,
+            PlayerMessage, SessionCode,
         },
         question::{Question, QuestionFilter},
         quiz::Quiz,
@@ -64,6 +65,7 @@ impl GameSessions {
         let game = GameSession {
             status: GameSessionStatus::Waiting,
             host: host.into(),
+            players: Vec::new(),
             quiz,
         };
 
@@ -151,11 +153,185 @@ impl GameSession {
         self.host.channel = Some(channel);
     }
 
-    pub async fn notify_host(&mut self, msg: Message<HostMessage>) {
-        if let Some(channel) = &mut self.host.channel
+    pub async fn handle_host_cmd(&mut self, cmd: Command<HostCommand>, _payload: SessionCode) {
+        match cmd.command {
+            HostCommand::Pong { .. } => (),
+            HostCommand::KickPlayer { id } => {
+                if let Some(pos) = self.players.iter().position(|v| v.id == id) {
+                    let mut player = self.players.swap_remove(pos);
+                    player.msg(PlayerMessage::Kick.into()).await;
+                    player.channel.close().await;
+                    if player.name.is_some() {
+                        self.host.ok(cmd.id).await;
+                        self.host
+                            .msg(HostMessage::RemovePlayer { id: player.id }.into())
+                            .await;
+                    }
+                } else {
+                    self.host
+                        .error(cmd.id, GameSessionError::PlayerNotFound)
+                        .await;
+                }
+            }
+        }
+    }
+
+    pub async fn set_player_channel<T: Channel<PlayerMessage> + 'static>(
+        &mut self,
+        id: Uuid,
+        channel: T,
+    ) {
+        match self.get_player_mut(id) {
+            Some(player) => {
+                let old_channel = std::mem::replace(&mut player.channel, Box::new(channel));
+                old_channel.close().await;
+            }
+            None => {
+                let player = GameSessionPlayer {
+                    id,
+                    name: None,
+                    emoji: None,
+                    channel: Box::new(channel),
+                };
+                self.players.push(player);
+            }
+        }
+    }
+
+    pub async fn handle_player_cmd(&mut self, cmd: Command<PlayerCommand>, id: Uuid) {
+        match cmd.command {
+            PlayerCommand::Pong { .. } => (),
+            PlayerCommand::SetName { name, emoji } => {
+                let mut name_in_use = false;
+                let mut this_player = None;
+                for player in self.players.iter_mut() {
+                    if player.name.as_ref() == Some(&name) && player.id != id {
+                        name_in_use = true;
+
+                        if this_player.is_some() {
+                            break;
+                        }
+                    }
+
+                    if player.id == id {
+                        this_player = Some(player);
+
+                        if name_in_use {
+                            break;
+                        }
+                    }
+                }
+
+                if let Some(player) = this_player {
+                    if name_in_use {
+                        player
+                            .error(cmd.id, GameSessionError::NameAlreadyTaken)
+                            .await;
+                    } else {
+                        let has_name = player.name.is_some();
+                        if let Some(emoji) = emoji {
+                            player.emoji = emojis::get(&emoji);
+                            if player.emoji.is_none() {
+                                player.error(cmd.id, GameSessionError::InvalidEmoji).await;
+                                return;
+                            }
+                        } else {
+                            player.emoji = None;
+                        }
+                        player.name = Some(name.clone());
+                        if has_name {
+                            self.host
+                                .msg(
+                                    HostMessage::RenamePlayer {
+                                        id,
+                                        name,
+                                        emoji: player.emoji,
+                                    }
+                                    .into(),
+                                )
+                                .await
+                        } else {
+                            self.host
+                                .msg(
+                                    HostMessage::AddPlayer {
+                                        id,
+                                        name,
+                                        emoji: player.emoji,
+                                    }
+                                    .into(),
+                                )
+                                .await
+                        }
+                        player.ok(cmd.id).await;
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn get_player_mut(&mut self, id: Uuid) -> Option<&mut GameSessionPlayer> {
+        self.players.iter_mut().find(|v| v.id == id)
+    }
+}
+
+impl GameSessionHost {
+    pub async fn msg(&mut self, msg: Message<HostMessage>) {
+        if let Some(channel) = &mut self.channel
             && let Err(err) = channel.send(msg).await
         {
             log::error!("notify host error: {err:?}");
+        }
+    }
+
+    pub async fn ok(&mut self, id: Option<u64>) {
+        if id.is_some() {
+            self.msg(Message {
+                id,
+                msg: HostMessage::Ok,
+                timing: None,
+            })
+            .await;
+        }
+    }
+
+    pub async fn error(&mut self, id: Option<u64>, err: impl Into<Error>) {
+        if id.is_some() {
+            self.msg(Message {
+                id,
+                msg: HostMessage::Error(err.into().into()),
+                timing: None,
+            })
+            .await;
+        }
+    }
+}
+
+impl GameSessionPlayer {
+    pub async fn msg(&mut self, msg: Message<PlayerMessage>) {
+        if let Err(err) = self.channel.send(msg).await {
+            log::error!("failed to send message to player {}: {err:?}", self.id)
+        }
+    }
+
+    pub async fn ok(&mut self, id: Option<u64>) {
+        if id.is_some() {
+            self.msg(Message {
+                id,
+                msg: PlayerMessage::Ok,
+                timing: None,
+            })
+            .await;
+        }
+    }
+
+    pub async fn error(&mut self, id: Option<u64>, err: impl Into<Error>) {
+        if id.is_some() {
+            self.msg(Message {
+                id,
+                msg: PlayerMessage::Error(err.into().into()),
+                timing: None,
+            })
+            .await;
         }
     }
 }

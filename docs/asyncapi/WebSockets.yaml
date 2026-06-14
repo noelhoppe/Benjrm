@@ -24,15 +24,80 @@ channels:
       session:
         description: The session code
     messages:
+      ok:
+        $ref: "#/components/messages/ok"
+      error:
+        $ref: "#/components/messages/error"
       ping:
         $ref: "#/components/messages/ping"
       pong:
         $ref: "#/components/messages/pong"
+      addPlayer:
+        $ref: "#/components/messages/addPlayer"
+      renamePlayer:
+        $ref: "#/components/messages/renamePlayer"
+      removePlayer:
+        $ref: "#/components/messages/removePlayer"
+      kickPlayer:
+        $ref: "#/components/messages/kickPlayer"
+    tags:
+      - name: Sessions
+  
+  sessionPlayer:
+    address: "/api/v1/sessions/{session}/ws/player"
+    parameters:
+      session:
+        description: The session code
+    messages:
+      ok:
+        $ref: "#/components/messages/ok"
+      error:
+        $ref: "#/components/messages/error"
+      ping:
+        $ref: "#/components/messages/ping"
+      pong:
+        $ref: "#/components/messages/pong"
+      setName:
+        $ref: "#/components/messages/setName"
+      kick:
+        $ref: "#/components/messages/kick"
     tags:
       - name: Sessions
 
 operations:
-  sendPing:
+  sendHostOk:
+    description: "Send ok command"
+    action: send
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/ok"
+  
+  sendPlayerOk:
+    description: "Send ok command"
+    action: send
+    channel:
+      $ref: "#/channels/sessionPlayer"
+    messages:
+      - $ref: "#/channels/sessionPlayer/messages/ok"
+  
+  sendHostError:
+    description: "Send error command"
+    action: send
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/error"
+  
+  sendPlayerError:
+    description: "Send error command"
+    action: send
+    channel:
+      $ref: "#/channels/sessionPlayer"
+    messages:
+      - $ref: "#/channels/sessionPlayer/messages/error"
+  
+  sendHostPing:
     description: "Send ping command"
     action: send
     channel:
@@ -42,7 +107,17 @@ operations:
     tags:
       - name: WebSocket
   
-  receivePong:
+  sendPlayerPing:
+    description: "Send ping command"
+    action: send
+    channel:
+      $ref: "#/channels/sessionPlayer"
+    messages:
+      - $ref: "#/channels/sessionPlayer/messages/ping"
+    tags:
+      - name: WebSocket
+  
+  receiveHostPong:
     description: "Receive pong command"
     action: receive
     channel:
@@ -51,9 +126,108 @@ operations:
       - $ref: "#/channels/sessionHost/messages/pong"
     tags:
       - name: WebSocket
+  
+  receivePlayerPong:
+    description: "Receive pong command"
+    action: receive
+    channel:
+      $ref: "#/channels/sessionPlayer"
+    messages:
+      - $ref: "#/channels/sessionPlayer/messages/pong"
+    tags:
+      - name: WebSocket
+  
+  sendAddPlayer:
+    description: "Send add player command"
+    action: send
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/addPlayer"
+    tags:
+      - name: Sessions
+  
+  sendRenamePlayer:
+    description: "Send rename player command"
+    action: send
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/renamePlayer"
+    tags:
+      - name: Sessions
+  
+  sendRemovePlayer:
+    description: "Send remove player command"
+    action: send
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/removePlayer"
+    tags:
+      - name: Sessions
+  
+  receiveKickPlayer:
+    description: "Receive kick player command"
+    action: receive
+    channel:
+      $ref: "#/channels/sessionHost"
+    messages:
+      - $ref: "#/channels/sessionHost/messages/kickPlayer"
+    tags:
+      - name: Sessions
+  
+  receiveSetName:
+    description: "Receive set name command from player"
+    action: receive
+    channel:
+      $ref: "#/channels/sessionPlayer"
+    messages:
+      - $ref: "#/channels/sessionPlayer/messages/setName"
+    tags:
+      - name: Sessions
+  
+  sendKick:
+    description: "Send kick command to player"
+    action: send
+    channel:
+      $ref: "#/channels/sessionPlayer"
+    messages:
+      - $ref: "#/channels/sessionPlayer/messages/kick"
+    tags:
+      - name: Sessions
 
 components:
   messages:
+    ok:
+      payload:
+        type: object
+        properties:
+          id:
+            type: integer
+          command:
+            type: string
+            const: "ok"
+    
+    error:
+      payload:
+        type: object
+        properties:
+          id:
+            type: integer
+          command:
+            type: string
+            const: "error"
+          payload:
+            type: object
+            properties:
+              category:
+                type: string
+              error:
+                type: string
+              message:
+                type: string
+    
     ping:
       payload:
         type: object
@@ -76,6 +250,9 @@ components:
             const: "pong"
           payload:
             type: object
+            required:
+              - id
+              - timestamp
             properties:
               id:
                 type: integer
@@ -83,3 +260,101 @@ components:
                 type: string
                 format: date-time
                 example: "2026-06-06T12:48:48.000Z"
+    
+    addPlayer:
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            const: "addPlayer"
+          payload:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              emoji:
+                type: string
+                example: "😀"
+    
+    renamePlayer:
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            const: "renamePlayer"
+          payload:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              emoji:
+                type: string
+                example: "😀"
+    
+    removePlayer:
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            const: "removePlayer"
+          payload:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+    
+    kickPlayer:
+      payload:
+        type: object
+        properties:
+          id:
+            type: integer
+          command:
+            type: string
+            const: "kickPlayer"
+          payload:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: string
+                format: uuid
+    
+    setName:
+      payload:
+        type: object
+        properties:
+          id:
+            type: integer
+          command:
+            type: string
+            const: "setName"
+          payload:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+              emoji:
+                type: string
+                example: "😀"
+    
+    kick:
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            const: "kick"

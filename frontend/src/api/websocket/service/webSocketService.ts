@@ -12,6 +12,10 @@ export default class WebSocketService {
 
     private listeners = new Map<keyof ServerEvents, Set<AnyServerEventHandler>>()
 
+    private openCallbacks = new Set<() => void>()
+
+    private closeWithoutOpenCallbacks = new Set<() => void>()
+
     private static async decodeMessageData(data: MessageEvent["data"]): Promise<string | null> {
         if (typeof data === "string") {
             return data
@@ -57,8 +61,13 @@ export default class WebSocketService {
         const ws = new WebSocket(url)
         this.socket = ws
 
+        let hasOpened = false
+
         ws.onopen = () => {
+            hasOpened = true
             console.log("Connected")
+            this.openCallbacks.forEach((cb) => cb())
+            this.openCallbacks.clear()
         }
 
         ws.onmessage = async (event) => {
@@ -81,7 +90,11 @@ export default class WebSocketService {
                 const data = raw as ServerMessage
                 const handlers = this.listeners.get(data.command)
                 handlers?.forEach((handler) =>
-                    (handler as ServerEventHandler<typeof data.command>)(data.payload, data.timing)
+                    (handler as ServerEventHandler<typeof data.command>)(
+                        data.payload,
+                        data.timing,
+                        data.id
+                    )
                 )
             } catch (error) {
                 console.error("Failed to process WebSocket message:", error)
@@ -89,6 +102,10 @@ export default class WebSocketService {
         }
 
         ws.onclose = () => {
+            if (!hasOpened) {
+                this.closeWithoutOpenCallbacks.forEach((cb) => cb())
+                this.closeWithoutOpenCallbacks.clear()
+            }
             this.cleanup(ws)
         }
 
@@ -124,6 +141,34 @@ export default class WebSocketService {
             )
         }
         this.socket.send(JSON.stringify(message))
+    }
+
+    /**
+     * Registers a callback to fire once when the socket is (or becomes) open.
+     * If the socket is already open the callback is invoked synchronously.
+     * @returns An unsubscribe function.
+     */
+    public onConnect(callback: () => void): () => void {
+        if (this.socket?.readyState === WebSocket.OPEN) {
+            callback()
+            return () => {}
+        }
+        this.openCallbacks.add(callback)
+        return () => {
+            this.openCallbacks.delete(callback)
+        }
+    }
+
+    /**
+     * Registers a callback to fire once if the current socket closes before it ever opens
+     * (i.e., the connection was refused or the session code was not found).
+     * @returns An unsubscribe function.
+     */
+    public onConnectFail(callback: () => void): () => void {
+        this.closeWithoutOpenCallbacks.add(callback)
+        return () => {
+            this.closeWithoutOpenCallbacks.delete(callback)
+        }
     }
 
     /**
