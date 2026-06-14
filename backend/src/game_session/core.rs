@@ -13,7 +13,6 @@ use {
     actix_web::rt,
     chrono::{TimeDelta, Utc},
     futures::{StreamExt, stream::FuturesUnordered},
-    rand::RngExt,
     sea_orm::ConnectionTrait,
     std::{collections::HashMap, sync::Arc, time::Duration},
     tokio::sync::{Mutex, RwLock},
@@ -51,21 +50,27 @@ impl GameSessions {
 
         let mut sessions = self.sessions.write().await;
         let code = {
-            let mut code = None;
-
-            let mut rng = rand::rng();
-            for _ in 0..10 {
-                #[cfg(not(debug_assertions))]
-                let new_code: SessionCode = rng.random_range(0..=9999_9999);
-                #[cfg(debug_assertions)]
-                let new_code: SessionCode = rng.random_range(0..=99);
-                if !sessions.contains_key(&new_code) {
-                    code = Some(new_code);
-                    break;
-                }
+            #[cfg(debug_assertions)]
+            {
+                use std::sync::atomic::{AtomicU32, Ordering};
+                static SESSION_CNT: AtomicU32 = AtomicU32::new(1);
+                SESSION_CNT.fetch_add(1, Ordering::Relaxed)
             }
 
-            code.ok_or(GameSessionError::CannotGenerateCode)?
+            #[cfg(not(debug_assertions))]
+            {
+                use rand::RngExt;
+                let mut code = None;
+                let mut rng = rand::rng();
+                for _ in 0..10 {
+                    let new_code: SessionCode = rng.random_range(100_0000..=9999_9999);
+                    if !sessions.contains_key(&new_code) {
+                        code = Some(new_code);
+                        break;
+                    }
+                }
+                code.ok_or(GameSessionError::CannotGenerateCode)?
+            }
         };
 
         let game = GameSession {
