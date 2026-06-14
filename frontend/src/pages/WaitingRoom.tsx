@@ -62,7 +62,7 @@ export default function WaitingRoom(): JSX.Element {
             ? ((s) => {
                   const mid = Math.floor(s.length / 2)
                   return `${s.slice(0, mid)}-${s.slice(mid)}`
-              })(String(code))
+              })(String(code).padStart(8, "0"))
             : undefined
 
     const { isLoading: isLoadingSession, isHost, isPlayer, isInvalidCode } = useSessionStatus(code)

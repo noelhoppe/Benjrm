@@ -21,7 +21,10 @@ use {
             atomic::{AtomicU64, Ordering},
         },
     },
-    tokio::sync::{Mutex, RwLock},
+    tokio::{
+        sync::{Mutex, RwLock},
+        task::JoinHandle,
+    },
     uuid::Uuid,
 };
 
@@ -60,6 +63,18 @@ impl_err! {
         NoPlayers = BAD_REQUEST,
         #[error("Quiz already started")]
         SessionAlreadyStarted = BAD_REQUEST,
+        #[error("Question already answered")]
+        AlreadyAnswered = BAD_GATEWAY,
+        #[error("Invalid answer count")]
+        InvalidAnswerCount = BAD_REQUEST,
+        #[error("Question can't be answered")]
+        CannotAnswer = BAD_REQUEST,
+        #[error("Answer does not belong to this question")]
+        InvalidAnswer = BAD_REQUEST,
+        #[error("Time to answer is up")]
+        TimeUp = BAD_REQUEST,
+        #[error("No question to answer")]
+        NoCurrentQuestion = BAD_REQUEST,
     }
 }
 
@@ -74,12 +89,20 @@ pub struct GameSession {
     quiz: Option<Arc<Quiz<Question>>>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum GameSessionStatus {
     Waiting,
     Started,
-    Question(usize),
+    Question {
+        idx: usize,
+        started: DateTime<Utc>,
+        answers: usize,
+        abort_handle: Option<JoinHandle<()>>,
+    },
     Closed,
+    Leaderboard {
+        idx: usize,
+    },
 }
 
 pub struct GameSessionHost {
@@ -96,13 +119,13 @@ impl From<User> for GameSessionHost {
     }
 }
 
-#[derive(Serialize)]
 pub struct GameSessionPlayer {
     id: Uuid,
     name: Option<String>,
     emoji: Option<&'static Emoji>,
-    #[serde(skip)]
     channel: Box<dyn Channel<PlayerMessage>>,
+    points: u32,
+    last_question: Option<(u32, Uuid)>,
 }
 
 #[async_trait::async_trait]
@@ -194,6 +217,37 @@ pub enum HostMessage {
         id: Uuid,
     },
     DisplayQuestion(Arc<DisplayQuestionMessage>),
+    DisplayLeaderBoard {
+        leaderboard: Vec<LeaderboardEntry>,
+    },
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LeaderboardEntry {
+    pub id: Uuid,
+    pub total_points: u32,
+    pub points: u32,
+}
+
+impl PartialEq for LeaderboardEntry {
+    fn eq(&self, other: &Self) -> bool {
+        self.total_points == other.total_points
+    }
+}
+
+impl Eq for LeaderboardEntry {}
+
+impl Ord for LeaderboardEntry {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other.total_points.cmp(&self.total_points)
+    }
+}
+
+impl PartialOrd for LeaderboardEntry {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -232,6 +286,12 @@ pub enum PlayerMessage {
     Kick,
     Start,
     DisplayQuestion(Arc<DisplayQuestionMessage>),
+    QuestionResult {
+        question: Uuid,
+        correct_answers: Arc<Vec<Uuid>>,
+        points: u32,
+        total_points: u32,
+    },
 }
 
 #[derive(Debug, Deserialize)]
@@ -244,6 +304,7 @@ pub enum PlayerMessage {
 pub enum PlayerCommand {
     Pong { id: u32, timestamp: DateTime<Utc> },
     SetName { name: String, emoji: Option<String> },
+    AnswerQuestion { answer: Vec<Uuid> },
 }
 
 impl CommandTrait for Command<PlayerCommand> {
@@ -311,12 +372,14 @@ impl From<&QuestionOptions> for DisplayQuestionOptions {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AnswerOption {
+    id: Uuid,
     answer: String,
 }
 
 impl From<&AnswerChoiceModel> for AnswerOption {
     fn from(value: &AnswerChoiceModel) -> Self {
         Self {
+            id: value.id,
             answer: value.answer.clone(),
         }
     }
@@ -325,6 +388,7 @@ impl From<&AnswerChoiceModel> for AnswerOption {
 impl From<&AnswerOrderModel> for AnswerOption {
     fn from(value: &AnswerOrderModel) -> Self {
         Self {
+            id: value.id,
             answer: value.answer.clone(),
         }
     }

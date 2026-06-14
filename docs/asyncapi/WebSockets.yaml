@@ -553,7 +553,11 @@ components:
     AnswerOption:
       type: object
       required:
+        - id
         - answer
       properties:
+        id:
+          type: string
+          format: uuid
         answer:
           type: string

@@ -12,7 +12,7 @@ export interface ClientEvents {
         emoji: string | null
     }
     answerQuestion: {
-        answers: string[]
+        answer: string[]
     }
     start: object
     showQuestion: {

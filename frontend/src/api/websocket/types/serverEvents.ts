@@ -21,13 +21,17 @@ export interface ServerEvents {
     }
     questionResult: {
         question: string
-        correctAnswer: string
+        correctAnswer: string[]
+        total_points: number
         points: number
     }
-    updateLeaderboard: {
-        name: string
-        points: number
-    }[]
+    displayLeaderboard: {
+        leaderboard: {
+            id: string
+            total_points: number
+            points: number
+        }[]
+    }
     addPlayer: {
         id: string
         name: string
