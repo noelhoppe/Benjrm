@@ -42,4 +42,5 @@ export interface ServerEvents {
     removePlayer: {
         id: string
     }
+    kick: unknown
 }
