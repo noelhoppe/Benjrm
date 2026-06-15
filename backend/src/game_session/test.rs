@@ -2,15 +2,56 @@ use {
     crate::{
         app_data::TestAppData,
         error::Error,
-        game_session::{Channel, ChannelError, GameSessionError, HostMessage, Message},
+        game_session::{Channel, ChannelError, GameSessionError, Message, api::ws::WsChannelError},
         quiz::{QuizError, test::create_one},
     },
+    actix_ws::Closed,
+    serde::Serialize,
     std::sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
+        mpsc,
     },
     uuid::Uuid,
 };
+
+struct DummyChanel<T> {
+    id: u64,
+    closed: Arc<AtomicBool>,
+    sender: mpsc::Sender<T>,
+}
+
+impl<T: Serialize + Sync + Send + Clone> DummyChanel<T> {
+    pub fn new() -> (Self, Arc<AtomicBool>, mpsc::Receiver<T>) {
+        let (sender, receiver) = mpsc::channel();
+        let closed = Arc::new(AtomicBool::new(false));
+        let _self = Self {
+            id: <Self as Channel<T>>::generate_id(),
+            closed: closed.clone(),
+            sender,
+        };
+        (_self, closed, receiver)
+    }
+}
+
+#[async_trait::async_trait]
+impl<T: Serialize + Sync + Send + Clone> Channel<T> for DummyChanel<T> {
+    async fn send(&mut self, msg: Message<'_, T>) -> Result<(), ChannelError> {
+        match self.closed.load(Ordering::Relaxed) {
+            true => Err(WsChannelError::Tx(Closed).into()),
+            false => self
+                .sender
+                .send(msg.msg.clone())
+                .map_err(|_| WsChannelError::Tx(Closed).into()),
+        }
+    }
+    async fn close(self: Box<Self>) {
+        self.closed.store(true, Ordering::Relaxed);
+    }
+    fn id(&self) -> u64 {
+        self.id
+    }
+}
 
 #[actix_web::test]
 async fn create_get_session() {
@@ -57,22 +98,6 @@ async fn check_set_host_channel() {
     let data = TestAppData::test().await;
     let user = data.dummy_user().await;
 
-    let closed = Arc::new(AtomicBool::new(false));
-    let closed2 = Arc::new(AtomicBool::new(false));
-    struct DummyChanel(u64, Arc<AtomicBool>);
-    #[async_trait::async_trait]
-    impl Channel<HostMessage> for DummyChanel {
-        async fn send(&mut self, _msg: Message<'_, HostMessage>) -> Result<(), ChannelError> {
-            Ok(())
-        }
-        async fn close(self: Box<Self>) {
-            self.1.store(true, Ordering::Relaxed);
-        }
-        fn id(&self) -> u64 {
-            self.0
-        }
-    }
-
     let (_, session) = data
         .game_sessions
         .create_session(&data.db, user.clone(), None)
@@ -81,15 +106,14 @@ async fn check_set_host_channel() {
     let mut session = session.lock().await;
 
     session.check_set_host_channel(&user).unwrap();
-    session
-        .set_host_channel(DummyChanel(DummyChanel::generate_id(), closed.clone()))
-        .await;
+    let (channel1, closed1, _) = DummyChanel::new();
+    session.set_host_channel(channel1).await;
     session.check_set_host_channel(&user).unwrap();
-    assert!(!closed.load(Ordering::Relaxed));
-    session
-        .set_host_channel(DummyChanel(DummyChanel::generate_id(), closed2.clone()))
-        .await;
-    assert!(closed.load(Ordering::Relaxed));
+    assert!(!closed1.load(Ordering::Relaxed));
+
+    let (channel2, closed2, _) = DummyChanel::new();
+    session.set_host_channel(channel2).await;
+    assert!(closed1.load(Ordering::Relaxed));
     assert!(!closed2.load(Ordering::Relaxed));
 
     let user2 = data.dummy_user().await;
