@@ -1,7 +1,7 @@
 // frontend/src/pages/WaitingRoom.tsx
 
 import type { JSX } from "react"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import { X } from "lucide-react"
 import { Toaster, toast } from "sonner"
@@ -216,6 +216,15 @@ export default function WaitingRoom(): JSX.Element {
         if (storageKey) sessionStorage.setItem(storageKey, JSON.stringify({ name: trimmed, emoji }))
     }
 
+    const handleStartQuiz = useCallback(() => {
+        websocket.send({ command: "start" })
+        if (code) {
+            navigate(`/play/${code}/host`, {
+                state: { playerCount: players.length },
+            })
+        }
+    }, [websocket, code, navigate, players.length])
+
     function onKickPlayer(playerId: string): void {
         websocket.send({ command: "kickPlayer", payload: { id: playerId } })
     }
@@ -354,20 +363,12 @@ export default function WaitingRoom(): JSX.Element {
                     )}
 
                     <div className="mt-8 flex items-center justify-center border-t border-white/10 pt-6">
-                        {isHost ? (
-                            <StartQuizButton
-                                onStart={() => {
-                                    if (code)
-                                        navigate(`/play/${code}/host`, {
-                                            state: { playerCount: players.length },
-                                        })
-                                }}
-                            />
-                        ) : (
+                        {isHost ? <StartQuizButton onStartQuiz={handleStartQuiz} /> : null}
+                        {!isHost && nameSaved ? (
                             <p className="text-muted-foreground text-sm font-medium">
                                 Waiting for host to start the game
                             </p>
-                        )}
+                        ) : null}
                     </div>
                 </div>
             </div>
