@@ -216,14 +216,46 @@ impl GameSession {
                     .await;
                 self.host.ok(cmd.id).await;
             }
-            HostCommand::NextQuestion => match self.next_question(None, arc).await {
-                Ok(()) => self.host.ok(cmd.id).await,
-                Err(err) => self.host.error(cmd.id, err).await,
-            },
+            HostCommand::NextQuestion => {
+                if matches!(self.status, GameSessionStatus::Question { .. }) {
+                    let is_final = self.end_question().await;
+                    if !is_final {
+                        match self.next_question(None, arc).await {
+                            Ok(()) => self.host.ok(cmd.id).await,
+                            Err(err) => self.host.error(cmd.id, err).await,
+                        }
+                    }
+                } else if let GameSessionStatus::Leaderboard { idx } = self.status {
+                    let has_next = self
+                        .quiz
+                        .as_ref()
+                        .map(|q| q.questions.get(idx + 1).is_some())
+                        .unwrap_or(false);
+                    if has_next {
+                        match self.next_question(None, arc).await {
+                            Ok(()) => self.host.ok(cmd.id).await,
+                            Err(err) => self.host.error(cmd.id, err).await,
+                        }
+                    } else {
+                        self.send_final_leaderboard().await;
+                    }
+                } else {
+                    match self.next_question(None, arc).await {
+                        Ok(()) => self.host.ok(cmd.id).await,
+                        Err(err) => self.host.error(cmd.id, err).await,
+                    }
+                }
+            }
             HostCommand::ShowQuestion { id } => match self.next_question(Some(id), arc).await {
                 Ok(()) => self.host.ok(cmd.id).await,
                 Err(err) => self.host.error(cmd.id, err).await,
             },
+            HostCommand::EndGame => {
+                self.notify_all_players(Message::from(&PlayerMessage::GameEnded))
+                    .await;
+                self.status = GameSessionStatus::Closed;
+                self.host.ok(cmd.id).await;
+            }
         }
     }
 
@@ -274,7 +306,7 @@ impl GameSession {
                         && *idx == question
                         && session.players.len() > *answers
                     {
-                        session.end_question().await
+                        session.end_question().await;
                     }
                 })
             });
@@ -285,7 +317,8 @@ impl GameSession {
             abort_handle,
         };
 
-        let question = Arc::new(DisplayQuestionMessage::from(&quiz.questions[question]));
+        let total_questions = quiz.questions.len();
+        let question = Arc::new(DisplayQuestionMessage::new(&quiz.questions[question], total_questions));
 
         self.host
             .msg(Message {
@@ -453,7 +486,7 @@ impl GameSession {
                             if let Some(handle) = abort_handle {
                                 handle.abort();
                             }
-                            self.end_question().await
+                            self.end_question().await;
                         }
                     }
                     Err(err) => player.error(cmd.id, err).await,
@@ -477,12 +510,12 @@ impl GameSession {
         execute_futures(iterator).await
     }
 
-    pub async fn end_question(&mut self) {
+    pub async fn end_question(&mut self) -> bool {
         let GameSessionStatus::Question { idx, .. } = &self.status else {
-            return;
+            return false;
         };
         let Some(quiz) = &self.quiz else {
-            return;
+            return false;
         };
 
         let question = &quiz.questions[*idx];
@@ -494,6 +527,8 @@ impl GameSession {
             let points = player.apply_points(question.model.id);
             leaderboard.push(LeaderboardEntry {
                 id: player.id,
+                name: player.name.clone().unwrap_or_default(),
+                emoji: player.emoji.map(|e| e.to_string()),
                 total_points: player.points,
                 points,
             });
@@ -513,13 +548,71 @@ impl GameSession {
         execute_futures(iterator).await;
 
         leaderboard.sort();
-        self.host
-            .msg(Message::from(&HostMessage::DisplayLeaderBoard {
-                leaderboard,
-            }))
-            .await;
+        let is_final = *idx + 1 >= quiz.questions.len();
 
         self.status = GameSessionStatus::Leaderboard { idx: *idx };
+
+        if is_final {
+            let leaderboard_arc = Arc::new(leaderboard.clone());
+
+            let player_iterator = self.players.iter_mut().map(|player| {
+                let leaderboard = Arc::clone(&leaderboard_arc);
+                async move {
+                    player
+                        .msg(Message::from(&PlayerMessage::DisplayLeaderboard {
+                            leaderboard,
+                            is_final,
+                        }))
+                        .await;
+                }
+            });
+            execute_futures(player_iterator).await;
+
+            self.host
+                .msg(Message::from(&HostMessage::DisplayLeaderboard {
+                    leaderboard,
+                    is_final,
+                }))
+                .await;
+        }
+
+        is_final
+    }
+
+    async fn send_final_leaderboard(&mut self) {
+        let mut leaderboard: Vec<LeaderboardEntry> = self
+            .players
+            .iter()
+            .map(|player| LeaderboardEntry {
+                id: player.id,
+                name: player.name.clone().unwrap_or_default(),
+                emoji: player.emoji.map(|e| e.to_string()),
+                total_points: player.points,
+                points: 0,
+            })
+            .collect();
+        leaderboard.sort();
+        let leaderboard_arc = Arc::new(leaderboard.clone());
+
+        let player_iterator = self.players.iter_mut().map(|player| {
+            let leaderboard = Arc::clone(&leaderboard_arc);
+            async move {
+                player
+                    .msg(Message::from(&PlayerMessage::DisplayLeaderboard {
+                        leaderboard,
+                        is_final: true,
+                    }))
+                    .await;
+            }
+        });
+        execute_futures(player_iterator).await;
+
+        self.host
+            .msg(Message::from(&HostMessage::DisplayLeaderboard {
+                leaderboard,
+                is_final: true,
+            }))
+            .await;
     }
 }
 

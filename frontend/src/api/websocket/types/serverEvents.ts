@@ -15,22 +15,26 @@ export interface ServerEvents {
     displayQuestion: {
         id: string
         question: string
-        type: "SINGLE_CHOICE" | "MULTIPLE_CHOICE"
-        options: object
-        secondsToAnswer: number
+        type: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "ORDER" | "SLIDE"
+        options: { id: string; answer: string }[]
+        seconds: number | null
+        totalQuestions: number
     }
     questionResult: {
         question: string
-        correctAnswer: string[]
-        total_points: number
+        correctAnswers: string[]
+        totalPoints: number
         points: number
     }
     displayLeaderboard: {
         leaderboard: {
             id: string
-            total_points: number
+            name: string
+            emoji: string | null
+            totalPoints: number
             points: number
         }[]
+        isFinal: boolean
     }
     addPlayer: {
         id: string
@@ -46,4 +50,6 @@ export interface ServerEvents {
         id: string
     }
     kick: unknown
+    start: unknown
+    gameEnded: unknown
 }

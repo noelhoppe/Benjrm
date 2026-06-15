@@ -15,6 +15,7 @@ export interface Quiz {
     hidden: false
     created: Date
     modified: Date
+    questions: unknown[]
 }
 
 export interface QuizList {

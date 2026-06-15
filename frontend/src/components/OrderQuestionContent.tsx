@@ -1,108 +1,228 @@
 // frontend/src/components/OrderQuestionContent.tsx
+/* eslint-disable react/jsx-no-bind */
 
+import type { JSX } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
     DndContext,
+    closestCenter,
+    KeyboardSensor,
     PointerSensor,
-    TouchSensor,
-    closestCorners,
     useSensor,
     useSensors,
 } from "@dnd-kit/core"
 import type { DragEndEvent } from "@dnd-kit/core"
-import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import type { JSX } from "react"
-import { useMemo, useState } from "react"
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { Button } from "@/shadcn/components/ui/button"
+import TimerBar from "@/components/TimerBar"
 
-import SortableOrderOption from "@/components/SortableOrderOption"
-
-interface OrderItem {
+export interface Option {
     id: string
-    label: string
+    text: string
 }
 
-const MOCK_ITEMS: OrderItem[] = [
-    { id: "item-1", label: "Irgendwas 1" },
-    { id: "item-2", label: "Irgendwas 2" },
-    { id: "item-3", label: "Irgendwas 3" },
-    { id: "item-4", label: "Irgendwas 4" },
-]
+export interface OrderQuestionContentProps {
+    currentQuestionIndex?: number
+    isHost?: boolean
+    onNextQuestion?: () => void
+    options?: Option[]
+    playerName?: string
+    questionText?: string
+    secondsToAnswer?: number | null
+    totalQuestions?: number
+    onSendAnswer?: (answerIds: string[]) => void
+}
 
-export default function OrderQuestionContent(): JSX.Element {
-    const [items, setItems] = useState<OrderItem[]>(MOCK_ITEMS)
+function SortableItem({ id, text }: { id: string; text: string }): JSX.Element {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id,
+    })
 
-    const sensors = useSensors(
-        useSensor(TouchSensor, {
-            activationConstraint: {
-                delay: 0,
-                tolerance: 5,
-            },
-        }),
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8,
-            },
-        })
-    )
-
-    const itemIds = useMemo(() => items.map((item) => item.id), [items])
-
-    const handleDragEnd = (event: DragEndEvent): void => {
-        const { active, over } = event
-
-        if (!over || active.id === over.id) return
-
-        setItems((currentItems) => {
-            const oldIndex = currentItems.findIndex((item) => item.id === active.id)
-            const newIndex = currentItems.findIndex((item) => item.id === over.id)
-
-            return arrayMove(currentItems, oldIndex, newIndex)
-        })
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 10 : 1,
     }
 
     return (
-        <div className="bg-background text-foreground min-h-screen px-4 py-8">
-            <div className="mx-auto flex max-w-xl flex-col gap-8">
-                <div className="flex items-center justify-center">
-                    <div className="bg-muted/30 border-border/40 rounded-full border px-8 py-3 shadow-sm backdrop-blur-sm">
-                        <span className="text-base font-bold sm:text-lg">Funny Crocodile</span>
-                    </div>
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className={`flex touch-none items-center justify-between rounded-xl border p-4 font-semibold text-white shadow-sm transition-colors ${
+                isDragging
+                    ? "border-[#00D4E8] bg-[#00D4E8]/20"
+                    : "border-white/10 bg-white/5 hover:bg-white/10"
+            }`}
+        >
+            <span>{text}</span>
+            <span className="text-muted-foreground text-xl">≡</span>
+        </div>
+    )
+}
+
+export default function OrderQuestionContent({
+    currentQuestionIndex = 0,
+    isHost = false,
+    onNextQuestion,
+    options = [],
+    playerName,
+    questionText = "Ordne die Elemente in die richtige Reihenfolge",
+    secondsToAnswer = null,
+    totalQuestions = 0,
+    onSendAnswer,
+}: OrderQuestionContentProps): JSX.Element {
+    const [items, setItems] = useState<Option[]>(options)
+    const [timeLeft, setTimeLeft] = useState<number | null>(secondsToAnswer)
+    const [hasAnswered, setHasAnswered] = useState(false)
+
+    // Timer Logik (läuft auch nach Antwort weiter, bis er 0 erreicht)
+    useEffect(() => {
+        if (secondsToAnswer === null) return undefined
+
+        const expiresAt = Date.now() + secondsToAnswer * 1000
+        const timer = setInterval(() => {
+            const now = Date.now()
+            const remaining = Math.max(0, Math.ceil((expiresAt - now) / 1000))
+            setTimeLeft(remaining)
+            if (remaining <= 0) clearInterval(timer)
+        }, 500) // Update faster to feel more responsive
+
+        return () => clearInterval(timer)
+    }, [secondsToAnswer])
+
+    // Automatisches Senden, wenn die Zeit abläuft
+    useEffect(() => {
+        if (timeLeft === 0 && !hasAnswered && !isHost) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setHasAnswered(true)
+            if (onSendAnswer) {
+                onSendAnswer(items.map((item) => item.id))
+            }
+        }
+    }, [timeLeft, hasAnswered, isHost, items, onSendAnswer])
+
+    // Drag-and-Drop Sensoren
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5, // Erlaubt Klicks (Maus/Touch) ohne direkt zu draggen
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    )
+
+    const itemIds = useMemo(() => items.map((i) => i.id), [items])
+
+    // Wird aufgerufen, wenn ein Element nach dem Ziehen losgelassen wird
+    function handleDragEnd(event: DragEndEvent): void {
+        const { active, over } = event
+        if (over && active.id !== over.id) {
+            setItems((prevItems) => {
+                const oldIndex = prevItems.findIndex((item) => item.id === active.id)
+                const newIndex = prevItems.findIndex((item) => item.id === over.id)
+                return arrayMove(prevItems, oldIndex, newIndex)
+            })
+        }
+    }
+
+    // Antwort senden
+    function handleSend(): void {
+        if (hasAnswered) return
+        setHasAnswered(true)
+        if (onSendAnswer) {
+            // Mappe das Array so, dass nur die IDs der aktuellen Reihenfolge gesendet werden
+            onSendAnswer(items.map((item) => item.id))
+        }
+    }
+
+    return (
+        <div className="flex w-full flex-col items-center p-4">
+            <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#111318] p-6 shadow-xl">
+                {/* Header (Fortschritt & Timer) */}
+                <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
+                    <span className="text-muted-foreground font-semibold">
+                        Question {currentQuestionIndex + 1} of {totalQuestions}
+                    </span>
+                    {timeLeft !== null && (
+                        <span
+                            className={`font-bold ${
+                                timeLeft <= 5 ? "animate-pulse text-red-500" : "text-[#00D4E8]"
+                            }`}
+                        >
+                            {timeLeft}s
+                        </span>
+                    )}
+                    {playerName ? (
+                        <span className="font-semibold text-white">{playerName}</span>
+                    ) : null}
                 </div>
 
-                <div className="bg-muted/20 border-border/10 rounded-[2rem] border p-6 shadow-2xl backdrop-blur-sm sm:p-8">
-                    <div className="mb-4 flex items-start justify-end">
-                        <div className="text-foreground text-3xl font-black tracking-tight sm:text-4xl">
-                            3 / 27
-                        </div>
+                <TimerBar
+                    className="mb-6"
+                    timeLeft={timeLeft}
+                    totalSeconds={secondsToAnswer ?? null}
+                />
+
+                <h2 className="mb-8 text-center text-2xl font-bold text-white sm:text-3xl">
+                    {questionText}
+                </h2>
+
+                {/* Ansicht für den Host */}
+                {isHost ? (
+                    <div className="flex flex-col items-center gap-6 py-12">
+                        <p className="text-muted-foreground text-center text-lg">
+                            Players are ordering the items...
+                        </p>
+                        <Button
+                            className="bg-[#00D4E8] px-8 py-6 text-lg font-bold text-black hover:bg-[#00BDD0]"
+                            onClick={onNextQuestion}
+                        >
+                            Next / Show Results
+                        </Button>
                     </div>
+                ) : (
+                    /* Ansicht für die Spieler (Drag & Drop) */
+                    <div className="flex flex-col gap-6">
+                        <DndContext
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                            sensors={sensors}
+                        >
+                            <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+                                <div
+                                    className={`flex flex-col gap-3 ${
+                                        hasAnswered
+                                            ? "pointer-events-none opacity-50 grayscale"
+                                            : ""
+                                    }`}
+                                >
+                                    {items.map((item) => (
+                                        <SortableItem key={item.id} id={item.id} text={item.text} />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </DndContext>
 
-                    <h1 className="text-foreground max-w-md text-3xl leading-tight font-black tracking-tight sm:text-4xl">
-                        Bring the elements in the correct order
-                    </h1>
-
-                    <div className="mt-5 h-3 w-[72%] rounded-full bg-white/5">
-                        <div className="h-full w-[58%] rounded-full bg-[#00F2FF] shadow-[0_0_18px_rgba(0,242,255,0.65)]" />
+                        <Button
+                            className="mt-4 bg-[#00D4E8] py-6 text-lg font-bold text-black hover:bg-[#00BDD0] disabled:bg-gray-600 disabled:text-gray-300"
+                            disabled={hasAnswered}
+                            onClick={handleSend}
+                        >
+                            {hasAnswered ? "Answer sent!" : "Submit Order"}
+                        </Button>
                     </div>
-                </div>
-
-                <DndContext
-                    collisionDetection={closestCorners}
-                    onDragEnd={handleDragEnd}
-                    sensors={sensors}
-                >
-                    <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-                        <div className="flex flex-col gap-4 pb-6">
-                            {items.map((item, index) => (
-                                <SortableOrderOption
-                                    key={item.id}
-                                    error={false}
-                                    id={item.id}
-                                    index={index}
-                                    value={item.label}
-                                />
-                            ))}
-                        </div>
-                    </SortableContext>
-                </DndContext>
+                )}
             </div>
         </div>
     )

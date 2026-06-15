@@ -217,15 +217,18 @@ pub enum HostMessage {
         id: Uuid,
     },
     DisplayQuestion(Arc<DisplayQuestionMessage>),
-    DisplayLeaderBoard {
+    DisplayLeaderboard {
         leaderboard: Vec<LeaderboardEntry>,
+        is_final: bool,
     },
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LeaderboardEntry {
     pub id: Uuid,
+    pub name: String,
+    pub emoji: Option<String>,
     pub total_points: u32,
     pub points: u32,
 }
@@ -263,6 +266,7 @@ pub enum HostCommand {
     Start,
     NextQuestion,
     ShowQuestion { id: Uuid },
+    EndGame,
 }
 
 impl CommandTrait for Command<HostCommand> {
@@ -285,12 +289,17 @@ pub enum PlayerMessage {
     Error(ErrorResponse),
     Kick,
     Start,
+    GameEnded,
     DisplayQuestion(Arc<DisplayQuestionMessage>),
     QuestionResult {
         question: Uuid,
         correct_answers: Arc<Vec<Uuid>>,
         points: u32,
         total_points: u32,
+    },
+    DisplayLeaderboard {
+        leaderboard: Arc<Vec<LeaderboardEntry>>,
+        is_final: bool,
     },
 }
 
@@ -328,15 +337,17 @@ pub struct DisplayQuestionMessage {
     #[serde(flatten)]
     options: DisplayQuestionOptions,
     seconds: Option<u32>,
+    total_questions: usize,
 }
 
-impl From<&Question> for DisplayQuestionMessage {
-    fn from(value: &Question) -> Self {
+impl DisplayQuestionMessage {
+    pub fn new(value: &Question, total_questions: usize) -> Self {
         Self {
             id: value.model.id,
             question: value.model.question.clone(),
             options: DisplayQuestionOptions::from(&value.options),
             seconds: value.model.r#type.default_answer_duration(),
+            total_questions,
         }
     }
 }

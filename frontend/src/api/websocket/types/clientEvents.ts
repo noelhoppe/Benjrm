@@ -15,6 +15,7 @@ export interface ClientEvents {
         answer: string[]
     }
     start: object
+    nextQuestion: object
     showQuestion: {
         question: string
     }
@@ -24,4 +25,5 @@ export interface ClientEvents {
     kickPlayer: {
         id: string
     }
+    endGame: object
 }

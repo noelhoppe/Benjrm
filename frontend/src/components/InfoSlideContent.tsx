@@ -2,12 +2,15 @@
 
 import type { JSX } from "react"
 import MarkdownPageComponent from "@/components/markdown/MarkdownPageComponent"
+import { Button } from "@/shadcn/components/ui/button"
 
 interface InfoSlideContentProps {
     content: string
     playerName?: string
     currentSlide?: number
     totalSlides?: number
+    isHost?: boolean
+    onNextQuestion?: () => void
 }
 
 export default function InfoSlideContent({
@@ -15,6 +18,8 @@ export default function InfoSlideContent({
     playerName = "Funny Crocodile",
     currentSlide = 1,
     totalSlides = 1,
+    isHost = false,
+    onNextQuestion,
 }: InfoSlideContentProps): JSX.Element {
     return (
         <div className="bg-background text-foreground min-h-full px-4 py-8">
@@ -40,6 +45,17 @@ export default function InfoSlideContent({
                     </div>
                 </div>
                 {/* Image would go here when backend supports it */}
+
+                {isHost && onNextQuestion ? (
+                    <div className="mt-8 flex justify-center">
+                        <Button
+                            className="bg-[#00D4E8] px-8 py-6 text-lg font-bold text-black hover:bg-[#00BDD0]"
+                            onClick={onNextQuestion}
+                        >
+                            Skip / Next Question
+                        </Button>
+                    </div>
+                ) : null}
             </div>
         </div>
     )
