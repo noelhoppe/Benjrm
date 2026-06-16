@@ -164,11 +164,11 @@ impl GameSession {
                     player.msg(Message::from(&PlayerMessage::Kick)).await;
                     player.channel.close().await;
                     if player.name.is_some() {
-                        self.host.ok(cmd.id).await;
                         self.host
                             .msg(Message::from(&HostMessage::RemovePlayer { id: player.id }))
                             .await;
                     }
+                    self.host.ok(cmd.id).await;
                 } else {
                     self.host
                         .error(cmd.id, GameSessionError::PlayerNotFound)
@@ -197,6 +197,17 @@ impl GameSession {
                 if let Err(err) = check_error() {
                     self.host.error(cmd.id, err).await;
                     return;
+                }
+
+                let mut i = 0;
+                while i < self.players.len() {
+                    if self.players[i].name.is_none() {
+                        let mut player = self.players.swap_remove(i);
+                        player.msg(Message::from(&PlayerMessage::Kick)).await;
+                        player.channel.close().await;
+                    } else {
+                        i += 1;
+                    }
                 }
 
                 self.status = GameSessionStatus::Started;
@@ -364,6 +375,7 @@ impl GameSession {
         let mut iterator = self
             .players
             .iter_mut()
+            .filter(|player| player.name.is_some())
             .map(|player| player.msg(msg.clone()));
 
         while futures.len() < 64
