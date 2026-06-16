@@ -4,9 +4,9 @@ use {
         auth::User,
         error::Error,
         game_session::{
-            Channel, ChannelError, Command, DisplayQuestionMessage, GameSession, GameSessionError,
-            HostCommand, HostMessage, Message, PlayerCommand, PlayerMessage,
-            api::ws::WsChannelError,
+            Channel, ChannelError, Command, DisplayQuestionMessage, DisplayQuestionOptions,
+            GameSession, GameSessionError, HostCommand, HostMessage, Message, PlayerCommand,
+            PlayerMessage, api::ws::WsChannelError,
         },
         question::{
             NewQuestion, NewQuestionOptions, Question,
@@ -636,4 +636,357 @@ async fn show_question() {
         &quiz.questions[2],
     )
     .await;
+}
+
+#[actix_web::test]
+async fn play_dummy_quiz() {
+    let data = TestAppData::test().await;
+    let user = data.dummy_user().await;
+
+    let (code, session_arc) = dummy_session(&data, &user, true).await;
+    let mut session = session_arc.lock().await;
+
+    let (host_channel, _, mut host_rx) = DummyChanel::new();
+    session.set_host_channel(host_channel).await;
+
+    let (player_1_uuid, mut player_1_rx) =
+        dummy_player(&mut session, session_arc.clone(), &mut host_rx, "player 1").await;
+    let (player_2_uuid, mut player_2_rx) =
+        dummy_player(&mut session, session_arc.clone(), &mut host_rx, "player 2").await;
+    let (player_3_uuid, mut player_3_rx) =
+        dummy_player(&mut session, session_arc.clone(), &mut host_rx, "player 3").await;
+
+    session.status = super::GameSessionStatus::Started;
+
+    session
+        .handle_host_cmd(
+            Command {
+                id: Some(1),
+                command: HostCommand::NextQuestion,
+            },
+            session_arc.clone(),
+            code,
+        )
+        .await;
+
+    assert!(matches!(
+        host_rx.recv().await.unwrap(),
+        HostMessage::DisplayQuestion(_)
+    ));
+    assert!(matches!(host_rx.recv().await.unwrap(), HostMessage::Ok));
+
+    match player_1_rx.recv().await.unwrap() {
+        PlayerMessage::DisplayQuestion(question_message)
+            if matches!(question_message.options, DisplayQuestionOptions::Slide) => {}
+        x => panic!("Invalid message or question type, expected display slide, found: {x:?}"),
+    }
+
+    assert!(matches!(
+        player_2_rx.recv().await.unwrap(),
+        PlayerMessage::DisplayQuestion(_)
+    ));
+    assert!(matches!(
+        player_3_rx.recv().await.unwrap(),
+        PlayerMessage::DisplayQuestion(_)
+    ));
+
+    session
+        .handle_player_cmd(
+            Command {
+                id: Some(1),
+                command: PlayerCommand::AnswerQuestion { answer: Vec::new() },
+            },
+            session_arc.clone(),
+            player_1_uuid,
+        )
+        .await;
+
+    match player_1_rx.recv().await.unwrap() {
+        PlayerMessage::Error(err) => assert_eq!(err.error, "cannot_answer"),
+        x => panic!("invalid message: {x:?}"),
+    }
+
+    session
+        .handle_player_cmd(
+            Command {
+                id: None,
+                command: PlayerCommand::AnswerQuestion { answer: Vec::new() },
+            },
+            session_arc.clone(),
+            player_2_uuid,
+        )
+        .await;
+
+    session
+        .handle_player_cmd(
+            Command {
+                id: None,
+                command: PlayerCommand::AnswerQuestion { answer: Vec::new() },
+            },
+            session_arc.clone(),
+            player_3_uuid,
+        )
+        .await;
+
+    session
+        .handle_host_cmd(
+            Command {
+                id: None,
+                command: HostCommand::NextQuestion,
+            },
+            session_arc.clone(),
+            code,
+        )
+        .await;
+
+    assert!(matches!(
+        player_1_rx.recv().await.unwrap(),
+        PlayerMessage::QuestionResult { .. }
+    ));
+    assert!(matches!(
+        player_2_rx.recv().await.unwrap(),
+        PlayerMessage::QuestionResult { .. }
+    ));
+    assert!(matches!(
+        player_3_rx.recv().await.unwrap(),
+        PlayerMessage::QuestionResult { .. }
+    ));
+
+    assert!(matches!(
+        host_rx.recv().await.unwrap(),
+        HostMessage::DisplayLeaderboard { .. }
+    ));
+    assert!(matches!(
+        host_rx.recv().await.unwrap(),
+        HostMessage::DisplayQuestion { .. }
+    ));
+
+    match player_1_rx.recv().await.unwrap() {
+        PlayerMessage::DisplayQuestion(question_message) => match &question_message.options {
+            DisplayQuestionOptions::SingleChoice(_) => (),
+            x => panic!("Invalid question, expected SingleChoice, found {x:?}"),
+        },
+        x => panic!("Invalid message, expected DisplayQuestion, found: {x:?}"),
+    };
+
+    assert!(matches!(
+        player_2_rx.recv().await.unwrap(),
+        PlayerMessage::DisplayQuestion(_)
+    ));
+    assert!(matches!(
+        player_3_rx.recv().await.unwrap(),
+        PlayerMessage::DisplayQuestion(_)
+    ));
+
+    let answers: Vec<Uuid> = session.quiz.clone().unwrap().questions[1]
+        .clone()
+        .options
+        .get_answer_choice_options()
+        .iter()
+        .map(|x| x.id)
+        .collect();
+
+    session
+        .handle_player_cmd(
+            Command {
+                id: Some(1),
+                command: PlayerCommand::AnswerQuestion {
+                    answer: vec![answers[1]],
+                },
+            },
+            session_arc.clone(),
+            player_1_uuid,
+        )
+        .await;
+
+    assert!(matches!(
+        player_1_rx.recv().await.unwrap(),
+        PlayerMessage::Ok
+    ));
+
+    session
+        .handle_player_cmd(
+            Command {
+                id: Some(1),
+                command: PlayerCommand::AnswerQuestion {
+                    answer: vec![answers[1], answers[2]],
+                },
+            },
+            session_arc.clone(),
+            player_2_uuid,
+        )
+        .await;
+
+    match player_2_rx.recv().await.unwrap() {
+        PlayerMessage::Error(err) => assert_eq!(err.error, "invalid_answer_count"),
+        x => panic!("invalid message: {x:?}"),
+    }
+
+    session
+        .handle_player_cmd(
+            Command {
+                id: Some(1),
+                command: PlayerCommand::AnswerQuestion {
+                    answer: vec![Uuid::new_v4()],
+                },
+            },
+            session_arc.clone(),
+            player_3_uuid,
+        )
+        .await;
+
+    match player_3_rx.recv().await.unwrap() {
+        PlayerMessage::Error(err) => assert_eq!(err.error, "invalid_answer"),
+        x => panic!("invalid message: {x:?}"),
+    }
+
+    drop(session);
+
+    match host_rx.recv().await.unwrap() {
+        HostMessage::DisplayLeaderboard {
+            leaderboard,
+            is_final,
+        } => {
+            if is_final {
+                panic!("Shold not be final");
+            }
+
+            assert_eq!(leaderboard[0].points, leaderboard[0].total_points);
+            assert_eq!(leaderboard[0].points, 1000);
+            assert_eq!(leaderboard[1].points, leaderboard[1].total_points);
+            assert_eq!(leaderboard[1].points, 0);
+            assert_eq!(leaderboard[2].points, leaderboard[2].total_points);
+            assert_eq!(leaderboard[2].points, 0);
+        }
+        x => panic!("invalid message: {x:?}"),
+    }
+
+    match player_1_rx.recv().await.unwrap() {
+        PlayerMessage::QuestionResult {
+            points,
+            total_points,
+            ..
+        } => {
+            assert_eq!(points, 1000);
+            assert_eq!(total_points, 1000);
+        }
+        x => panic!("invalid message: {x:?}"),
+    }
+
+    match player_2_rx.recv().await.unwrap() {
+        PlayerMessage::QuestionResult {
+            points,
+            total_points,
+            ..
+        } => {
+            assert_eq!(points, 0);
+            assert_eq!(total_points, 0);
+        }
+        x => panic!("invalid message: {x:?}"),
+    }
+
+    assert!(matches!(
+        player_3_rx.recv().await.unwrap(),
+        PlayerMessage::QuestionResult { .. }
+    ));
+
+    let mut session = session_arc.lock().await;
+
+    loop {
+        session
+            .handle_host_cmd(
+                Command {
+                    id: None,
+                    command: HostCommand::NextQuestion,
+                },
+                session_arc.clone(),
+                code,
+            )
+            .await;
+
+        match host_rx.recv().await.unwrap() {
+            HostMessage::DisplayQuestion(_) => {
+                assert!(matches!(
+                    player_1_rx.recv().await.unwrap(),
+                    PlayerMessage::DisplayQuestion(_)
+                ));
+                assert!(matches!(
+                    player_2_rx.recv().await.unwrap(),
+                    PlayerMessage::DisplayQuestion(_)
+                ));
+                assert!(matches!(
+                    player_3_rx.recv().await.unwrap(),
+                    PlayerMessage::DisplayQuestion(_)
+                ));
+            }
+            HostMessage::DisplayLeaderboard { is_final, .. } => {
+                if is_final {
+                    break;
+                }
+
+                assert!(matches!(
+                    player_1_rx.recv().await.unwrap(),
+                    PlayerMessage::QuestionResult { .. }
+                ));
+                assert!(matches!(
+                    player_2_rx.recv().await.unwrap(),
+                    PlayerMessage::QuestionResult { .. }
+                ));
+                assert!(matches!(
+                    player_3_rx.recv().await.unwrap(),
+                    PlayerMessage::QuestionResult { .. }
+                ));
+            }
+            x => panic!("invalid message: {x:?}"),
+        }
+    }
+
+    assert!(matches!(
+        player_1_rx.recv().await.unwrap(),
+        PlayerMessage::QuestionResult { .. }
+    ));
+    assert!(matches!(
+        player_2_rx.recv().await.unwrap(),
+        PlayerMessage::QuestionResult { .. }
+    ));
+    assert!(matches!(
+        player_3_rx.recv().await.unwrap(),
+        PlayerMessage::QuestionResult { .. }
+    ));
+    assert!(matches!(
+        player_1_rx.recv().await.unwrap(),
+        PlayerMessage::DisplayLeaderboard { .. }
+    ));
+    assert!(matches!(
+        player_2_rx.recv().await.unwrap(),
+        PlayerMessage::DisplayLeaderboard { .. }
+    ));
+    assert!(matches!(
+        player_3_rx.recv().await.unwrap(),
+        PlayerMessage::DisplayLeaderboard { .. }
+    ));
+
+    session
+        .handle_host_cmd(
+            Command {
+                id: None,
+                command: HostCommand::EndGame,
+            },
+            session_arc.clone(),
+            code,
+        )
+        .await;
+
+    assert!(matches!(
+        player_1_rx.recv().await.unwrap(),
+        PlayerMessage::GameEnded
+    ));
+    assert!(matches!(
+        player_2_rx.recv().await.unwrap(),
+        PlayerMessage::GameEnded
+    ));
+    assert!(matches!(
+        player_3_rx.recv().await.unwrap(),
+        PlayerMessage::GameEnded
+    ));
 }
