@@ -1,5 +1,6 @@
 import type { JSX } from "react"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { useNavigate, useParams } from "react-router"
 import {
     DndContext,
     PointerSensor,
@@ -10,16 +11,13 @@ import {
 } from "@dnd-kit/core"
 import type { DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { useSocketEvent, useWebSocketContext } from "@/api/websocket"
-import type { ServerEvents } from "@/api/websocket/types/serverEvents"
+import { useWebSocketContext } from "@/api/websocket"
+import useDisplayQuestion from "@/hooks/useDisplayQuestion"
 import CountdownDisplay from "@/components/CountdownDisplay"
 import QuestionContainer from "@/components/QuestionContainer"
 import AnswerOption from "@/components/AnswerOption"
 import SortableOrderOption from "@/components/SortableOrderOption"
 import { Button } from "@/shadcn/components/ui/button"
-import useCountdown from "@/hooks/useCountdown"
-
-type DisplayQuestion = ServerEvents["displayQuestion"]
 
 interface OrderItem {
     id: string
@@ -27,27 +25,38 @@ interface OrderItem {
 }
 
 export default function GamePage(): JSX.Element {
+    const codeParam = useParams().code
+    const code = codeParam !== null ? Number(codeParam) || undefined : undefined
+    const navigate = useNavigate()
+
+    const gameActive = code !== undefined && sessionStorage.getItem(`gameActive:${code}`) === "1"
+
+    useEffect(() => {
+        if (!gameActive) {
+            navigate(`/play/${codeParam ?? ""}`, { replace: true })
+        }
+    }, [gameActive, navigate, codeParam])
+
     const websocket = useWebSocketContext()
 
-    const [question, setQuestion] = useState<DisplayQuestion | null>(null)
-    const [questionIndex, setQuestionIndex] = useState(0)
     const [selectedAnswers, setSelectedAnswers] = useState<string[]>([])
     const [orderItems, setOrderItems] = useState<OrderItem[]>([])
     const [answered, setAnswered] = useState(false)
-    const [timeLeft, setTimeLeft] = useCountdown(null)
 
-    useSocketEvent("displayQuestion", (payload) => {
-        setQuestion(payload)
-        setQuestionIndex((prev) => prev + 1)
-        setSelectedAnswers([])
-        setAnswered(false)
-        setTimeLeft(payload.seconds)
-        if (payload.type === "ORDER") {
-            setOrderItems(
-                payload.options.map((opt, i) => ({ id: `${payload.id}-${i}`, label: opt.answer }))
-            )
-        }
-    })
+    const { question, questionIndex, timeLeft } = useDisplayQuestion(
+        useCallback((payload) => {
+            setSelectedAnswers([])
+            setAnswered(false)
+            if (payload.type === "ORDER") {
+                setOrderItems(
+                    (payload.options ?? []).map((opt, i) => ({
+                        id: `${payload.id}-${i}`,
+                        label: opt.answer,
+                    }))
+                )
+            }
+        }, [])
+    )
 
     const sensors = useSensors(
         useSensor(TouchSensor, { activationConstraint: { delay: 0, tolerance: 5 } }),

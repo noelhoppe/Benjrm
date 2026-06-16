@@ -188,6 +188,7 @@ export default function WaitingRoom(): JSX.Element {
 
     useSocketEvent("start", () => {
         if (code && !isHost) {
+            sessionStorage.setItem(`gameActive:${code}`, "1")
             navigate(`/play/${code}/game`)
         }
     })
@@ -277,9 +278,10 @@ export default function WaitingRoom(): JSX.Element {
                     <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF8A00]" />
                     Waiting Lobby
                 </div>
-                <p className="text-muted-foreground text-sm">
-                    Game Pin: {codeWithDash ?? "No active PIN"}
-                </p>
+                <div className="bg-muted/30 border-border/40 rounded-full border px-6 py-2.5 text-base font-bold backdrop-blur-sm">
+                    Room Pin:{" "}
+                    <span className="text-[#00F2FF]">{codeWithDash ?? "No active PIN"}</span>
+                </div>
             </div>
 
             <div className="dark:text-foreground overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl dark:border-white/10 dark:bg-[#111318]">
