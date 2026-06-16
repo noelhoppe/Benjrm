@@ -8,6 +8,7 @@ import RootLayout from "./layouts/RootLayout"
 import PublicLayout from "./layouts/PublicLayout"
 import QuizCreator from "./pages/QuizCreator"
 import OrderQuestion from "./pages/OrderQuestion"
+import WaitingRoom from "./pages/WaitingRoom"
 import DownloadableMarkdown from "./components/DownloadableMarkdown"
 import LoginRedirect from "@/auth/utils/LoginRedirect.tsx"
 import AuthGuard from "@/auth/guards/AuthGuard.tsx"
@@ -50,6 +51,10 @@ const routes: RouteObject[] = [
             {
                 path: "/auth/login",
                 element: <LoginRedirect />,
+            },
+            {
+                path: "/play/:code",
+                element: <WaitingRoom />,
             },
         ],
     },
