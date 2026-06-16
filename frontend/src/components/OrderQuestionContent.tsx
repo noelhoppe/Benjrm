@@ -36,6 +36,7 @@ export interface OrderQuestionContentProps {
     playerName?: string
     questionText?: string
     secondsToAnswer?: number | null
+    questionExpiresAt?: number | null
     totalQuestions?: number
     onSendAnswer?: (answerIds: string[]) => void
 }
@@ -57,10 +58,10 @@ function SortableItem({ id, text }: { id: string; text: string }): JSX.Element {
             style={style}
             {...attributes}
             {...listeners}
-            className={`flex touch-none items-center justify-between rounded-xl border p-4 font-semibold text-white shadow-sm transition-colors ${
+            className={`text-foreground flex touch-none items-center justify-between rounded-xl border p-4 font-semibold shadow-sm transition-colors ${
                 isDragging
                     ? "border-[#00D4E8] bg-[#00D4E8]/20"
-                    : "border-white/10 bg-white/5 hover:bg-white/10"
+                    : "border-border bg-muted/30 hover:bg-muted/60"
             }`}
         >
             <span>{text}</span>
@@ -77,27 +78,29 @@ export default function OrderQuestionContent({
     playerName,
     questionText = "Ordne die Elemente in die richtige Reihenfolge",
     secondsToAnswer = null,
+    questionExpiresAt = null,
     totalQuestions = 0,
     onSendAnswer,
 }: OrderQuestionContentProps): JSX.Element {
     const [items, setItems] = useState<Option[]>(options)
-    const [timeLeft, setTimeLeft] = useState<number | null>(secondsToAnswer)
+    const [timeLeft, setTimeLeft] = useState<number | null>(() => {
+        if (questionExpiresAt)
+            return Math.max(0, Math.ceil((questionExpiresAt - Date.now()) / 1000))
+        return secondsToAnswer
+    })
     const [hasAnswered, setHasAnswered] = useState(false)
 
-    // Timer Logik (läuft auch nach Antwort weiter, bis er 0 erreicht)
     useEffect(() => {
-        if (secondsToAnswer === null) return undefined
-
-        const expiresAt = Date.now() + secondsToAnswer * 1000
+        const expiresAt =
+            questionExpiresAt ?? (secondsToAnswer ? Date.now() + secondsToAnswer * 1000 : null)
+        if (expiresAt === null) return undefined
         const timer = setInterval(() => {
-            const now = Date.now()
-            const remaining = Math.max(0, Math.ceil((expiresAt - now) / 1000))
+            const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000))
             setTimeLeft(remaining)
             if (remaining <= 0) clearInterval(timer)
-        }, 500) // Update faster to feel more responsive
-
+        }, 500)
         return () => clearInterval(timer)
-    }, [secondsToAnswer])
+    }, [questionExpiresAt, secondsToAnswer])
 
     // Automatisches Senden, wenn die Zeit abläuft
     useEffect(() => {
@@ -148,9 +151,9 @@ export default function OrderQuestionContent({
 
     return (
         <div className="flex w-full flex-col items-center p-4">
-            <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#111318] p-6 shadow-xl">
+            <div className="bg-card text-card-foreground w-full max-w-2xl rounded-2xl border p-6 shadow-xl">
                 {/* Header (Fortschritt & Timer) */}
-                <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="border-border mb-4 flex items-center justify-between border-b pb-4">
                     <span className="text-muted-foreground font-semibold">
                         Question {currentQuestionIndex + 1} of {totalQuestions}
                     </span>
@@ -164,7 +167,7 @@ export default function OrderQuestionContent({
                         </span>
                     )}
                     {playerName ? (
-                        <span className="font-semibold text-white">{playerName}</span>
+                        <span className="text-foreground font-semibold">{playerName}</span>
                     ) : null}
                 </div>
 
@@ -174,9 +177,7 @@ export default function OrderQuestionContent({
                     totalSeconds={secondsToAnswer ?? null}
                 />
 
-                <h2 className="mb-8 text-center text-2xl font-bold text-white sm:text-3xl">
-                    {questionText}
-                </h2>
+                <h2 className="mb-8 text-center text-2xl font-bold sm:text-3xl">{questionText}</h2>
 
                 {/* Ansicht für den Host */}
                 {isHost ? (
@@ -215,7 +216,7 @@ export default function OrderQuestionContent({
                         </DndContext>
 
                         <Button
-                            className="mt-4 bg-[#00D4E8] py-6 text-lg font-bold text-black hover:bg-[#00BDD0] disabled:bg-gray-600 disabled:text-gray-300"
+                            className="disabled:bg-muted disabled:text-muted-foreground mt-4 bg-[#00D4E8] py-6 text-lg font-bold text-black hover:bg-[#00BDD0]"
                             disabled={hasAnswered}
                             onClick={handleSend}
                         >

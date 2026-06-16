@@ -113,6 +113,7 @@ export default function WaitingRoom(): JSX.Element {
             onNextQuestion={session.sendNextQuestion}
             onSendAnswer={session.sendAnswer}
             playerName={session.name || undefined}
+            previousLeaderboard={session.previousLeaderboard}
             questionExpiresAt={session.questionExpiresAt}
             questionResult={session.questionResult}
             totalQuestions={session.totalQuestions}

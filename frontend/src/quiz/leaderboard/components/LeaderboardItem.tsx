@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { motion } from "framer-motion"
 import { Avatar, AvatarImage, AvatarFallback } from "@shadcn/components/ui/avatar"
 import getRankingClassName from "@/quiz/leaderboard/utils/getRankingClassName.ts"
 
@@ -14,18 +15,30 @@ export default function LeaderboardItem(leaderboardItemProps: LeaderboardItemPro
     const rankingClassName = getRankingClassName(ranking)
     const initials = name.substring(0, 2).toUpperCase()
 
+    let medal: string | null = null
+    if (ranking === 1) medal = "🥇"
+    else if (ranking === 2) medal = "🥈"
+    else if (ranking === 3) medal = "🥉"
+
     return (
-        <div
-            className={`grid grid-cols-[20px_1fr_auto] items-center gap-6 rounded-xl border p-4 ${rankingClassName} `}
+        <motion.div
+            layout
+            animate={{ opacity: 1, y: 0 }}
+            className={`grid grid-cols-[2rem_2.5rem_1fr_auto] items-center gap-4 rounded-xl border p-4 ${rankingClassName}`}
+            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: 20 }}
+            layoutId={name}
+            transition={{ layout: { type: "spring", stiffness: 300, damping: 30 }, duration: 0.3 }}
         >
-            <div className="flex items-center gap-3">
-                <Avatar>
-                    <AvatarImage alt={name} src={avatar} />
-                    <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
+            <div className="text-center text-lg font-black">
+                {medal ?? <span className="text-muted-foreground text-sm">#{ranking}</span>}
             </div>
-            <div>{name}</div>
-            <div className="font-semibold tabular-nums">{points} pts</div>
-        </div>
+            <Avatar>
+                <AvatarImage alt={name} src={avatar} />
+                <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <div className="font-semibold">{name}</div>
+            <div className="font-bold tabular-nums">{points} pts</div>
+        </motion.div>
     )
 }

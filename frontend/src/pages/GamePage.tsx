@@ -81,7 +81,7 @@ export default function GamePage(): JSX.Element {
         const answers =
             question?.type === "ORDER" ? orderItems.map((item) => item.label) : selectedAnswers
         if (answers.length === 0) return
-        websocket.send({ command: "answerQuestion", payload: { answers } })
+        websocket.send({ command: "answerQuestion", payload: { answer: answers } })
         setAnswered(true)
     }, [answered, question?.type, orderItems, selectedAnswers, websocket])
 

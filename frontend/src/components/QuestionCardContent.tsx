@@ -17,6 +17,7 @@ export interface QuestionCardContentProps {
     questionText: string
     options: QuestionOption[]
     secondsToAnswer: number | null
+    questionExpiresAt?: number | null
     playerName?: string
     isHost: boolean
     currentQuestionIndex: number
@@ -30,6 +31,7 @@ export default function QuestionCardContent({
     questionText,
     options,
     secondsToAnswer,
+    questionExpiresAt,
     playerName,
     isHost,
     currentQuestionIndex,
@@ -39,25 +41,26 @@ export default function QuestionCardContent({
     type,
 }: QuestionCardContentProps): JSX.Element {
     const [selectedAnswers, setSelectedAnswers] = useState<string[]>([])
-    const [timeLeft, setTimeLeft] = useState<number | null>(secondsToAnswer)
+    const [timeLeft, setTimeLeft] = useState<number | null>(() => {
+        if (questionExpiresAt)
+            return Math.max(0, Math.ceil((questionExpiresAt - Date.now()) / 1000))
+        return secondsToAnswer
+    })
     const [hasSubmitted, setHasSubmitted] = useState(false)
 
-    // Timer läuft sauber herunter, ohne bei jedem Tick neu zu starten
     useEffect(() => {
-        if (secondsToAnswer === null) {
-            return undefined
-        }
-        const expiresAt = Date.now() + secondsToAnswer * 1000
+        const expiresAt =
+            questionExpiresAt ?? (secondsToAnswer ? Date.now() + secondsToAnswer * 1000 : null)
+        if (expiresAt === null) return undefined
         const timer = setInterval(() => {
-            const now = Date.now()
-            const remaining = Math.max(0, Math.ceil((expiresAt - now) / 1000))
+            const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000))
             setTimeLeft(remaining)
             if (remaining <= 0) clearInterval(timer)
         }, 500)
         return (): void => {
             clearInterval(timer)
         }
-    }, [secondsToAnswer])
+    }, [questionExpiresAt, secondsToAnswer])
 
     // Automatisches Absenden, wenn die Zeit bei 0 ankommt
     useEffect(() => {
@@ -76,11 +79,7 @@ export default function QuestionCardContent({
                 prev.includes(id) ? prev.filter((val) => val !== id) : [...prev, id]
             )
         } else {
-            // Single Choice
-            if (selectedAnswers.length > 0) return
             setSelectedAnswers([id])
-            setHasSubmitted(true)
-            if (onSendAnswer) onSendAnswer([id])
         }
     }
 
@@ -110,8 +109,7 @@ export default function QuestionCardContent({
                     ))}
                 </div>
 
-                {/* Submit-Button für Spieler bei Multiple-Choice */}
-                {!isHost && type === "MULTIPLE_CHOICE" ? (
+                {!isHost ? (
                     <div className="mt-6 flex justify-center">
                         <Button
                             className="bg-[#00D4E8] px-8 py-6 text-lg font-bold text-black hover:bg-[#00BDD0] disabled:bg-gray-600 disabled:text-gray-300"

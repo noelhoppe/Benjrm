@@ -69,6 +69,7 @@ export interface UseGameSessionResult {
     totalQuestions: number
     questionExpiresAt: number | null
     leaderboard: LeaderboardEntry[] | null
+    previousLeaderboard: LeaderboardEntry[] | null
     isFinalLeaderboard: boolean
     questionResult: QuestionResult | null
     players: Player[]
@@ -116,12 +117,17 @@ export function useGameSession({
     const [totalQuestions, setTotalQuestions] = useState(0)
     const [questionExpiresAt, setQuestionExpiresAt] = useState<number | null>(null)
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null)
+    const [previousLeaderboard, setPreviousLeaderboard] = useState<LeaderboardEntry[] | null>(null)
     const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false)
     const [questionResult, setQuestionResult] = useState<QuestionResult | null>(null)
 
     // Live player list seeded from REST on mount
     const { data: initialPlayers } = useSessionPlayers(isHost ? code : undefined)
     const [players, setPlayers] = useState<Player[]>([])
+    const playersRef = useRef<Player[]>([])
+    useEffect(() => {
+        playersRef.current = players
+    }, [players])
     const playersInitialized = useRef(false)
     useEffect(() => {
         if (initialPlayers && !playersInitialized.current) {
@@ -155,6 +161,8 @@ export function useGameSession({
     const [nameError, setNameError] = useState<string | null>(null)
     const [pendingId, setPendingId] = useState<number | null>(null)
     const [pendingStartId, setPendingStartId] = useState<number | null>(null)
+    const [pendingAnswerId, setPendingAnswerId] = useState<number | null>(null)
+    const [pendingNextId, setPendingNextId] = useState<number | null>(null)
 
     // WS connection tracking (player role only)
     const [wsConnectionState, setWsConnectionState] = useState<{
@@ -212,6 +220,14 @@ export function useGameSession({
         )
     })
     useSocketEvent("removePlayer", ({ id }) => {
+        if (isHost) {
+            const leaving = playersRef.current.find((p) => p.id === id)
+            if (leaving) {
+                toast(
+                    `${leaving.emoji ? `${leaving.emoji} ` : ""}${leaving.name} has left the room`
+                )
+            }
+        }
         setPlayers((prev) => prev.filter((p) => p.id !== id))
     })
 
@@ -220,7 +236,7 @@ export function useGameSession({
         setGameState("playing")
     })
 
-    useSocketEvent("displayQuestion", (payload) => {
+    useSocketEvent("displayQuestion", (payload, timing) => {
         setGameState("question")
         setCurrentQuestion({
             id: payload.id,
@@ -232,7 +248,8 @@ export function useGameSession({
             })),
             seconds: payload.seconds ?? null,
         })
-        setQuestionExpiresAt(payload.seconds ? Date.now() + payload.seconds * 1000 : null)
+        const startedAt = timing ? new Date(timing).getTime() : Date.now()
+        setQuestionExpiresAt(payload.seconds ? startedAt + payload.seconds * 1000 : null)
         setTotalQuestions(payload.totalQuestions)
         setCurrentQuestionIndex((prev) => prev + 1)
         setQuestionResult(null)
@@ -244,6 +261,7 @@ export function useGameSession({
     })
 
     useSocketEvent("displayLeaderboard", (payload) => {
+        setPreviousLeaderboard(leaderboard)
         setLeaderboard(payload.leaderboard)
         const isLastByIndex = totalQuestions > 0 && currentQuestionIndex >= totalQuestions - 1
         setIsFinalLeaderboard(payload.isFinal || isLastByIndex)
@@ -275,9 +293,7 @@ export function useGameSession({
             setPendingStartId(null)
             setGameState("playing")
             if (isHost) {
-                setTimeout(() => {
-                    websocket.send({ command: "nextQuestion" })
-                }, 2000)
+                websocket.send({ command: "nextQuestion" })
             }
         }
     })
@@ -289,6 +305,14 @@ export function useGameSession({
         } else if (pendingStartId === id) {
             setPendingStartId(null)
             toast.error(payload.message || "Failed to start the game")
+        } else if (pendingAnswerId === id) {
+            setPendingAnswerId(null)
+            toast.error(payload.message || "Your answer could not be submitted")
+        } else if (pendingNextId === id) {
+            setPendingNextId(null)
+            toast.error(payload.message || "Could not advance to the next question")
+        } else if (gameState !== "lobby") {
+            toast.error(payload.message || "Something went wrong")
         }
     })
 
@@ -323,12 +347,16 @@ export function useGameSession({
     }, [players.length, websocket])
 
     function sendNextQuestion(): void {
-        websocket.send({ command: "nextQuestion" })
+        const id = Math.floor(Math.random() * 2 ** 31)
+        setPendingNextId(id)
+        websocket.send({ id, command: "nextQuestion" })
     }
 
     function sendAnswer(answer: string | string[]): void {
+        const id = Math.floor(Math.random() * 2 ** 31)
+        setPendingAnswerId(id)
         const answerArray = Array.isArray(answer) ? answer : [answer]
-        websocket.send({ command: "answerQuestion", payload: { answer: answerArray } })
+        websocket.send({ id, command: "answerQuestion", payload: { answer: answerArray } })
     }
 
     function sendEndGame(): void {
@@ -342,6 +370,7 @@ export function useGameSession({
         totalQuestions,
         questionExpiresAt,
         leaderboard,
+        previousLeaderboard,
         isFinalLeaderboard,
         questionResult,
         players,
