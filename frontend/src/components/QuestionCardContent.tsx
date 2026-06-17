@@ -2,6 +2,8 @@
 
 import type { JSX } from "react"
 import { useState, useEffect } from "react"
+import { QuestionTypeEnum } from "@/api/questions/types/questionType"
+import type { QuestionType } from "@/api/questions/types/questionType"
 import QuestionHeader from "@/components/QuestionHeader"
 import QuestionContainer from "@/components/QuestionContainer"
 import AnswerOption from "@/components/AnswerOption"
@@ -24,7 +26,7 @@ export interface QuestionCardContentProps {
     totalQuestions: number
     onSendAnswer?: (id: string | string[]) => void
     onNextQuestion?: () => void
-    type?: string
+    type?: QuestionType
 }
 
 export default function QuestionCardContent({
@@ -74,7 +76,7 @@ export default function QuestionCardContent({
     const handleSelect = (id: string) => {
         if (isHost || hasSubmitted) return
 
-        if (type === "MULTIPLE_CHOICE") {
+        if (type === QuestionTypeEnum.MULTIPLE_CHOICE) {
             setSelectedAnswers((prev) =>
                 prev.includes(id) ? prev.filter((val) => val !== id) : [...prev, id]
             )

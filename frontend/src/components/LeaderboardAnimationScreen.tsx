@@ -1,5 +1,5 @@
 import type { JSX } from "react"
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/shadcn/components/ui/button"
 import { Avatar, AvatarFallback } from "@shadcn/components/ui/avatar"
@@ -22,30 +22,14 @@ function getMedal(rank: number): string | null {
     return null
 }
 
-function RankChangeBadge({
-    settled,
-    change,
-}: {
-    settled: boolean
-    change: number
-}): JSX.Element | null {
-    if (!settled) return null
-    if (change === 0) return <span className="text-muted-foreground">—</span>
-    const color = change > 0 ? "text-green-500" : "text-red-500"
-    const label = change > 0 ? `▲${change}` : `▼${Math.abs(change)}`
-    return <span className={color}>{label}</span>
-}
-
 interface LeaderboardAnimationScreenProps {
     leaderboard: LeaderboardEntry[]
-    previousLeaderboard: LeaderboardEntry[] | null
     isFinal: boolean
     onLeave: () => void
 }
 
 export default function LeaderboardAnimationScreen({
     leaderboard,
-    previousLeaderboard,
     isFinal,
     onLeave,
 }: LeaderboardAnimationScreenProps): JSX.Element {
@@ -53,40 +37,6 @@ export default function LeaderboardAnimationScreen({
         () => [...leaderboard].sort((a, b) => b.totalPoints - a.totalPoints),
         [leaderboard]
     )
-
-    const prevSorted = useMemo(
-        () =>
-            previousLeaderboard
-                ? [...previousLeaderboard].sort((a, b) => b.totalPoints - a.totalPoints)
-                : null,
-        [previousLeaderboard]
-    )
-
-    // useState initializers run only once on mount — safe to use prevSorted/sorted directly
-    const [displayed, setDisplayed] = useState<LeaderboardEntry[]>(prevSorted ?? sorted)
-    const [settled, setSettled] = useState(!prevSorted)
-
-    // hasRunRef prevents the animation from re-triggering if prevSorted/sorted references change
-    const hasRunRef = useRef(false)
-    useEffect((): (() => void) | undefined => {
-        if (hasRunRef.current || !prevSorted) return undefined
-        hasRunRef.current = true
-        const t = setTimeout(() => {
-            setDisplayed(sorted)
-            setSettled(true)
-        }, 1200)
-        return () => clearTimeout(t)
-    }, [prevSorted, sorted])
-
-    // Rank change per player id: positive = moved up, negative = moved down
-    const rankChanges = useMemo<Record<string, number>>(() => {
-        if (!prevSorted) return {}
-        const prevRank = Object.fromEntries(prevSorted.map((e, i) => [e.id, i + 1]))
-        const newRank = Object.fromEntries(sorted.map((e, i) => [e.id, i + 1]))
-        return Object.fromEntries(
-            sorted.map((e) => [e.id, (prevRank[e.id] ?? newRank[e.id]) - newRank[e.id]])
-        )
-    }, [sorted, prevSorted])
 
     return (
         <div className="bg-background text-foreground flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-12">
@@ -101,22 +51,18 @@ export default function LeaderboardAnimationScreen({
 
             <div className="w-full max-w-lg">
                 <AnimatePresence>
-                    {displayed.map((entry, i) => {
-                        const rank = sorted.findIndex((e) => e.id === entry.id) + 1
-                        const change = rankChanges[entry.id] ?? 0
+                    {sorted.map((entry, i) => {
+                        const rank = i + 1
                         const medal = getMedal(rank)
                         const initials = entry.name.substring(0, 2).toUpperCase()
 
                         return (
                             <motion.div
                                 key={entry.id}
-                                layout
                                 animate={{ opacity: 1, x: 0 }}
-                                className={`mb-3 grid grid-cols-[2.5rem_3rem_1fr_auto_4rem] items-center gap-3 rounded-2xl border p-4 text-base font-semibold shadow-sm ${getRankColor(rank)}`}
+                                className={`mb-3 grid grid-cols-[2.5rem_3rem_1fr_auto] items-center gap-3 rounded-2xl border p-4 text-base font-semibold shadow-sm ${getRankColor(rank)}`}
                                 initial={{ opacity: 0, x: -60 }}
-                                layoutId={`lb-${entry.id}`}
                                 transition={{
-                                    layout: { type: "spring", stiffness: 250, damping: 28 },
                                     opacity: { delay: i * 0.08, duration: 0.35 },
                                     x: { delay: i * 0.08, duration: 0.35 },
                                 }}
@@ -129,18 +75,12 @@ export default function LeaderboardAnimationScreen({
                                     )}
                                 </div>
                                 <Avatar>
-                                    <AvatarFallback>{initials}</AvatarFallback>
+                                    <AvatarFallback>{entry.emoji ?? initials}</AvatarFallback>
                                 </Avatar>
-                                <span className="truncate font-bold">
-                                    {entry.name}
-                                    {entry.emoji ? ` ${entry.emoji}` : ""}
-                                </span>
+                                <span className="truncate font-bold">{entry.name}</span>
                                 <span className="font-bold tabular-nums">
                                     {entry.totalPoints} pts
                                 </span>
-                                <div className="text-right text-sm font-black">
-                                    <RankChangeBadge change={change} settled={settled} />
-                                </div>
                             </motion.div>
                         )
                     })}

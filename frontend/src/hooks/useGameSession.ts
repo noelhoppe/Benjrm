@@ -3,6 +3,7 @@ import { useNavigate } from "react-router"
 import { toast } from "sonner"
 import { useSocketEvent, useWebSocketContext } from "@/api/websocket"
 import useSessionPlayers from "@/api/session/hooks/useSessionPlayers"
+import type { QuestionType } from "@/api/questions/types/questionType"
 
 export const AVAILABLE_EMOJIS = [
     "😀",
@@ -40,7 +41,7 @@ export interface Player {
 
 export interface GameQuestion {
     id: string
-    type: string
+    type: QuestionType
     text: string
     options: { id: string; text: string }[]
     seconds: number | null
@@ -60,7 +61,15 @@ export interface LeaderboardEntry {
     points: number
 }
 
-export type GameState = "lobby" | "playing" | "question" | "leaderboard" | "result"
+export const GameStateEnum = {
+    LOBBY: "lobby",
+    PLAYING: "playing",
+    QUESTION: "question",
+    LEADERBOARD: "leaderboard",
+    RESULT: "result",
+} as const
+
+export type GameState = (typeof GameStateEnum)[keyof typeof GameStateEnum]
 
 export interface UseGameSessionResult {
     gameState: GameState
@@ -111,7 +120,7 @@ export function useGameSession({
     const websocket = useWebSocketContext()
 
     // Game state machine
-    const [gameState, setGameState] = useState<GameState>("lobby")
+    const [gameState, setGameState] = useState<GameState>(GameStateEnum.LOBBY)
     const [currentQuestion, setCurrentQuestion] = useState<GameQuestion | null>(null)
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1)
     const [totalQuestions, setTotalQuestions] = useState(0)
@@ -233,11 +242,11 @@ export function useGameSession({
 
     // Game flow events
     useSocketEvent("start", () => {
-        setGameState("playing")
+        setGameState(GameStateEnum.PLAYING)
     })
 
     useSocketEvent("displayQuestion", (payload, timing) => {
-        setGameState("question")
+        setGameState(GameStateEnum.QUESTION)
         setCurrentQuestion({
             id: payload.id,
             type: payload.type,
@@ -257,7 +266,7 @@ export function useGameSession({
 
     useSocketEvent("questionResult", (payload) => {
         setQuestionResult(payload)
-        setGameState("result")
+        setGameState(GameStateEnum.RESULT)
     })
 
     useSocketEvent("displayLeaderboard", (payload) => {
@@ -265,7 +274,7 @@ export function useGameSession({
         setLeaderboard(payload.leaderboard)
         const isLastByIndex = totalQuestions > 0 && currentQuestionIndex >= totalQuestions - 1
         setIsFinalLeaderboard(payload.isFinal || isLastByIndex)
-        setGameState("leaderboard")
+        setGameState(GameStateEnum.LEADERBOARD)
     })
 
     useSocketEvent("kick", () => {
@@ -291,7 +300,7 @@ export function useGameSession({
             setNameSaved(true)
         } else if (pendingStartId === id) {
             setPendingStartId(null)
-            setGameState("playing")
+            setGameState(GameStateEnum.PLAYING)
             if (isHost) {
                 websocket.send({ command: "nextQuestion" })
             }
@@ -311,7 +320,7 @@ export function useGameSession({
         } else if (pendingNextId === id) {
             setPendingNextId(null)
             toast.error(payload.message || "Could not advance to the next question")
-        } else if (gameState !== "lobby") {
+        } else if (gameState !== GameStateEnum.LOBBY) {
             toast.error(payload.message || "Something went wrong")
         }
     })

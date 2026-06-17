@@ -295,12 +295,14 @@ pub enum PlayerMessage {
     Start,
     GameEnded,
     DisplayQuestion(Arc<DisplayQuestionMessage>),
+    #[serde(rename_all = "camelCase")]
     QuestionResult {
         question: Uuid,
         correct_answers: Arc<Vec<Uuid>>,
         points: u32,
         total_points: u32,
     },
+    #[serde(rename_all = "camelCase")]
     DisplayLeaderboard {
         leaderboard: Arc<Vec<LeaderboardEntry>>,
         is_final: bool,

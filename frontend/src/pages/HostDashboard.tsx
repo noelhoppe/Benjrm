@@ -1,11 +1,12 @@
 import type { JSX } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useNavigate, useParams } from "react-router"
+import { useLocation, useNavigate, useParams } from "react-router"
 import { toast } from "sonner"
 import { useSocketEvent, useWebSocketContext } from "@/api/websocket"
 import useSessionStatus from "@/api/session/hooks/useSessionStatus"
 import useSessionQuiz from "@/api/session/hooks/useSessionQuiz"
 import HostGameScreen from "@/components/HostGameScreen"
+import { GameStateEnum } from "@/hooks/useGameSession"
 import type { GameState, GameQuestion, LeaderboardEntry } from "@/hooks/useGameSession"
 import type { SessionPlayer } from "@/api/session"
 
@@ -13,6 +14,7 @@ export default function HostDashboard(): JSX.Element {
     const codeParam = useParams().code
     const code = codeParam !== null ? Number(codeParam) || undefined : undefined
     const navigate = useNavigate()
+    const location = useLocation()
     const ws = useWebSocketContext()
 
     const { isLoading: isSessionLoading, isHost } = useSessionStatus(code)
@@ -32,17 +34,22 @@ export default function HostDashboard(): JSX.Element {
         }
     }, [isSessionLoading, isHost, navigate, codeParam])
 
-    const [gameState, setGameState] = useState<GameState>("playing")
+    const [gameState, setGameState] = useState<GameState>(GameStateEnum.PLAYING)
     const [currentQuestion, setCurrentQuestion] = useState<GameQuestion | null>(null)
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1)
     const [totalQuestions, setTotalQuestions] = useState(0)
     const [questionExpiresAt, setQuestionExpiresAt] = useState<number | null>(null)
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null)
     const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false)
-    const [players, setPlayers] = useState<SessionPlayer[]>([])
+    const [players, setPlayers] = useState<SessionPlayer[]>(
+        (location.state as { players?: SessionPlayer[] } | null)?.players ?? []
+    )
+
+    const hasDisplayedQuestionRef = useRef(false)
 
     useSocketEvent("displayQuestion", (payload, timing) => {
-        setGameState("question")
+        hasDisplayedQuestionRef.current = true
+        setGameState(GameStateEnum.QUESTION)
         setCurrentQuestion({
             id: payload.id,
             type: payload.type,
@@ -64,7 +71,7 @@ export default function HostDashboard(): JSX.Element {
         setLeaderboard(payload.leaderboard)
         const isLastByIndex = totalQuestions > 0 && currentQuestionIndex >= totalQuestions - 1
         setIsFinalLeaderboard(payload.isFinal || isLastByIndex)
-        setGameState("leaderboard")
+        setGameState(GameStateEnum.LEADERBOARD)
     })
 
     useSocketEvent("addPlayer", ({ id, name, emoji }) => {
@@ -79,7 +86,10 @@ export default function HostDashboard(): JSX.Element {
         setPlayers((prev) => prev.filter((p) => p.id !== id))
     })
 
+    const gameEndedRef = useRef(false)
+
     useSocketEvent("gameEnded", () => {
+        gameEndedRef.current = true
         navigate("/")
     })
 
@@ -102,11 +112,24 @@ export default function HostDashboard(): JSX.Element {
         return ws.onConnect(sendFirstQuestion)
     }, [ws])
 
+    // Send endGame on unmount only after the first question was received from the server.
+    // Guards against React StrictMode's double-mount: the cleanup fires before the server
+    // ever sends displayQuestion, so hasDisplayedQuestionRef is still false then.
+    useEffect(
+        () => () => {
+            if (!gameEndedRef.current && hasDisplayedQuestionRef.current) {
+                ws.send({ command: "endGame" })
+            }
+        },
+        [ws]
+    )
+
     const sendNextQuestion = useCallback((): void => {
         ws.send({ command: "nextQuestion" })
     }, [ws])
 
     const sendEndGame = useCallback((): void => {
+        gameEndedRef.current = true
         ws.send({ command: "endGame" })
     }, [ws])
 

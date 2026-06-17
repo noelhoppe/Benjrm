@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { motion } from "framer-motion"
-import { Avatar, AvatarImage, AvatarFallback } from "@shadcn/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@shadcn/components/ui/avatar"
 import getRankingClassName from "@/quiz/leaderboard/utils/getRankingClassName.ts"
 
 export interface LeaderboardItemProps {
@@ -34,8 +34,7 @@ export default function LeaderboardItem(leaderboardItemProps: LeaderboardItemPro
                 {medal ?? <span className="text-muted-foreground text-sm">#{ranking}</span>}
             </div>
             <Avatar>
-                <AvatarImage alt={name} src={avatar} />
-                <AvatarFallback>{initials}</AvatarFallback>
+                <AvatarFallback>{avatar ?? initials}</AvatarFallback>
             </Avatar>
             <div className="font-semibold">{name}</div>
             <div className="font-bold tabular-nums">{points} pts</div>

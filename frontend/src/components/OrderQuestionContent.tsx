@@ -22,6 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import { Button } from "@/shadcn/components/ui/button"
 import TimerBar from "@/components/TimerBar"
+import { restrictToVerticalAxis, restrictToParentElement } from "@/pages/quiz/quizUtils"
 
 export interface Option {
     id: string
@@ -197,6 +198,7 @@ export default function OrderQuestionContent({
                     <div className="flex flex-col gap-6">
                         <DndContext
                             collisionDetection={closestCenter}
+                            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
                             onDragEnd={handleDragEnd}
                             sensors={sensors}
                         >

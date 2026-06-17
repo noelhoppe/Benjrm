@@ -138,7 +138,7 @@ export default function WaitingRoom(): JSX.Element {
         } else if (id === pendingStartId) {
             setPendingStartId(null)
             navigate(`/play/${codeParam ?? ""}/host`, {
-                state: { playerCount: players.length },
+                state: { players },
             })
         }
     })

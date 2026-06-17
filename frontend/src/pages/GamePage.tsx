@@ -1,8 +1,10 @@
 import type { JSX } from "react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router"
+import { Toaster, toast } from "sonner"
 import { useSocketEvent, useWebSocketContext } from "@/api/websocket"
 import GameScreen from "@/components/GameScreen"
+import { GameStateEnum } from "@/hooks/useGameSession"
 import type {
     GameState,
     GameQuestion,
@@ -34,18 +36,17 @@ export default function GamePage(): JSX.Element {
         }
     }, [storageKey])
 
-    const [gameState, setGameState] = useState<GameState>("playing")
+    const [gameState, setGameState] = useState<GameState>(GameStateEnum.PLAYING)
     const [currentQuestion, setCurrentQuestion] = useState<GameQuestion | null>(null)
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1)
     const [totalQuestions, setTotalQuestions] = useState(0)
     const [questionExpiresAt, setQuestionExpiresAt] = useState<number | null>(null)
     const [questionResult, setQuestionResult] = useState<QuestionResult | null>(null)
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null)
-    const [previousLeaderboard, setPreviousLeaderboard] = useState<LeaderboardEntry[] | null>(null)
     const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false)
 
     useSocketEvent("displayQuestion", (payload, timing) => {
-        setGameState("question")
+        setGameState(GameStateEnum.QUESTION)
         setCurrentQuestion({
             id: payload.id,
             type: payload.type,
@@ -65,24 +66,39 @@ export default function GamePage(): JSX.Element {
 
     useSocketEvent("questionResult", (payload) => {
         setQuestionResult(payload)
-        setGameState("result")
+        setGameState(GameStateEnum.RESULT)
     })
 
     // handlerRef pattern in useSocketEvent ensures leaderboard/totalQuestions/currentQuestionIndex
     // are always the latest values — no stale closure risk
     useSocketEvent("displayLeaderboard", (payload) => {
-        setPreviousLeaderboard(leaderboard)
         setLeaderboard(payload.leaderboard)
         const isLastByIndex = totalQuestions > 0 && currentQuestionIndex >= totalQuestions - 1
         setIsFinalLeaderboard(payload.isFinal || isLastByIndex)
-        setGameState("leaderboard")
+        // Delay transition if the result screen is visible so the player can read their score
+        if (gameState === GameStateEnum.RESULT) {
+            setTimeout(() => setGameState(GameStateEnum.LEADERBOARD), 3000)
+        } else {
+            setGameState(GameStateEnum.LEADERBOARD)
+        }
     })
 
+    const [hostEndedGame, setHostEndedGame] = useState(false)
+
     useSocketEvent("gameEnded", () => {
-        if (storageKey) sessionStorage.removeItem(storageKey)
-        if (code !== undefined) sessionStorage.removeItem(`gameActive:${code}`)
-        navigate("/")
+        setHostEndedGame(true)
     })
+
+    useEffect(() => {
+        if (!hostEndedGame) return undefined
+        toast.error("Host has closed the lobby")
+        const t = setTimeout(() => {
+            if (storageKey) sessionStorage.removeItem(storageKey)
+            if (code !== undefined) sessionStorage.removeItem(`gameActive:${code}`)
+            navigate("/")
+        }, 3000)
+        return () => clearTimeout(t)
+    }, [hostEndedGame, navigate, storageKey, code])
 
     const sendAnswer = useCallback(
         (answer: string | string[]): void => {
@@ -92,20 +108,34 @@ export default function GamePage(): JSX.Element {
         [ws]
     )
 
+    if (hostEndedGame) {
+        return (
+            <>
+                <Toaster richColors />
+                <div className="bg-background text-foreground flex min-h-screen flex-col items-center justify-center gap-4 text-center">
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-[#00D4E8]" />
+                    <p className="text-muted-foreground">Host has closed the lobby...</p>
+                </div>
+            </>
+        )
+    }
+
     return (
-        <GameScreen
-            currentQuestion={currentQuestion}
-            currentQuestionIndex={currentQuestionIndex}
-            gameState={gameState}
-            isFinalLeaderboard={isFinalLeaderboard}
-            leaderboard={leaderboard}
-            onNextQuestion={() => undefined}
-            onSendAnswer={sendAnswer}
-            playerName={playerName}
-            previousLeaderboard={previousLeaderboard}
-            questionExpiresAt={questionExpiresAt}
-            questionResult={questionResult}
-            totalQuestions={totalQuestions}
-        />
+        <>
+            <Toaster richColors />
+            <GameScreen
+                currentQuestion={currentQuestion}
+                currentQuestionIndex={currentQuestionIndex}
+                gameState={gameState}
+                isFinalLeaderboard={isFinalLeaderboard}
+                leaderboard={leaderboard}
+                onNextQuestion={() => undefined}
+                onSendAnswer={sendAnswer}
+                playerName={playerName}
+                questionExpiresAt={questionExpiresAt}
+                questionResult={questionResult}
+                totalQuestions={totalQuestions}
+            />
+        </>
     )
 }

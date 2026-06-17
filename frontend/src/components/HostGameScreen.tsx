@@ -6,7 +6,9 @@ import { Button } from "@/shadcn/components/ui/button"
 import HostDashboardSidebar from "@/components/HostDashboardSidebar"
 import Leaderboard from "@/quiz/leaderboard/components/Leaderboard"
 import MarkdownPageComponent from "@/components/markdown/MarkdownPageComponent"
+import { GameStateEnum } from "@/hooks/useGameSession"
 import type { GameState, GameQuestion, LeaderboardEntry } from "@/hooks/useGameSession"
+import { QuestionTypeEnum } from "@/api/questions/types/questionType"
 
 function QuestionTimer({ expiresAt }: { expiresAt: number | null }): JSX.Element | null {
     const [now, setNow] = useState(() => Date.now())
@@ -61,7 +63,10 @@ export default function HostGameScreen({
     const prevQuestionIndexRef = useRef(-1)
 
     useEffect(() => {
-        if (gameState === "question" && currentQuestionIndex !== prevQuestionIndexRef.current) {
+        if (
+            gameState === GameStateEnum.QUESTION &&
+            currentQuestionIndex !== prevQuestionIndexRef.current
+        ) {
             prevQuestionIndexRef.current = currentQuestionIndex
             setPlayersPreviewing(true)
             const timer = setTimeout(() => setPlayersPreviewing(false), 2500)
@@ -72,8 +77,9 @@ export default function HostGameScreen({
 
     if (isFinalLeaderboard && leaderboard) {
         const items = leaderboard.map((entry) => ({
-            name: entry.name + (entry.emoji ? ` ${entry.emoji}` : ""),
+            name: entry.name,
             points: entry.totalPoints,
+            avatar: entry.emoji ?? undefined,
         }))
         return (
             <>
@@ -95,7 +101,7 @@ export default function HostGameScreen({
         )
     }
 
-    if (gameState === "playing") {
+    if (gameState === GameStateEnum.PLAYING) {
         return (
             <>
                 <Toaster richColors />
@@ -139,18 +145,22 @@ export default function HostGameScreen({
                         <span className="text-muted-foreground text-sm font-bold">
                             Question {currentQuestionIndex + 1} / {totalQuestions}
                         </span>
-                        {playersPreviewing ? (
+                        {playersPreviewing && currentQuestion?.type !== QuestionTypeEnum.SLIDE ? (
                             <span className="text-muted-foreground text-sm font-semibold">
                                 Players are reading...
                             </span>
                         ) : (
-                            <QuestionTimer expiresAt={questionExpiresAt} />
+                            <QuestionTimer
+                                expiresAt={
+                                    gameState === GameStateEnum.QUESTION ? questionExpiresAt : null
+                                }
+                            />
                         )}
                     </div>
 
                     {currentQuestion ? (
                         <>
-                            {currentQuestion.type === "SLIDE" ? (
+                            {currentQuestion.type === QuestionTypeEnum.SLIDE ? (
                                 <MarkdownPageComponent content={currentQuestion.text} />
                             ) : (
                                 <>
@@ -161,7 +171,7 @@ export default function HostGameScreen({
                                         {currentQuestion.text}
                                     </h2>
 
-                                    {currentQuestion.type === "ORDER" &&
+                                    {currentQuestion.type === QuestionTypeEnum.ORDER &&
                                     currentQuestion.options.length > 0 ? (
                                         <ol className="mt-6 flex flex-col gap-2">
                                             {currentQuestion.options.map((opt, i) => (
@@ -177,7 +187,7 @@ export default function HostGameScreen({
                                             ))}
                                         </ol>
                                     ) : null}
-                                    {currentQuestion.type !== "ORDER" &&
+                                    {currentQuestion.type !== QuestionTypeEnum.ORDER &&
                                     currentQuestion.options.length > 0 ? (
                                         <div className="mt-6 grid grid-cols-2 gap-3">
                                             {currentQuestion.options.map((opt, i) => {
@@ -205,7 +215,8 @@ export default function HostGameScreen({
                         <p className="text-muted-foreground text-sm">No question yet.</p>
                     )}
 
-                    {gameState === "question" ? (
+                    {gameState === GameStateEnum.QUESTION &&
+                    currentQuestion?.type !== QuestionTypeEnum.SLIDE ? (
                         <div className="mt-6 flex items-center gap-3 border-t pt-4">
                             <div className="border-muted-foreground/20 border-t-muted-foreground/60 h-4 w-4 animate-spin rounded-full border-2" />
                             <p className="text-muted-foreground text-sm">
@@ -214,7 +225,7 @@ export default function HostGameScreen({
                         </div>
                     ) : null}
 
-                    {gameState === "leaderboard" ? (
+                    {gameState === GameStateEnum.LEADERBOARD ? (
                         <div className="mt-6 border-t pt-4">
                             <p className="text-sm font-medium text-green-500">
                                 Question complete — results are in!

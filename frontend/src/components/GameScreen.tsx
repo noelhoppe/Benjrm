@@ -6,12 +6,14 @@ import QuestionCardContent from "@/components/QuestionCardContent"
 import InfoSlideContent from "@/components/InfoSlideContent"
 import OrderQuestionContent from "@/components/OrderQuestionContent"
 import LeaderboardAnimationScreen from "@/components/LeaderboardAnimationScreen"
+import { GameStateEnum } from "@/hooks/useGameSession"
 import type {
     GameState,
     GameQuestion,
     QuestionResult,
     LeaderboardEntry,
 } from "@/hooks/useGameSession"
+import { QuestionTypeEnum } from "@/api/questions/types/questionType"
 
 const PREVIEW_DURATION_MS = 2500
 
@@ -44,27 +46,6 @@ function QuestionPreview({ question }: { question: { text: string } }): JSX.Elem
     )
 }
 
-function ResultTimer({ expiresAt }: { expiresAt: number | null }): JSX.Element | null {
-    const [now, setNow] = useState(() => Date.now())
-
-    useEffect(() => {
-        if (!expiresAt) return undefined
-        const interval = setInterval(() => setNow(Date.now()), 1000)
-        return () => clearInterval(interval)
-    }, [expiresAt])
-
-    if (!expiresAt) return null
-    const timeLeft = Math.max(0, Math.ceil((expiresAt - now) / 1000))
-    if (timeLeft <= 0) return null
-
-    return (
-        <div className="mt-4 flex flex-col items-center gap-2">
-            <div className="border-border h-6 w-6 animate-spin rounded-full border-2 border-t-[#00D4E8]" />
-            <p className="font-bold text-[#00D4E8]">Others are still answering... {timeLeft}s</p>
-        </div>
-    )
-}
-
 interface GameScreenProps {
     gameState: GameState
     currentQuestion: GameQuestion | null
@@ -73,7 +54,6 @@ interface GameScreenProps {
     questionResult: QuestionResult | null
     questionExpiresAt: number | null
     leaderboard: LeaderboardEntry[] | null
-    previousLeaderboard: LeaderboardEntry[] | null
     isFinalLeaderboard: boolean
     playerName: string | undefined
     onNextQuestion: () => void
@@ -88,7 +68,6 @@ export default function GameScreen({
     questionResult,
     questionExpiresAt,
     leaderboard,
-    previousLeaderboard,
     isFinalLeaderboard,
     playerName,
     onNextQuestion,
@@ -100,9 +79,9 @@ export default function GameScreen({
 
     useEffect(() => {
         if (
-            gameState === "question" &&
+            gameState === GameStateEnum.QUESTION &&
             currentQuestion &&
-            currentQuestion.type !== "SLIDE" &&
+            currentQuestion.type !== QuestionTypeEnum.SLIDE &&
             currentQuestionIndex !== prevQuestionIndexRef.current
         ) {
             prevQuestionIndexRef.current = currentQuestionIndex
@@ -115,13 +94,12 @@ export default function GameScreen({
     }, [gameState, currentQuestion, currentQuestionIndex])
 
     function renderContent(): JSX.Element | null {
-        if (gameState === "leaderboard" && leaderboard) {
+        if (gameState === GameStateEnum.LEADERBOARD && leaderboard) {
             return (
                 <LeaderboardAnimationScreen
                     isFinal={isFinalLeaderboard}
                     leaderboard={leaderboard}
                     onLeave={async () => navigate("/")}
-                    previousLeaderboard={previousLeaderboard}
                 />
             )
         }
@@ -129,7 +107,7 @@ export default function GameScreen({
         if (showingPreview && currentQuestion) {
             return <QuestionPreview question={currentQuestion} />
         }
-        if (gameState === "playing") {
+        if (gameState === GameStateEnum.PLAYING) {
             return (
                 <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
                     <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-[#00D4E8]" />
@@ -139,8 +117,8 @@ export default function GameScreen({
             )
         }
 
-        if (gameState === "question" && currentQuestion) {
-            if (currentQuestion.type === "SLIDE") {
+        if (gameState === GameStateEnum.QUESTION && currentQuestion) {
+            if (currentQuestion.type === QuestionTypeEnum.SLIDE) {
                 return (
                     <InfoSlideContent
                         key={currentQuestion.id}
@@ -154,7 +132,7 @@ export default function GameScreen({
                 )
             }
 
-            if (currentQuestion.type === "ORDER") {
+            if (currentQuestion.type === QuestionTypeEnum.ORDER) {
                 return (
                     <OrderQuestionContent
                         key={currentQuestion.id}
@@ -190,7 +168,7 @@ export default function GameScreen({
             )
         }
 
-        if (gameState === "result" && questionResult) {
+        if (gameState === GameStateEnum.RESULT && questionResult) {
             const correct = questionResult.points > 0
             return (
                 <div className="text-foreground flex min-h-[50vh] flex-col items-center justify-center gap-6 text-center">
@@ -202,7 +180,6 @@ export default function GameScreen({
                     <h2 className="text-3xl font-bold">{correct ? "Correct!" : "Wrong!"}</h2>
                     <p className="text-xl">+{questionResult.points} points</p>
                     <p className="text-muted-foreground">Total: {questionResult.totalPoints}</p>
-                    <ResultTimer expiresAt={questionExpiresAt} />
                     <p className="text-muted-foreground mt-8 text-sm">
                         Waiting for the host to continue...
                     </p>
