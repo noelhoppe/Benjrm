@@ -42,6 +42,7 @@ export default function QuizCreator(): JSX.Element {
         questionError,
         bigQuestionError,
         questions,
+        isQuizPlayable,
         currentQuestionIndex,
         handleSelectQuestion,
         currentQuestion,

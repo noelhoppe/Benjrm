@@ -1,7 +1,7 @@
 // frontend/src/pages/WaitingRoom.tsx
 
 import type { JSX } from "react"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import { X } from "lucide-react"
 import { Toaster, toast } from "sonner"
@@ -10,14 +10,10 @@ import GamePinForm from "@/components/GamePinForm"
 import useSessionStatus from "@/api/session/hooks/useSessionStatus"
 import useSessionQuiz from "@/api/session/hooks/useSessionQuiz"
 import useSessionPlayers from "@/api/session/hooks/useSessionPlayers"
-import {
-    useHostWebSocket,
-    usePlayerWebSocket,
-    useSocketEvent,
-    useWebSocketContext,
-} from "@/api/websocket"
+import { useSocketEvent, useWebSocketContext } from "@/api/websocket"
 import { Button } from "@/shadcn/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shadcn/components/ui/dialog"
+import StartQuizButton from "@/components/StartQuizButton.tsx"
 
 interface Player {
     id: string
@@ -70,9 +66,8 @@ export default function WaitingRoom(): JSX.Element {
 
     // Delay WS connection until role is determined
     // (which would disconnect mid-render and wipe all event subscriptions via listeners.clear())
+    // WS connection is managed by PlayLayout; wsCode is only used for tracking connection state.
     const wsCode = isLoadingSession ? undefined : code
-    useHostWebSocket(isHost ? wsCode : undefined)
-    usePlayerWebSocket(!isHost ? wsCode : undefined)
 
     const websocket = useWebSocketContext()
 
@@ -177,6 +172,7 @@ export default function WaitingRoom(): JSX.Element {
     }, [wsCode, isPlayer, websocket])
 
     const navigate = useNavigate()
+    const [pendingStartId, setPendingStartId] = useState<number | null>(null)
 
     useSocketEvent("kick", () => {
         if (storageKey) sessionStorage.removeItem(storageKey)
@@ -190,11 +186,23 @@ export default function WaitingRoom(): JSX.Element {
         }, 2000)
     })
 
+    useSocketEvent("start", () => {
+        if (code && !isHost) {
+            sessionStorage.setItem(`gameActive:${code}`, "1")
+            navigate(`/play/${code}/game`)
+        }
+    })
+
     useSocketEvent("ok", (_payload, _timing, id) => {
         if (pendingId === id) {
             setPendingId(null)
-            // TODO: add command specific response handling when there are more commands (maybe add it globally)
             setNameSaved(true)
+        }
+        if (pendingStartId === id && code) {
+            setPendingStartId(null)
+            navigate(`/play/${code}/host`, {
+                state: { playerCount: players.length },
+            })
         }
     })
 
@@ -202,6 +210,10 @@ export default function WaitingRoom(): JSX.Element {
         if (pendingId === id) {
             setPendingId(null)
             setNameError(payload.message)
+        }
+        if (pendingStartId === id) {
+            setPendingStartId(null)
+            toast.error(payload.message ?? "Failed to start the quiz.")
         }
     })
 
@@ -214,6 +226,12 @@ export default function WaitingRoom(): JSX.Element {
         websocket.send({ id, command: "setName", payload: { name: trimmed, emoji } })
         if (storageKey) sessionStorage.setItem(storageKey, JSON.stringify({ name: trimmed, emoji }))
     }
+
+    const handleStartQuiz = useCallback(() => {
+        const id = Math.floor(Math.random() * 2 ** 31)
+        setPendingStartId(id)
+        websocket.send({ id, command: "start" })
+    }, [websocket])
 
     function onKickPlayer(playerId: string): void {
         websocket.send({ command: "kickPlayer", payload: { id: playerId } })
@@ -260,9 +278,10 @@ export default function WaitingRoom(): JSX.Element {
                     <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF8A00]" />
                     Waiting Lobby
                 </div>
-                <p className="text-muted-foreground text-sm">
-                    Game Pin: {codeWithDash ?? "No active PIN"}
-                </p>
+                <div className="bg-muted/30 border-border/40 rounded-full border px-6 py-2.5 text-base font-bold backdrop-blur-sm">
+                    Room Pin:{" "}
+                    <span className="text-[#00F2FF]">{codeWithDash ?? "No active PIN"}</span>
+                </div>
             </div>
 
             <div className="dark:text-foreground overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl dark:border-white/10 dark:bg-[#111318]">
@@ -354,13 +373,10 @@ export default function WaitingRoom(): JSX.Element {
 
                     <div className="mt-8 flex items-center justify-center border-t border-white/10 pt-6">
                         {isHost ? (
-                            <Button
-                                className="rounded-xl border-0 bg-[#00D4E8] px-8 py-5 text-sm font-bold tracking-wide text-black uppercase shadow-[0_0_20px_-5px_rgba(0,212,232,0.6)] transition-all hover:bg-[#00BDD0]"
-                                size="lg"
-                                type="button"
-                            >
-                                Start Game
-                            </Button>
+                            <StartQuizButton
+                                disabled={players.length === 0 || pendingStartId !== null}
+                                onStartQuiz={handleStartQuiz}
+                            />
                         ) : null}
                         {!isHost && nameSaved ? (
                             <p className="text-muted-foreground text-sm font-medium">

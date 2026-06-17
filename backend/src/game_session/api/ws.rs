@@ -103,7 +103,11 @@ async fn get_player_ws(
         GameSession::handle_player_cmd,
         remove_player_ws,
     );
-    session.set_player_channel(id, channel).await;
+
+    session
+        .set_player_channel(id, channel)
+        .await
+        .map_err(Error::from)?;
 
     Ok(res)
 }
@@ -121,7 +125,7 @@ async fn remove_player_ws(
         if player.name.is_some() {
             session
                 .host
-                .msg(HostMessage::RemovePlayer { id: player_id }.into())
+                .msg(Message::from(&HostMessage::RemovePlayer { id: player_id }))
                 .await
         }
     }
@@ -312,8 +316,8 @@ struct PingCommand {
 }
 
 #[async_trait::async_trait]
-impl<T: Serialize + Send + 'static> Channel<T> for WsChannel {
-    async fn send(&mut self, mut msg: Message<T>) -> Result<(), ChannelError> {
+impl<T: Serialize + Sync + 'static> Channel<T> for WsChannel {
+    async fn send(&mut self, mut msg: Message<'_, T>) -> Result<(), ChannelError> {
         if let Some(timing) = &mut msg.timing {
             let ms = self.time_delta_ms.load(Ordering::Relaxed);
             *timing += TimeDelta::milliseconds(ms);
