@@ -1,3 +1,4 @@
+ARG BASE_IMAGE=alpine:3.24
 FROM --platform=$BUILDPLATFORM node:26-alpine AS frontend
 WORKDIR /app/frontend
 
@@ -23,21 +24,23 @@ COPY database-migrator /app/database-migrator
 RUN --mount=type=cache,target=/app/backend/target/ \
     --mount=type=cache,target=/usr/local/cargo/git/db \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
-    if echo "$RUST_TARGET" | grep -q -e '^i686' -e '^arm'; then export RUSTFLAGS="-Clink-arg=-latomic" && export CFLAGS="-DBROKEN_CLANG_ATOMICS"; fi && \
+    if echo "$RUST_TARGET" | grep -q -e '^i686' -e '^arm-'; then export RUSTFLAGS="-Clink-arg=-latomic" && export CFLAGS="-DBROKEN_CLANG_ATOMICS"; fi && \
     cargo zigbuild --release --target "$RUST_TARGET" && \
     cp "./target/$RUST_TARGET/release/benjrm" /bin/benjrm
 
-# we have to use debian instead of alpine because we rely on openssl and openssl can cause segfaults on alpine.
-# the requirement for openssl might be removed in the future.
-FROM debian:12.13 AS final
+FROM ${BASE_IMAGE} AS final
 LABEL org.opencontainers.image.source=https://github.com/Benjrm/Benjrm
 LABEL org.opencontainers.image.description="Benjrm - a quiz platform for interactive learning and live competition"
 
 WORKDIR /config
 
-RUN apt update && apt install -y openssl curl
-
-RUN useradd -m -u 1000 app
+RUN if command -v apk > /dev/null; then \
+      apk add --no-cache curl; \
+      adduser -D -u 1000 app; \
+    else \
+      apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*; \
+      useradd -m -u 1000 app; \
+    fi
 
 COPY --from=build /bin/benjrm /bin/benjrm
 

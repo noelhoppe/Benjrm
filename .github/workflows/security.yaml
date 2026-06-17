@@ -40,6 +40,8 @@ jobs:
   sonarqube:
     name: SonarQube SAST Scan
     runs-on: 'ubuntu-24.04'
+    # Skips the SonarQube Scan because we got timeout errors on the hosted sonarqube instance.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
