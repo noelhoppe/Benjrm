@@ -3,11 +3,15 @@ use {
         auth::User,
         error::{ErrorResponse, impl_err},
         game_session::api::ws::WsChannelError,
-        question::Question,
+        question::{
+            Question, QuestionOptions,
+            answer::{choice::entity::AnswerChoiceModel, order::AnswerOrderModel},
+        },
         quiz::Quiz,
     },
     chrono::{DateTime, Utc},
     emojis::Emoji,
+    rand::seq::SliceRandom,
     serde::{Deserialize, Serialize},
     std::{
         collections::HashMap,
@@ -44,6 +48,18 @@ impl_err! {
         InvalidEmoji = BAD_REQUEST,
         #[error("Player not found")]
         PlayerNotFound = NOT_FOUND,
+        #[error("Game session not started")]
+        NotStarted = BAD_REQUEST,
+        #[error("Game session already started")]
+        AlreadyStarted = BAD_REQUEST,
+        #[error("Quiz is missing")]
+        QuizMissing = BAD_REQUEST,
+        #[error("Question not found")]
+        QuestionNotFound = NOT_FOUND,
+        #[error("No players")]
+        NoPlayers = BAD_REQUEST,
+        #[error("Quiz has no questions")]
+        NoQuestions = BAD_REQUEST,
     }
 }
 
@@ -61,6 +77,8 @@ pub struct GameSession {
 #[derive(Debug, PartialEq, Eq)]
 pub enum GameSessionStatus {
     Waiting,
+    Started,
+    Question(usize),
     Closed,
 }
 
@@ -89,7 +107,7 @@ pub struct GameSessionPlayer {
 
 #[async_trait::async_trait]
 pub trait Channel<Msg: Serialize>: Send {
-    async fn send(&mut self, msg: Message<Msg>) -> Result<(), ChannelError>;
+    async fn send(&mut self, msg: Message<'_, Msg>) -> Result<(), ChannelError>;
     async fn close(self: Box<Self>);
     fn id(&self) -> u64;
 
@@ -113,19 +131,29 @@ impl From<WsChannelError> for ChannelError {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Message<T: Serialize> {
+pub struct Message<'a, T: Serialize> {
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<u64>,
     #[serde(flatten)]
-    msg: T,
+    msg: &'a T,
     #[serde(skip_serializing_if = "Option::is_none")]
     timing: Option<DateTime<Utc>>,
 }
 
-impl<T: Serialize> From<T> for Message<T> {
-    fn from(value: T) -> Self {
+impl<T: Serialize> Clone for Message<'_, T> {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            msg: self.msg,
+            timing: self.timing,
+        }
+    }
+}
+
+impl<'a, T: Serialize> From<&'a T> for Message<'a, T> {
+    fn from(value: &'a T) -> Self {
         Self {
             id: None,
             msg: value,
@@ -134,7 +162,7 @@ impl<T: Serialize> From<T> for Message<T> {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Command<T> {
     pub id: Option<u64>,
@@ -147,7 +175,7 @@ pub trait CommandTrait: Sized {
     fn pong(&self) -> Option<(u32, DateTime<Utc>)>;
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "command", content = "payload", rename_all = "camelCase")]
 pub enum HostMessage {
     Ok,
@@ -165,9 +193,10 @@ pub enum HostMessage {
     RemovePlayer {
         id: Uuid,
     },
+    DisplayQuestion(Arc<DisplayQuestionMessage>),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(
     tag = "command",
     content = "payload",
@@ -177,6 +206,9 @@ pub enum HostMessage {
 pub enum HostCommand {
     Pong { id: u32, timestamp: DateTime<Utc> },
     KickPlayer { id: Uuid },
+    Start,
+    NextQuestion,
+    ShowQuestion { id: Uuid },
 }
 
 impl CommandTrait for Command<HostCommand> {
@@ -192,15 +224,17 @@ impl CommandTrait for Command<HostCommand> {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "command", content = "payload", rename_all = "camelCase")]
 pub enum PlayerMessage {
     Ok,
     Error(ErrorResponse),
     Kick,
+    Start,
+    DisplayQuestion(Arc<DisplayQuestionMessage>),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(
     tag = "command",
     content = "payload",
@@ -221,6 +255,77 @@ impl CommandTrait for Command<PlayerCommand> {
         match self.command {
             PlayerCommand::Pong { id, timestamp } => Some((id, timestamp)),
             _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DisplayQuestionMessage {
+    id: Uuid,
+    question: String,
+    #[serde(flatten)]
+    options: DisplayQuestionOptions,
+    seconds: Option<u32>,
+}
+
+impl From<&Question> for DisplayQuestionMessage {
+    fn from(value: &Question) -> Self {
+        Self {
+            id: value.model.id,
+            question: value.model.question.clone(),
+            options: DisplayQuestionOptions::from(&value.options),
+            seconds: value.model.r#type.default_answer_duration(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(tag = "type", content = "options", rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DisplayQuestionOptions {
+    Slide,
+    SingleChoice(Vec<AnswerOption>),
+    MultipleChoice(Vec<AnswerOption>),
+    Order(Vec<AnswerOption>),
+}
+
+impl From<&QuestionOptions> for DisplayQuestionOptions {
+    fn from(value: &QuestionOptions) -> Self {
+        match value {
+            QuestionOptions::Slide => Self::Slide,
+            QuestionOptions::SingleChoice(models) => {
+                Self::SingleChoice(models.iter().map(Into::into).collect())
+            }
+            QuestionOptions::MultipleChoice(models) => {
+                Self::MultipleChoice(models.iter().map(Into::into).collect())
+            }
+            QuestionOptions::Order(models) => {
+                let mut options: Vec<_> = models.iter().map(Into::into).collect();
+                options.shuffle(&mut rand::rng());
+                Self::Order(options)
+            }
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnswerOption {
+    answer: String,
+}
+
+impl From<&AnswerChoiceModel> for AnswerOption {
+    fn from(value: &AnswerChoiceModel) -> Self {
+        Self {
+            answer: value.answer.clone(),
+        }
+    }
+}
+
+impl From<&AnswerOrderModel> for AnswerOption {
+    fn from(value: &AnswerOrderModel) -> Self {
+        Self {
+            answer: value.answer.clone(),
         }
     }
 }
