@@ -8,6 +8,7 @@ import useSessionQuiz from "@/api/session/hooks/useSessionQuiz"
 import HostGameScreen from "@/components/HostGameScreen"
 import { GameStateEnum } from "@/hooks/useGameSession"
 import type { GameState, GameQuestion, LeaderboardEntry } from "@/hooks/useGameSession"
+import { QuestionTypeEnum } from "@/api/questions/types/questionType"
 import type { SessionPlayer } from "@/api/session"
 
 export default function HostDashboard(): JSX.Element {
@@ -41,6 +42,8 @@ export default function HostDashboard(): JSX.Element {
     const [questionExpiresAt, setQuestionExpiresAt] = useState<number | null>(null)
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null)
     const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false)
+    const [hasPendingFinalPodium, setHasPendingFinalPodium] = useState(false)
+    const pendingFinalLeaderboardRef = useRef<LeaderboardEntry[] | null>(null)
     const [players, setPlayers] = useState<SessionPlayer[]>(
         (location.state as { players?: SessionPlayer[] } | null)?.players ?? []
     )
@@ -66,12 +69,23 @@ export default function HostDashboard(): JSX.Element {
         setCurrentQuestionIndex((prev) => prev + 1)
     })
 
-    // handlerRef pattern ensures totalQuestions/currentQuestionIndex are always fresh
     useSocketEvent("displayLeaderboard", (payload) => {
+        const isFinal = payload.isFinal || (totalQuestions > 0 && currentQuestionIndex >= totalQuestions - 1)
         setLeaderboard(payload.leaderboard)
-        const isLastByIndex = totalQuestions > 0 && currentQuestionIndex >= totalQuestions - 1
-        setIsFinalLeaderboard(payload.isFinal || isLastByIndex)
         setGameState(GameStateEnum.LEADERBOARD)
+        if (isFinal) {
+            if (currentQuestion?.type === QuestionTypeEnum.SLIDE) {
+                // Slide questions have no result screen — jump straight to podium
+                setIsFinalLeaderboard(true)
+                sendEndGame()
+            } else {
+                // Buffer — wait for host to click "Show Podium →"
+                pendingFinalLeaderboardRef.current = payload.leaderboard
+                setHasPendingFinalPodium(true)
+            }
+        } else {
+            setIsFinalLeaderboard(false)
+        }
     })
 
     useSocketEvent("addPlayer", ({ id, name, emoji }) => {
@@ -129,9 +143,19 @@ export default function HostDashboard(): JSX.Element {
     }, [ws])
 
     const sendEndGame = useCallback((): void => {
+        if (gameEndedRef.current) return
         gameEndedRef.current = true
         ws.send({ command: "endGame" })
     }, [ws])
+
+    const showFinalPodium = useCallback((): void => {
+        const pending = pendingFinalLeaderboardRef.current
+        if (!pending) return
+        setLeaderboard(pending)
+        setIsFinalLeaderboard(true)
+        setHasPendingFinalPodium(false)
+        sendEndGame()
+    }, [sendEndGame])
 
     return (
         <HostGameScreen
@@ -143,6 +167,7 @@ export default function HostDashboard(): JSX.Element {
             leaderboard={leaderboard}
             onEndGame={sendEndGame}
             onNextQuestion={sendNextQuestion}
+            onShowPodium={hasPendingFinalPodium ? showFinalPodium : undefined}
             players={players}
             questionExpiresAt={questionExpiresAt}
             quizTitle={quiz?.title}

@@ -42,6 +42,7 @@ interface HostGameScreenProps {
     quizTitle: string | undefined
     onNextQuestion: () => void
     onEndGame: () => void
+    onShowPodium?: () => void
 }
 
 export default function HostGameScreen({
@@ -57,6 +58,7 @@ export default function HostGameScreen({
     quizTitle,
     onNextQuestion,
     onEndGame,
+    onShowPodium,
 }: HostGameScreenProps): JSX.Element {
     const navigate = useNavigate()
     const [playersPreviewing, setPlayersPreviewing] = useState(false)
@@ -238,6 +240,14 @@ export default function HostGameScreen({
                 <HostDashboardSidebar
                     isFinal={isFinalLeaderboard}
                     onNext={onNextQuestion}
+                    onShowPodium={
+                        onShowPodium ??
+                        (currentQuestion?.type === QuestionTypeEnum.SLIDE &&
+                        totalQuestions > 0 &&
+                        currentQuestionIndex >= totalQuestions - 1
+                            ? onNextQuestion
+                            : undefined)
+                    }
                     entries={
                         leaderboard && leaderboard.length > 0
                             ? leaderboard.map((entry) => ({

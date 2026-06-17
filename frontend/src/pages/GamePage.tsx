@@ -1,8 +1,9 @@
 import type { JSX } from "react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import { Toaster, toast } from "sonner"
 import { useSocketEvent, useWebSocketContext } from "@/api/websocket"
+import { QuestionTypeEnum } from "@/api/questions/types/questionType"
 import GameScreen from "@/components/GameScreen"
 import { GameStateEnum } from "@/hooks/useGameSession"
 import type {
@@ -44,6 +45,7 @@ export default function GamePage(): JSX.Element {
     const [questionResult, setQuestionResult] = useState<QuestionResult | null>(null)
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null)
     const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false)
+    const pendingFinalLeaderboardRef = useRef<LeaderboardEntry[] | null>(null)
 
     useSocketEvent("displayQuestion", (payload, timing) => {
         setGameState(GameStateEnum.QUESTION)
@@ -65,20 +67,19 @@ export default function GamePage(): JSX.Element {
     })
 
     useSocketEvent("questionResult", (payload) => {
+        if (currentQuestion?.type === QuestionTypeEnum.SLIDE) return
         setQuestionResult(payload)
         setGameState(GameStateEnum.RESULT)
     })
 
-    // handlerRef pattern in useSocketEvent ensures leaderboard/totalQuestions/currentQuestionIndex
-    // are always the latest values — no stale closure risk
     useSocketEvent("displayLeaderboard", (payload) => {
-        setLeaderboard(payload.leaderboard)
-        const isLastByIndex = totalQuestions > 0 && currentQuestionIndex >= totalQuestions - 1
-        setIsFinalLeaderboard(payload.isFinal || isLastByIndex)
-        // Delay transition if the result screen is visible so the player can read their score
-        if (gameState === GameStateEnum.RESULT) {
-            setTimeout(() => setGameState(GameStateEnum.LEADERBOARD), 3000)
+        if (payload.isFinal) {
+            // Buffer final leaderboard — player stays on result screen until host ends the game
+            pendingFinalLeaderboardRef.current = payload.leaderboard
+            setIsFinalLeaderboard(true)
         } else {
+            setLeaderboard(payload.leaderboard)
+            setIsFinalLeaderboard(false)
             setGameState(GameStateEnum.LEADERBOARD)
         }
     })
@@ -86,19 +87,27 @@ export default function GamePage(): JSX.Element {
     const [hostEndedGame, setHostEndedGame] = useState(false)
 
     useSocketEvent("gameEnded", () => {
-        setHostEndedGame(true)
+        if (storageKey) sessionStorage.removeItem(storageKey)
+        const pending = pendingFinalLeaderboardRef.current
+        if (pending) {
+            // Show final podium — don't remove gameActive yet or the guard effect redirects away
+            setLeaderboard(pending)
+            setIsFinalLeaderboard(true)
+            setGameState(GameStateEnum.LEADERBOARD)
+        } else {
+            setHostEndedGame(true)
+        }
     })
 
     useEffect(() => {
         if (!hostEndedGame) return undefined
         toast.error("Host has closed the lobby")
         const t = setTimeout(() => {
-            if (storageKey) sessionStorage.removeItem(storageKey)
             if (code !== undefined) sessionStorage.removeItem(`gameActive:${code}`)
             navigate("/")
         }, 3000)
         return () => clearTimeout(t)
-    }, [hostEndedGame, navigate, storageKey, code])
+    }, [hostEndedGame, navigate, code])
 
     const sendAnswer = useCallback(
         (answer: string | string[]): void => {
