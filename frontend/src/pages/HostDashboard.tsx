@@ -49,6 +49,13 @@ export default function HostDashboard(): JSX.Element {
     )
 
     const hasDisplayedQuestionRef = useRef(false)
+    const gameEndedRef = useRef(false)
+
+    const sendEndGame = useCallback((): void => {
+        if (gameEndedRef.current) return
+        gameEndedRef.current = true
+        ws.send({ command: "endGame" })
+    }, [ws])
 
     useSocketEvent("displayQuestion", (payload, timing) => {
         hasDisplayedQuestionRef.current = true
@@ -70,7 +77,8 @@ export default function HostDashboard(): JSX.Element {
     })
 
     useSocketEvent("displayLeaderboard", (payload) => {
-        const isFinal = payload.isFinal || (totalQuestions > 0 && currentQuestionIndex >= totalQuestions - 1)
+        const isFinal =
+            payload.isFinal || (totalQuestions > 0 && currentQuestionIndex >= totalQuestions - 1)
         setLeaderboard(payload.leaderboard)
         setGameState(GameStateEnum.LEADERBOARD)
         if (isFinal) {
@@ -99,8 +107,6 @@ export default function HostDashboard(): JSX.Element {
         if (leaving) toast(`${leaving.emoji ? `${leaving.emoji} ` : ""}${leaving.name} has left`)
         setPlayers((prev) => prev.filter((p) => p.id !== id))
     })
-
-    const gameEndedRef = useRef(false)
 
     useSocketEvent("gameEnded", () => {
         gameEndedRef.current = true
@@ -140,12 +146,6 @@ export default function HostDashboard(): JSX.Element {
 
     const sendNextQuestion = useCallback((): void => {
         ws.send({ command: "nextQuestion" })
-    }, [ws])
-
-    const sendEndGame = useCallback((): void => {
-        if (gameEndedRef.current) return
-        gameEndedRef.current = true
-        ws.send({ command: "endGame" })
     }, [ws])
 
     const showFinalPodium = useCallback((): void => {

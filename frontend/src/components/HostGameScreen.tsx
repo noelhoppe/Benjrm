@@ -240,14 +240,6 @@ export default function HostGameScreen({
                 <HostDashboardSidebar
                     isFinal={isFinalLeaderboard}
                     onNext={onNextQuestion}
-                    onShowPodium={
-                        onShowPodium ??
-                        (currentQuestion?.type === QuestionTypeEnum.SLIDE &&
-                        totalQuestions > 0 &&
-                        currentQuestionIndex >= totalQuestions - 1
-                            ? onNextQuestion
-                            : undefined)
-                    }
                     entries={
                         leaderboard && leaderboard.length > 0
                             ? leaderboard.map((entry) => ({
@@ -268,6 +260,14 @@ export default function HostGameScreen({
                         onEndGame()
                         navigate("/dashboard")
                     }}
+                    onShowPodium={
+                        onShowPodium ??
+                        (currentQuestion?.type === QuestionTypeEnum.SLIDE &&
+                        totalQuestions > 0 &&
+                        currentQuestionIndex >= totalQuestions - 1
+                            ? onNextQuestion
+                            : undefined)
+                    }
                 />
             </div>
         </div>
