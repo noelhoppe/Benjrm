@@ -3,26 +3,23 @@ import { arrayMove } from "@dnd-kit/sortable"
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { useQuiz, useDeleteQuiz } from "@/api/quizzes/quizzes.queries.ts"
 import { useQuestions } from "@/api/questions"
 import questionKeys from "@/api/questions/utils/questionKeys"
-import type { Question } from "@/types/question"
-import {
-    createEmptyQuestion,
-    questionToRequest,
-    responseToQuestion,
-    applyQueueToQuestions,
-} from "@/pages/quiz/quizUtils"
+import { createEmptyQuestion, applyQueueToQuestions } from "@/pages/quiz/quizUtils"
 import tempId from "@/utils/tempId"
-import useQuestionChangeQueue, {
-    QuestionQueueError,
-    QueueOpEnum,
-} from "@/hooks/useQuestionChangeQueue"
-import type { QueueItem } from "@/hooks/useQuestionChangeQueue"
-import type { QuestionApiRequest } from "@/api/questions/types/question.api.ts"
 import { ApiError } from "@/api/utils"
-import { QuestionTypeEnum } from "@/api/questions/types/questionType"
+import type { Question, QuestionRequest } from "@/api/questions/questions.types.ts"
+import { useDeleteQuiz, useQuiz } from "@/api/quizzes/quizzes.queries.ts"
 import { getQuiz } from "@/api/quizzes/quizzes.api.ts"
+import {
+    addOptionToQuestion,
+    removeOptionFromQuestion,
+    updateOptionInQuestionAtIndex,
+} from "@/api/questions/utils/questionUtils.ts"
+import { questionToRequest } from "@/api/questions/question.mapper.ts"
+import type { QueueItem } from "@/queue/queue.types.ts"
+import useQuestionChangeQueue from "@/hooks/useQuestionChangeQueue.ts"
+import QuestionQueueError from "@/queue/queue.error.ts"
 
 export interface QuestionError {
     missingQuestion: boolean
@@ -40,7 +37,6 @@ export interface UseQuizEditorResult {
     bigQuestionError: string | null
     isLoadingQuestions: boolean
     questionLoadError: unknown
-    isQuizPlayable: boolean
     questions: Question[]
     currentQuestionIndex: number
     handleSelectQuestion: (n: number) => void
@@ -52,7 +48,7 @@ export interface UseQuizEditorResult {
     handleDragEnd: (e: DragEndEvent) => void
     handleDragCancel: () => void
     reorderQuestions: (a: string, b: string) => void
-    updateQuestion: (data: Partial<Question>) => void
+    updateQuestion: (data: Question) => void
     updateOption: (index: number, value: string) => void
     toggleOptionCorrect: (index: number) => void
     reorderOptions: (activeId: string, overId: string) => void
@@ -68,9 +64,10 @@ export interface UseQuizEditorResult {
     discardChanges: () => void
     flush: () => Promise<{ items: unknown[]; idMap: Record<string, string> } | null>
     upsertReorder: (order: string[]) => void
-    upsertUpdate: (id: string, payload: Partial<QuestionApiRequest>) => void
+    upsertUpdate: (id: string, payload: QuestionRequest) => void
     deleteQuizMutation: ReturnType<typeof useDeleteQuiz>
     hasInitializedQuestions: boolean
+    isQuizPlayable: boolean
 }
 
 export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
@@ -147,14 +144,14 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
             validationError.missingQuestion = true
         }
 
-        if (question.type !== QuestionTypeEnum.SLIDE) {
+        if (question.type !== "SLIDE") {
             for (let oi = 0; oi < question.options.length; oi += 1) {
                 if (!question.options[oi].answer.trim()) {
                     validationError.missingAnswers.push(oi)
                 }
             }
             if (
-                question.type !== QuestionTypeEnum.ORDER &&
+                question.type !== "ORDER" &&
                 !question.options.some((o) => (o as { correct?: boolean }).correct)
             ) {
                 validationError.missingCorrectAnswer = true
@@ -179,7 +176,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
             const validationRes = validateQuestion(questions[qi])
             if (validationRes) {
                 if (validationRes.missingQuestion) {
-                    if (questions[qi].type === QuestionTypeEnum.SLIDE) {
+                    if (questions[qi].type === "SLIDE") {
                         return `Slide ${qi + 1} is missing the text.`
                     }
                     return `Question ${qi + 1} is missing the question text.`
@@ -250,10 +247,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     const queuedQuestions = useMemo(() => {
         if (!savedQuestions) return null
 
-        const baseQuestions =
-            savedQuestions.length > 0
-                ? savedQuestions.map((response) => responseToQuestion(response))
-                : [createEmptyQuestion()]
+        const baseQuestions = savedQuestions.length > 0 ? savedQuestions : [createEmptyQuestion()]
 
         return applyQueueToQuestions(baseQuestions, queue)
     }, [queue, savedQuestions])
@@ -294,9 +288,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         clear()
 
         const baseQs =
-            savedQuestions && savedQuestions.length > 0
-                ? savedQuestions.map((response) => responseToQuestion(response))
-                : [createEmptyQuestion()]
+            savedQuestions && savedQuestions.length > 0 ? savedQuestions : [createEmptyQuestion()]
 
         setQuestions(baseQs)
         setCurrentQuestionIndex((prev) => Math.min(prev, Math.max(baseQs.length - 1, 0)))
@@ -410,20 +402,19 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         }
     }
 
-    const updateQuestion = (data: Partial<Question>) => {
+    const updateQuestion = (question: Question) => {
         markUnsavedChanges()
-        const next = { ...questions[currentQuestionIndex], ...data }
-        if (typeof next.id === "string" && next.id.startsWith("temp-")) {
-            upsertCreate(next.id, questionToRequest(next))
+        if (question.id.startsWith("temp-")) {
+            upsertCreate(question.id, questionToRequest(question))
         } else {
-            upsertUpdate(next.id, questionToRequest(next))
+            upsertUpdate(question.id, questionToRequest(question))
         }
         setQuestions((prevQuestions) => {
             const updated = [...prevQuestions]
-            updated[currentQuestionIndex] = next
+            updated[currentQuestionIndex] = question
             return updated
         })
-        const validationRes = validateQuestion(next)
+        const validationRes = validateQuestion(question)
         if (validationRes && bigQuestionError) {
             setQuestionError(validationRes)
             showBigQuestionError(validationRes)
@@ -437,39 +428,51 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         }
     }
 
+    /**
+     * Updates the 'answer' field of the option at the given index for the current question.
+     * @param index The index of the option in the options array to update.
+     * @param value The 'answer' field of the option to update with the new value.
+     */
     const updateOption = (index: number, value: string) => {
+        if (currentQuestion.type === "SLIDE") return
         markUnsavedChanges()
-        const newOptions = [...currentQuestion.options]
-        newOptions[index] = { ...newOptions[index], answer: value }
-        updateQuestion({ options: newOptions })
+        updateQuestion(
+            updateOptionInQuestionAtIndex(currentQuestion, index, (opt) => ({
+                ...opt,
+                answer: value,
+            }))
+        )
     }
 
+    /**
+     * Toggles the correct field of an option for questions of type "SINGLE_CHOICE" and "MULTIPLE_CHOICE".
+     * Does nothing for "ORDER" and "SLIDE" type questions.
+     * @param index The index of the option in the options array to toggle the correct field.
+     */
     const toggleOptionCorrect = (index: number) => {
-        if (
-            currentQuestion.type === QuestionTypeEnum.ORDER ||
-            currentQuestion.type === QuestionTypeEnum.SLIDE
-        )
-            return
-
+        if (currentQuestion.type === "ORDER" || currentQuestion.type === "SLIDE") return
         markUnsavedChanges()
-        const newOptions = currentQuestion.options.map((option, optionIndex) =>
-            optionIndex === index
-                ? { ...option, correct: !(option as { correct?: boolean }).correct }
-                : option
+        updateQuestion(
+            updateOptionInQuestionAtIndex(currentQuestion, index, (opt) => ({
+                ...opt,
+                correct: !opt.correct,
+            }))
         )
-        updateQuestion({ options: newOptions })
     }
 
+    /**
+     * Swaps the position of two options in a question of type "ORDER".
+     * @param activeId The option's id that is being dragged.
+     * @param overId The option's id that is being dragged over.
+     */
     const reorderOptions = (activeId: string, overId: string) => {
+        if (currentQuestion.type !== "ORDER") return
         const oldIndex = currentQuestion.options.findIndex((option) => option.id === activeId)
         const newIndex = currentQuestion.options.findIndex((option) => option.id === overId)
-
         if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
-
         markUnsavedChanges()
-
-        const nextOptions = arrayMove(currentQuestion.options, oldIndex, newIndex)
-        updateQuestion({ options: nextOptions })
+        const newOptions = arrayMove(currentQuestion.options, oldIndex, newIndex)
+        updateQuestion({ ...currentQuestion, options: newOptions })
     }
 
     const deleteQuestion = (indexToDelete: number) => {
@@ -514,10 +517,9 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         if (deletingId && !String(deletingId).startsWith("temp-")) {
             enqueue({
                 id: tempId(),
-                op: QueueOpEnum.DELETE,
+                op: "delete",
                 quizId: quizId ?? "new",
                 questionId: deletingId,
-                createdAt: new Date().toISOString(),
             })
         }
 
@@ -547,35 +549,38 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
 
         enqueue({
             id: tempId(),
-            op: QueueOpEnum.CREATE,
+            op: "create",
             quizId: quizId ?? "new",
             questionId: newQ.id,
             payload: questionToRequest(newQ),
-            createdAt: new Date().toISOString(),
         })
     }
 
+    /**
+     * Adds a new option to the current question if the question type is not "SLIDE".
+     */
     const handleAddOption = () => {
-        if (currentQuestion.type === QuestionTypeEnum.SLIDE) return
+        if (currentQuestion.type === "SLIDE") return
 
         markUnsavedChanges()
         const newOption =
-            currentQuestion.type === QuestionTypeEnum.ORDER
+            currentQuestion.type === "ORDER"
                 ? { id: tempId(), answer: "" }
                 : { id: tempId(), answer: "", correct: false }
-        const updatedQuestion = {
-            ...currentQuestion,
-            options: [...currentQuestion.options, newOption],
-        }
-        updateQuestion({ options: updatedQuestion.options })
+
+        updateQuestion(addOptionToQuestion(currentQuestion, newOption))
     }
 
+    /**
+     * Deletes the option at the given index from the current question's options array.
+     * Does nothing if the question type is "SLIDE" or if there are only 2 options left (to ensure at least 2 options remain).
+     * @param indexToDelete The index of the option to delete from the current question's options array.
+     */
     const handleDeleteOption = (indexToDelete: number) => {
+        if (currentQuestion.type === "SLIDE") return
         if (currentQuestion.options.length <= 2) return
         markUnsavedChanges()
-        updateQuestion({
-            options: currentQuestion.options.filter((_, index) => index !== indexToDelete),
-        })
+        updateQuestion(removeOptionFromQuestion(currentQuestion, indexToDelete))
     }
 
     const isQuizPlayable =
