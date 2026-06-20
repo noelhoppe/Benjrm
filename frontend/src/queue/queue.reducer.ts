@@ -11,7 +11,12 @@ export default function reducer(state: QueueItem[], action: Action): QueueItem[]
             return action.items
         case "removeQuestion":
             return state.filter(
-                (item) => !(item.op !== "reorder" && item.questionId === action.questionId)
+                (item) =>
+                    !(
+                        item.op !== "reorder" &&
+                        item.questionId === action.questionId &&
+                        item.op !== "delete"
+                    )
             )
         case "upsertCreate":
             return upsertCreate(state, action.questionId, action.payload, action.quizId)
