@@ -133,31 +133,16 @@ async fn dummy_session(
 
 async fn dummy_player(
     session: &mut GameSession,
-    session_arc: Arc<Mutex<GameSession>>,
     host_rx: &mut mpsc::Receiver<HostMessage>,
     name: &str,
 ) -> (Uuid, mpsc::Receiver<PlayerMessage>) {
     let player = Uuid::new_v4();
-    let (player_channel, _, mut player_rx) = DummyChanel::new();
+    let (player_channel, _, player_rx) = DummyChanel::new();
+    session.check_add_player(name).unwrap();
     session
-        .set_player_channel(player, player_channel)
-        .await
-        .unwrap();
-
-    session
-        .handle_player_cmd(
-            Command {
-                id: Some(1),
-                command: PlayerCommand::SetName {
-                    name: name.into(),
-                    emoji: None,
-                },
-            },
-            session_arc,
-            player,
-        )
+        .add_player(player, player_channel, name.into(), None)
         .await;
-    assert!(matches!(player_rx.recv().await.unwrap(), PlayerMessage::Ok));
+
     match host_rx.recv().await.unwrap() {
         HostMessage::AddPlayer {
             id,
@@ -296,25 +281,16 @@ async fn join() {
 
     {
         session.set_host_channel(host_channel).await;
+        session.check_add_player("cool name").unwrap();
         session
-            .set_player_channel(player, player_channel)
-            .await
-            .unwrap();
-
-        session
-            .handle_player_cmd(
-                Command {
-                    id: Some(1),
-                    command: PlayerCommand::SetName {
-                        name: "cool name".into(),
-                        emoji: Some("😀".into()),
-                    },
-                },
-                session_arc.clone(),
+            .add_player(
                 player,
+                player_channel,
+                "cool name".into(),
+                Some(emojis::get("😀").unwrap()),
             )
             .await;
-        assert!(matches!(player_rx.recv().await.unwrap(), PlayerMessage::Ok));
+
         match host_rx.recv().await.unwrap() {
             HostMessage::AddPlayer { id, name, emoji } => {
                 assert_eq!(id, player);
@@ -325,32 +301,10 @@ async fn join() {
         }
     }
 
-    {
-        let player2 = Uuid::new_v4();
-        let (player2_channel, _, mut player2_rx) = DummyChanel::new();
-        session
-            .set_player_channel(player2, player2_channel)
-            .await
-            .unwrap();
-
-        session
-            .handle_player_cmd(
-                Command {
-                    id: Some(1),
-                    command: PlayerCommand::SetName {
-                        name: "cool name".into(),
-                        emoji: Some("😀".into()),
-                    },
-                },
-                session_arc.clone(),
-                player2,
-            )
-            .await;
-        match player2_rx.recv().await.unwrap() {
-            PlayerMessage::Error(err) => assert_eq!(err.error, "name_already_taken"),
-            x => panic!("invalid message: {x:?}"),
-        }
-    }
+    assert!(matches!(
+        session.check_add_player("cool name"),
+        Err(GameSessionError::NameAlreadyTaken)
+    ));
 
     {
         session
@@ -388,8 +342,7 @@ async fn rename_player() {
     let (host_channel, _, mut host_rx) = DummyChanel::new();
     session.set_host_channel(host_channel).await;
 
-    let (player, mut player_rx) =
-        dummy_player(&mut session, session_arc.clone(), &mut host_rx, "name").await;
+    let (player, mut player_rx) = dummy_player(&mut session, &mut host_rx, "name").await;
     session
         .handle_player_cmd(
             Command {
@@ -403,6 +356,7 @@ async fn rename_player() {
             player,
         )
         .await;
+
     assert!(matches!(player_rx.recv().await.unwrap(), PlayerMessage::Ok));
     match host_rx.recv().await.unwrap() {
         HostMessage::RenamePlayer { id, name, emoji } => {
@@ -466,39 +420,11 @@ async fn start() {
 
         let player = Uuid::new_v4();
         let (player_channel, _, mut player_rx) = DummyChanel::new();
+        session.check_add_player("test").unwrap();
         session
-            .set_player_channel(player, player_channel)
-            .await
-            .unwrap();
-
-        session
-            .handle_host_cmd(
-                Command {
-                    id: Some(2),
-                    command: HostCommand::Start,
-                },
-                session_arc.clone(),
-                code,
-            )
+            .add_player(player, player_channel, "test".into(), None)
             .await;
-        match rx.recv().await.unwrap() {
-            HostMessage::Error(err) => assert_eq!(err.error, "no_players"),
-            x => panic!("invalid message: {x:?}"),
-        }
 
-        session
-            .handle_player_cmd(
-                Command {
-                    id: None,
-                    command: PlayerCommand::SetName {
-                        name: "test".into(),
-                        emoji: None,
-                    },
-                },
-                session_arc.clone(),
-                player,
-            )
-            .await;
         match rx.recv().await.unwrap() {
             HostMessage::AddPlayer { id, name, emoji } => {
                 assert_eq!(id, player);
@@ -524,10 +450,8 @@ async fn start() {
             PlayerMessage::Start
         ));
 
-        let player2 = Uuid::new_v4();
-        let (player2_channel, _, _) = DummyChanel::new();
         assert!(matches!(
-            session.set_player_channel(player2, player2_channel).await,
+            session.check_add_player("some name"),
             Err(GameSessionError::AlreadyStarted)
         ));
 
@@ -559,14 +483,7 @@ async fn kick_on_start() {
     let (host_channel, _, mut host_rx) = DummyChanel::new();
     session.set_host_channel(host_channel).await;
 
-    let (_, mut player1_rx) =
-        dummy_player(&mut session, session_arc.clone(), &mut host_rx, "test").await;
-    let player2 = Uuid::new_v4();
-    let (player2_channel, player2_closed, mut player2_rx) = DummyChanel::new();
-    session
-        .set_player_channel(player2, player2_channel)
-        .await
-        .unwrap();
+    let (_, mut player1_rx) = dummy_player(&mut session, &mut host_rx, "test").await;
 
     session
         .handle_host_cmd(
@@ -583,16 +500,9 @@ async fn kick_on_start() {
         player1_rx.recv().await.unwrap(),
         PlayerMessage::Start
     ));
-    assert!(matches!(
-        player2_rx.recv().await.unwrap(),
-        PlayerMessage::Kick
-    ));
-    assert!(player2_closed.load(Ordering::Relaxed));
 
-    let player3 = Uuid::new_v4();
-    let (player3_channel, _, _) = DummyChanel::new();
     assert!(matches!(
-        session.set_player_channel(player3, player3_channel).await,
+        session.check_add_player("test2"),
         Err(GameSessionError::AlreadyStarted)
     ));
 }
@@ -608,8 +518,7 @@ async fn show_question() {
     let (channel, _, mut rx) = DummyChanel::new();
     session.set_host_channel(channel).await;
 
-    let (_, mut player_rx) =
-        dummy_player(&mut session, session_arc.clone(), &mut rx, "player name").await;
+    let (_, mut player_rx) = dummy_player(&mut session, &mut rx, "player name").await;
     session
         .handle_host_cmd(
             Command {
@@ -703,11 +612,11 @@ async fn play_dummy_quiz() {
     session.set_host_channel(host_channel).await;
 
     let (player_1_uuid, mut player_1_rx) =
-        dummy_player(&mut session, session_arc.clone(), &mut host_rx, "player 1").await;
+        dummy_player(&mut session, &mut host_rx, "player 1").await;
     let (player_2_uuid, mut player_2_rx) =
-        dummy_player(&mut session, session_arc.clone(), &mut host_rx, "player 2").await;
+        dummy_player(&mut session, &mut host_rx, "player 2").await;
     let (player_3_uuid, mut player_3_rx) =
-        dummy_player(&mut session, session_arc.clone(), &mut host_rx, "player 3").await;
+        dummy_player(&mut session, &mut host_rx, "player 3").await;
 
     session.status = super::GameSessionStatus::Started;
 
