@@ -12,14 +12,16 @@ import QuestionQueueError from "@/queue/queue.error.ts"
 import { ApiError } from "@/api/utils.ts"
 
 async function processCreateOp<QI extends Extract<QueueItem, CreateQuestionQueueItem>>(
-    item: QI
+    item: QI,
+    quizId: string
 ): Promise<ProcessResult> {
-    const created = await questionAdapterImpl.createQuestion(item.quizId, item.payload)
+    const created = await questionAdapterImpl.createQuestion(quizId, item.payload)
     return { status: "success", createdId: created.id }
 }
 
 async function processUpdateOp<QI extends Extract<QueueItem, UpdateQuestionQueueItem>>(
-    item: QI
+    item: QI,
+    quizId: string
 ): Promise<ProcessResult> {
     if (!item.questionId) return { status: "skipped", reason: "no_question_id" }
 
@@ -27,12 +29,13 @@ async function processUpdateOp<QI extends Extract<QueueItem, UpdateQuestionQueue
         return { status: "skipped", reason: "unresolved_temp_id" }
     }
 
-    await questionAdapterImpl.updateQuestion(item.quizId, item.questionId, item.payload)
+    await questionAdapterImpl.updateQuestion(quizId, item.questionId, item.payload)
     return { status: "success" }
 }
 
 async function processDeleteOp<QI extends Extract<QueueItem, DeleteQuestionQueueItem>>(
-    item: QI
+    item: QI,
+    quizId: string
 ): Promise<ProcessResult> {
     if (!item.questionId) return { status: "skipped", reason: "no_question_id" }
 
@@ -42,13 +45,14 @@ async function processDeleteOp<QI extends Extract<QueueItem, DeleteQuestionQueue
         return { status: "success" }
     }
 
-    await questionAdapterImpl.deleteQuestion(item.quizId, item.questionId)
+    await questionAdapterImpl.deleteQuestion(quizId, item.questionId)
     return { status: "success" }
 }
 
 async function processReorderOp<QI extends Extract<QueueItem, ReorderQueueItem>>(
     item: QI,
-    idMap: Record<string, string>
+    idMap: Record<string, string>,
+    quizId: string
 ): Promise<ProcessResult> {
     // const payload = item.payload as { order?: string[] } | undefined
     // let order = payload?.order ?? []
@@ -66,30 +70,32 @@ async function processReorderOp<QI extends Extract<QueueItem, ReorderQueueItem>>
         return { status: "skipped", reason: "unresolved_temp_ids_in_order" }
     }
 
-    await questionAdapterImpl.reorderQuestions(item.quizId, order)
+    await questionAdapterImpl.reorderQuestions(quizId, order)
     return { status: "success" }
 }
 
 async function processQueueItem(
     item: QueueItem,
-    idMap: Record<string, string>
+    idMap: Record<string, string>,
+    quizId: string
 ): Promise<ProcessResult> {
     switch (item.op) {
         case "create":
-            return processCreateOp(item)
+            return processCreateOp(item, quizId)
         case "update":
-            return processUpdateOp(item)
+            return processUpdateOp(item, quizId)
         case "delete":
-            return processDeleteOp(item)
+            return processDeleteOp(item, quizId)
         case "reorder":
-            return processReorderOp(item, idMap)
+            return processReorderOp(item, idMap, quizId)
         default:
             return assertNever(item)
     }
 }
 
 export default async function processQueue(
-    items: QueueItem[]
+    items: QueueItem[],
+    quizId: string
 ): Promise<{ idMap: Record<string, string>; succeededIds: Set<string> }> {
     const idMap: Record<string, string> = {}
     const succeededIds = new Set<string>()
@@ -105,7 +111,7 @@ export default async function processQueue(
         }
 
         // eslint-disable-next-line no-await-in-loop
-        const result = await processQueueItem(item, idMap)
+        const result = await processQueueItem(item, idMap, quizId)
 
         if (
             result.status === "success" &&

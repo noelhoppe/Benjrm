@@ -17,7 +17,6 @@ import {
     updateOptionInQuestionAtIndex,
 } from "@/api/questions/utils/questionUtils.ts"
 import { questionToRequest } from "@/api/questions/question.mapper.ts"
-import type { QueueItem } from "@/queue/queue.types.ts"
 import useQuestionChangeQueue from "@/hooks/useQuestionChangeQueue.ts"
 import QuestionQueueError from "@/queue/queue.error.ts"
 
@@ -60,7 +59,6 @@ export interface UseQuizEditorResult {
     isSavingQuestions: boolean
     hasUnsavedChanges: boolean
     setHasUnsavedChanges: (b: boolean) => void
-    enqueue: (item: QueueItem) => void
     discardChanges: () => void
     flush: () => Promise<{ items: unknown[]; idMap: Record<string, string> } | null>
     upsertReorder: (order: string[]) => void
@@ -105,12 +103,11 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     const reorderTimeoutRef = useRef<number | null>(null)
 
     const {
-        enqueue,
         clear,
         cleanup,
         flush,
         queue,
-        removeQuestion,
+        upsertDelete,
         upsertCreate,
         upsertReorder,
         upsertUpdate,
@@ -514,18 +511,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
             }
         }
 
-        if (deletingId && !String(deletingId).startsWith("temp-")) {
-            enqueue({
-                id: tempId(),
-                op: "delete",
-                quizId: quizId ?? "new",
-                questionId: deletingId,
-            })
-        }
-
-        if (deletingId) {
-            removeQuestion(deletingId)
-        }
+        upsertDelete(deletingId)
     }
 
     const handleAddQuestion = () => {
@@ -542,18 +528,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
             return next
         })
 
-        if (quizId) {
-            upsertCreate(newQ.id, questionToRequest(newQ))
-            return
-        }
-
-        enqueue({
-            id: tempId(),
-            op: "create",
-            quizId: quizId ?? "new",
-            questionId: newQ.id,
-            payload: questionToRequest(newQ),
-        })
+        upsertCreate(newQ.id, questionToRequest(newQ))
     }
 
     /**
@@ -622,7 +597,6 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         isSavingQuestions,
         hasUnsavedChanges,
         setHasUnsavedChanges,
-        enqueue,
         discardChanges,
         flush,
         upsertReorder,

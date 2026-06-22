@@ -7,14 +7,13 @@ import type { QuestionRequest } from "@/api/questions/questions.types.ts"
 import processQueue, { normalizeError, sortQueue } from "@/queue/queue.operations.ts"
 
 export interface UseQuestionChangeQueueReturn {
-    enqueue: (item: QueueItem) => void
     clear: () => void
     cleanup: (isUsed: (id: string) => Promise<boolean>) => void
     flush: () => Promise<{ items: QueueItem[]; idMap: Record<string, string> }>
-    removeQuestion: (questionId: string) => void
     upsertCreate: (questionId: string, payload: QuestionRequest) => void
     upsertReorder: (order: string[]) => void
     upsertUpdate: (questionId: string, payload: QuestionRequest) => void
+    upsertDelete: (questionId: string) => void
     pendingCount: number
     isFlushing: boolean
     lastError: QuestionQueueError | null
@@ -53,34 +52,22 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         }
     }, [queueStorage, storageQuizId, queue])
 
-    const enqueue = useCallback((item: QueueItem) => {
-        dispatch({ type: "enqueue", item })
+
+    const upsertCreate = useCallback((questionId: string, payload: QuestionRequest) => {
+        dispatch({ type: "upsertCreate", questionId, payload })
     }, [])
 
-    const removeQuestion = useCallback((questionId: string) => {
-        dispatch({ type: "removeQuestion", questionId })
+    const upsertReorder = useCallback((order: string[]) => {
+        dispatch({ type: "upsertReorder", order })
     }, [])
 
-    const upsertCreate = useCallback(
-        (questionId: string, payload: QuestionRequest) => {
-            dispatch({ type: "upsertCreate", questionId, payload, quizId })
-        },
-        [quizId]
-    )
+    const upsertUpdate = useCallback((questionId: string, payload: QuestionRequest) => {
+        dispatch({ type: "upsertUpdate", questionId, payload })
+    }, [])
 
-    const upsertReorder = useCallback(
-        (order: string[]) => {
-            dispatch({ type: "upsertReorder", order, quizId })
-        },
-        [quizId]
-    )
-
-    const upsertUpdate = useCallback(
-        (questionId: string, payload: QuestionRequest) => {
-            dispatch({ type: "upsertUpdate", questionId, payload, quizId })
-        },
-        [quizId]
-    )
+    const upsertDelete = useCallback((questionId: string) => {
+        dispatch({ type: "upsertDelete", questionId })
+    }, [])
 
     const clear = useCallback(() => {
         dispatch({ type: "clear" })
@@ -132,7 +119,10 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
 
         try {
             const sortedQueue = sortQueue(queue)
-            const { idMap, succeededIds } = await processQueue(sortedQueue)
+            if (!quizId) {
+                throw new Error("Quiz id is required to flush the question change queue.")
+            }
+            const { idMap, succeededIds } = await processQueue(sortedQueue, quizId)
             updateQueueState(queue, succeededIds, idMap)
 
             return { items: sortedQueue, idMap }
@@ -143,17 +133,16 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         } finally {
             setIsFlushing(false)
         }
-    }, [queue, queueStorage, storageQuizId])
+    }, [queue, queueStorage, quizId, storageQuizId])
 
     return {
-        enqueue,
         clear,
         cleanup,
         flush,
-        removeQuestion,
         upsertCreate,
         upsertReorder,
         upsertUpdate,
+        upsertDelete,
         pendingCount: queue.length,
         isFlushing,
         lastError,

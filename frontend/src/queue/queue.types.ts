@@ -11,13 +11,6 @@ interface BaseQueueItem {
      * so we can remove only the successful ones from the queue after a flush.
      */
     id: string
-
-    /**
-     * The quizzes unique uuid v4 identifier.
-     * Used to scope the queue to a specific quiz, and allow multiple queues
-     * for different quizzes to coexist in storage without conflict.
-     */
-    quizId: string
 }
 
 /**
@@ -109,22 +102,22 @@ export type QueueItem =
  * Actions used to manipulate the local queue state (e.g. reducer actions).
  */
 export type Action =
-    | { type: "enqueue"; item: QueueItem }
     | { type: "clear" }
     | { type: "replace"; items: QueueItem[] }
-    | { type: "removeQuestion"; questionId: string }
     | {
           type: "upsertCreate"
           questionId: string
           payload: QuestionRequest
-          quizId?: string
       }
-    | { type: "upsertReorder"; order: string[]; quizId?: string }
+    | { type: "upsertReorder"; order: string[] }
     | {
           type: "upsertUpdate"
           questionId: string
           payload: QuestionRequest
-          quizId?: string
+      }
+    | {
+          type: "upsertDelete"
+          questionId: string
       }
 
 /**
