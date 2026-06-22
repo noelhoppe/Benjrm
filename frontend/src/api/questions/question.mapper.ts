@@ -41,18 +41,7 @@ export function questionToRequest(question: Question): QuestionRequest {
                     answer: option.answer,
                 })),
             }
-
         case "SINGLE_CHOICE":
-            return {
-                type: question.type,
-                question: question.question,
-                hidden: question.hidden,
-                options: question.options.map((option) => ({
-                    answer: option.answer,
-                    correct: option.correct,
-                })),
-            }
-
         case "MULTIPLE_CHOICE":
             return {
                 type: question.type,
