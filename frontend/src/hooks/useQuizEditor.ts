@@ -5,10 +5,9 @@ import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useQuestions } from "@/api/questions"
 import questionKeys from "@/api/questions/utils/questionKeys"
-import { createEmptyQuestion, applyQueueToQuestions } from "@/pages/quiz/quizUtils"
 import tempId from "@/utils/tempId"
 import { ApiError } from "@/api/utils"
-import type { Question, QuestionRequest } from "@/api/questions/questions.types.ts"
+import type { Question, QuestionOption, UpdateQuestionRequest } from "@/api/questions/questions.types.ts"
 import { useDeleteQuiz, useQuiz } from "@/api/quizzes/quizzes.queries.ts"
 import { getQuiz } from "@/api/quizzes/quizzes.api.ts"
 import {
@@ -16,9 +15,13 @@ import {
     removeOptionFromQuestion,
     updateOptionInQuestionAtIndex,
 } from "@/api/questions/utils/questionUtils.ts"
-import { questionToRequest } from "@/api/questions/question.mapper.ts"
+import {
+    questionToQuestionRequest,
+    questionToUpdateQuestionRequest,
+} from "@/api/questions/question.mapper.ts"
 import useQuestionChangeQueue from "@/hooks/useQuestionChangeQueue.ts"
 import QuestionQueueError from "@/queue/queue.error.ts"
+import { applyQueueToQuestions, createEmptyQuestion } from "@/pages/quiz/quizUtils.ts"
 
 export interface QuestionError {
     missingQuestion: boolean
@@ -62,7 +65,7 @@ export interface UseQuizEditorResult {
     discardChanges: () => void
     flush: () => Promise<{ items: unknown[]; idMap: Record<string, string> } | null>
     upsertReorder: (order: string[]) => void
-    upsertUpdate: (id: string, payload: QuestionRequest) => void
+    upsertUpdate: (id: string, payload: UpdateQuestionRequest) => void
     deleteQuizMutation: ReturnType<typeof useDeleteQuiz>
     hasInitializedQuestions: boolean
     isQuizPlayable: boolean
@@ -362,9 +365,16 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         try {
             const flushResult = await flush()
 
-            if (flushResult?.idMap && Object.keys(flushResult.idMap).length > 0) {
-                const { idMap } = flushResult
-                setQuestions((prev) => prev.map((q) => ({ ...q, id: idMap[q.id] ?? q.id })))
+            if (Object.keys(flushResult.idMap).length > 0 || Object.keys(flushResult.optionIdsByQuestion).length > 0) {
+                const { idMap, optionIdsByQuestion } = flushResult
+                setQuestions((prev) => prev.map((q) => {
+                    if (q.type !== "SLIDE" && optionIdsByQuestion[q.id]) {
+                        q.options.forEach((option, optionIndex) => 
+                            option.id = optionIdsByQuestion[q.id][optionIndex]
+                        )
+                    }
+                    return { ...q, id: idMap[q.id] ?? q.id }
+                }))
             }
 
             await queryClient.invalidateQueries({ queryKey: questionKeys.all(quizId) })
@@ -397,9 +407,9 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
     const updateQuestion = (question: Question) => {
         markUnsavedChanges()
         if (question.id.startsWith("temp-")) {
-            upsertCreate(question.id, questionToRequest(question))
+            upsertCreate(question.id, questionToQuestionRequest(question))
         } else {
-            upsertUpdate(question.id, questionToRequest(question))
+            upsertUpdate(question.id, questionToUpdateQuestionRequest(question))
         }
         setQuestions((prevQuestions) => {
             const updated = [...prevQuestions]
@@ -523,7 +533,7 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
             return next
         })
 
-        upsertCreate(newQ.id, questionToRequest(newQ))
+        upsertCreate(newQ.id, questionToQuestionRequest(newQ))
     }
 
     /**

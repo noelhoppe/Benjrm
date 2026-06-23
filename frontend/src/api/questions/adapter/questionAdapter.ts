@@ -1,4 +1,8 @@
-import type { Question, QuestionRequest } from "@/api/questions/questions.types.ts"
+import type {
+    Question,
+    QuestionRequest,
+    UpdateQuestionRequest,
+} from "@/api/questions/questions.types.ts"
 
 /**
  * {@link https://en.wikipedia.org/wiki/Adapter_pattern Adapter pattern} for the question's api.
@@ -37,7 +41,7 @@ export interface QuestionAdapter {
     updateQuestion: (
         quizId: string,
         questionId: string,
-        request: Partial<QuestionRequest>
+        request: Partial<UpdateQuestionRequest>
     ) => Promise<Question>
     /**
      * Deletes a question from a quiz.

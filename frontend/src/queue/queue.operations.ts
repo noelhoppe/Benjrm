@@ -15,13 +15,19 @@ async function processCreateOp<QI extends Extract<QueueItem, CreateQuestionQueue
     item: QI,
     quizId: string
 ): Promise<ProcessResult> {
-    const created = await questionAdapterImpl.createQuestion(quizId, item.payload)
-    return { status: "success", createdId: created.id }
+    const payload = item.payload
+    const created = await questionAdapterImpl.createQuestion(quizId, payload)
+
+    let optionIds: string[] | undefined = undefined
+    if (created.type !== "SLIDE") {
+        optionIds = created.options.map((option) => option.id)
+    }
+    return { status: "success", createdId: created.id, optionIds }
 }
 
 async function processUpdateOp<QI extends Extract<QueueItem, UpdateQuestionQueueItem>>(
     item: QI,
-    quizId: string
+    quizId: string,
 ): Promise<ProcessResult> {
     if (!item.questionId) return { status: "skipped", reason: "no_question_id" }
 
@@ -29,8 +35,13 @@ async function processUpdateOp<QI extends Extract<QueueItem, UpdateQuestionQueue
         return { status: "skipped", reason: "unresolved_temp_id" }
     }
 
-    await questionAdapterImpl.updateQuestion(quizId, item.questionId, item.payload)
-    return { status: "success" }
+    const updated = await questionAdapterImpl.updateQuestion(quizId, item.questionId, item.payload)
+
+    let optionIds: string[] | undefined = undefined
+    if (updated.type !== "SLIDE") {
+        optionIds = updated.options.map((option) => option.id)
+    }
+    return { status: "success", optionIds }
 }
 
 async function processDeleteOp<QI extends Extract<QueueItem, DeleteQuestionQueueItem>>(
@@ -95,21 +106,22 @@ export default async function processQueue(
     quizId: string
 ): Promise<{
     idMap: Record<string, string>
+    optionIdsByQuestion: Record<string, string[]>
     succeededIds: Set<string>
     failed: { itemId: string; error: string }[]
 }> {
     const idMap: Record<string, string> = {}
+    
+    // maps client-side, temporary question IDs to server-side generated option IDs for each question
+    const optionIdsByQuestion: Record<string, string[]> = {}
     const succeededIds = new Set<string>()
     const failed: { itemId: string; error: string }[] = []
 
     // eslint-disable-next-line no-restricted-syntax
     for (const item of items) {
         try {
-            if (
-                (item.op === "update" || item.op === "delete") &&
-                item.questionId &&
-                idMap[item.questionId]
-            ) {
+            if ((item.op === "update" || item.op === "delete") && idMap[item.questionId]) {
+                console.error("should never happen")
                 item.questionId = idMap[item.questionId]
             }
 
@@ -121,6 +133,12 @@ export default async function processQueue(
                 if (item.op === "create" && item.questionId && result.createdId) {
                     idMap[item.questionId] = result.createdId
                 }
+                if ((item.op === "create" || item.op === "update") && item.questionId && result.optionIds) {
+                    optionIdsByQuestion[item.questionId] = result.optionIds
+                }
+                // if (item.op === "create" && result.createdOptionsIdMap) {
+                //         optionIdMapByQuestion[idMap[item.questionId]] = result.createdOptionsIdMap
+                // }
             } else {
                 failed.push({
                     itemId: item.id,
@@ -134,7 +152,7 @@ export default async function processQueue(
             })
         }
     }
-    return { idMap, succeededIds, failed }
+    return { idMap, optionIdsByQuestion, succeededIds, failed }
 }
 
 export function sortQueue(queue: QueueItem[]): QueueItem[] {

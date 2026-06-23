@@ -1,4 +1,4 @@
-import type { QuestionRequest } from "@/api/questions/questions.types.ts"
+import type { QuestionRequest, UpdateQuestionRequest } from "@/api/questions/questions.types.ts"
 
 /**
  * Base structure for all queue items.
@@ -47,7 +47,7 @@ export interface UpdateQuestionQueueItem extends BaseQueueItem {
     /**
      * The full data required to update a question
      */
-    payload: QuestionRequest
+    payload: UpdateQuestionRequest
 
     /**
      * The unique, server-side generated question uuid v4 identifier.
@@ -112,7 +112,7 @@ export type Action =
     | {
           type: "upsertUpdate"
           questionId: string
-          payload: QuestionRequest
+          payload: UpdateQuestionRequest
       }
     | {
           type: "upsertDelete"
@@ -123,5 +123,5 @@ export type Action =
  * Result of processing a queue item.
  */
 export type ProcessResult =
-    | { status: "success"; createdId?: string }
+    | { status: "success"; createdId?: string; optionIds?: string[] }
     | { status: "skipped"; reason: string }

@@ -1,6 +1,11 @@
 import type { Modifier } from "@dnd-kit/core"
 import tempId from "@/utils/tempId"
-import type { Question, QuestionRequest, QuestionType } from "@/api/questions/questions.types.ts"
+import type {
+    Question,
+    QuestionRequest,
+    QuestionType,
+    UpdateQuestionRequest,
+} from "@/api/questions/questions.types.ts"
 import assertNever from "@/utils/assertNever.ts"
 import type { QueueItem } from "@/queue/queue.types.ts"
 
@@ -38,7 +43,10 @@ export function applyQueueToQuestions(baseQuestions: Question[], queue: QueueIte
 
     let draftQuestions = [...baseQuestions]
 
-    const applyRequest = (question: Question, request: QuestionRequest): Question => {
+    const applyRequest = (
+        question: Question,
+        request: QuestionRequest | UpdateQuestionRequest
+    ): Question => {
         switch (request.type) {
             case "SLIDE":
                 return {

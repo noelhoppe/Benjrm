@@ -1,15 +1,18 @@
 import type { QuestionAdapter } from "@/api/questions/adapter/questionAdapter.ts"
 import QuestionApiAdapter from "@/api/questions/adapter/questionApiAdapter.ts"
-import type { Question, QuestionRequest } from "@/api/questions/questions.types.ts"
+import type {
+    Question,
+    UpdateQuestionRequest,
+} from "@/api/questions/questions.types.ts"
 
 class QuestionAdapterImpl implements QuestionAdapter {
-    private service: QuestionAdapter
+    private readonly service: QuestionAdapter
 
     constructor(service: QuestionAdapter) {
         this.service = service
     }
 
-    async createQuestion(quizId: string, request: QuestionRequest): Promise<Question> {
+    async createQuestion(quizId: string, request: T): Promise<Question> {
         return this.service.createQuestion(quizId, request)
     }
 
@@ -24,7 +27,7 @@ class QuestionAdapterImpl implements QuestionAdapter {
     async updateQuestion(
         quizId: string,
         questionId: string,
-        request: Partial<QuestionRequest>
+        request: Partial<UpdateQuestionRequest>
     ): Promise<Question> {
         return this.service.updateQuestion(quizId, questionId, request)
     }

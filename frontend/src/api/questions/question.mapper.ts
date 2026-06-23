@@ -2,6 +2,7 @@ import type {
     Question,
     QuestionRequest,
     QuestionResponse,
+    UpdateQuestionRequest,
 } from "@/api/questions/questions.types.ts"
 import assertNever from "@/utils/assertNever"
 
@@ -19,11 +20,11 @@ export function toQuestion(dto: QuestionResponse): Question {
 }
 
 /**
- * Converts a question's domain model used within the frontend application to the question's api request object, which can be sent to the backend when creating or updating a question.
+ * Converts a question's domain model used within the frontend application to the question's api request object, which can be sent to the backend when creating (or updating) a question.
  * @param question The question domain model used within the frontend application.
- * @returns The question's api request object, which can be sent to the backend when creating or updating a question.
+ * @returns The question's api request object, which can be sent to the backend when creating (or updating) a question.
  */
-export function questionToRequest(question: Question): QuestionRequest {
+export function questionToQuestionRequest(question: Question): QuestionRequest {
     switch (question.type) {
         case "SLIDE":
             return {
@@ -48,6 +49,46 @@ export function questionToRequest(question: Question): QuestionRequest {
                 question: question.question,
                 hidden: question.hidden,
                 options: question.options.map((option) => ({
+                    answer: option.answer,
+                    correct: option.correct,
+                })),
+            }
+        default:
+            return assertNever(question)
+    }
+}
+
+/**
+ * Converts a question's domain model used within the frontend application to the question's api request object, which can be sent to the backend when updating a question.
+ * @param question The question domain model used within the frontend application.
+ * @returns The question's api request object, which can be sent to the backend when updating a question,
+ */
+export function questionToUpdateQuestionRequest(question: Question): UpdateQuestionRequest {
+    switch (question.type) {
+        case "SLIDE":
+            return {
+                type: question.type,
+                question: question.question,
+                hidden: question.hidden,
+            }
+        case "ORDER":
+            return {
+                type: question.type,
+                question: question.question,
+                hidden: question.hidden,
+                options: question.options.map((option) => ({
+                    id: option.id.startsWith("temp-") ? undefined : option.id,
+                    answer: option.answer,
+                })),
+            }
+        case "MULTIPLE_CHOICE":
+        case "SINGLE_CHOICE":
+            return {
+                type: question.type,
+                question: question.question,
+                hidden: question.hidden,
+                options: question.options.map((option) => ({
+                    id: option.id.startsWith("temp-") ? undefined : option.id,
                     answer: option.answer,
                     correct: option.correct,
                 })),

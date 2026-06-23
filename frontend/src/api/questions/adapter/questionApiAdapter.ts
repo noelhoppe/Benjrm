@@ -4,6 +4,7 @@ import type {
     Question,
     QuestionRequest,
     QuestionResponse,
+    UpdateQuestionRequest,
 } from "@/api/questions/questions.types.ts"
 import { toQuestion } from "@/api/questions/question.mapper.ts"
 
@@ -40,7 +41,7 @@ export default class QuestionApiAdapter implements QuestionAdapter {
     async updateQuestion(
         quizId: string,
         questionId: string,
-        request: Partial<QuestionRequest>
+        request: Partial<UpdateQuestionRequest>
     ): Promise<Question> {
         const dto = await apiPatch<QuestionResponse>(
             `/quizzes/${quizId}/questions/${questionId}`,

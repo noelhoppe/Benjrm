@@ -1,22 +1,21 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import useQuestionQueueStorage from "@/api/questions/hooks/useQuestionQueueStorage.ts"
 import type { QueueItem } from "@/queue/queue.types.ts"
-import type QuestionQueueError from "@/queue/queue.error.ts"
+import QuestionQueueError from "@/queue/queue.error.ts"
 import reducer from "@/queue/queue.reducer.ts"
-import type { QuestionRequest } from "@/api/questions/questions.types.ts"
-import processQueue, { normalizeError, sortQueue } from "@/queue/queue.operations.ts"
+import type { QuestionRequest, UpdateQuestionRequest } from "@/api/questions/questions.types.ts"
+import processQueue, { sortQueue } from "@/queue/queue.operations.ts"
 
 export interface UseQuestionChangeQueueReturn {
     clear: () => void
     cleanup: (isUsed: (id: string) => Promise<boolean>) => void
-    flush: () => Promise<{ items: QueueItem[]; idMap: Record<string, string> }>
+    flush: () => Promise<{ items: QueueItem[]; idMap: Record<string, string>, optionIdsByQuestion: Record<string, string[]> }>
     upsertCreate: (questionId: string, payload: QuestionRequest) => void
     upsertReorder: (order: string[]) => void
-    upsertUpdate: (questionId: string, payload: QuestionRequest) => void
+    upsertUpdate: (questionId: string, payload: UpdateQuestionRequest) => void
     upsertDelete: (questionId: string) => void
     pendingCount: number
     isFlushing: boolean
-    lastError: QuestionQueueError | null
     queue: QueueItem[]
 }
 
@@ -26,7 +25,6 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
     const [queue, dispatch] = useReducer(reducer, [] as QueueItem[])
     const hydratedStorageQuizIdRef = useRef<string | null>(null)
     const [isFlushing, setIsFlushing] = useState(false)
-    const [lastError, setLastError] = useState<QuestionQueueError | null>(null)
 
     // Hydrate the queue from local storage when the quiz ID changes
     useEffect(() => {
@@ -60,7 +58,7 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         dispatch({ type: "upsertReorder", order })
     }, [])
 
-    const upsertUpdate = useCallback((questionId: string, payload: QuestionRequest) => {
+    const upsertUpdate = useCallback((questionId: string, payload: UpdateQuestionRequest) => {
         dispatch({ type: "upsertUpdate", questionId, payload })
     }, [])
 
@@ -75,7 +73,6 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         } catch {
             // ignore
         }
-        setLastError(null)
     }, [queueStorage, storageQuizId])
 
     const cleanup = useCallback(
@@ -88,10 +85,9 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
     const flush = useCallback(async (): Promise<{
         items: QueueItem[]
         idMap: Record<string, string>
+        optionIdsByQuestion: Record<string, string[]>
     }> => {
         setIsFlushing(true)
-        setLastError(null)
-
         const updateQueueState = (
             qi: QueueItem[],
             succeededIds: Set<string>,
@@ -121,12 +117,16 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
             if (!quizId) {
                 throw new Error("Quiz id is required to flush the question change queue.")
             }
-            const { idMap, succeededIds, failed } = await processQueue(sortedQueue, quizId)
+            const { idMap, optionIdsByQuestion, succeededIds, failed } = await processQueue(sortedQueue, quizId)
             updateQueueState(queue, succeededIds, idMap)
 
-            setLastError(normalizeError(failed))
+            if (failed.length > 0) {
+                throw new QuestionQueueError(failed[0].itemId, new Error(failed[0].error))
+            }
 
-            return { items: sortedQueue, idMap }
+            //setLastError(normalizeError(failed))
+
+            return { items: sortedQueue, idMap, optionIdsByQuestion }
         } finally {
             setIsFlushing(false)
         }
@@ -142,7 +142,6 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         upsertDelete,
         pendingCount: queue.length,
         isFlushing,
-        lastError,
         queue,
     }
 }

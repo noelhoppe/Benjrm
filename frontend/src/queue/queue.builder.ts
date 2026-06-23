@@ -48,9 +48,7 @@ export function upsertUpdate(
     return [...filtered, buildUpdateQuestionQueueItem(questionId, payload)]
 }
 
-function buildReorderQueueItem(
-    payload: ReorderQueueItem["payload"]
-): ReorderQueueItem {
+function buildReorderQueueItem(payload: ReorderQueueItem["payload"]): ReorderQueueItem {
     return {
         id: `reorder-${Date.now()}`,
         op: "reorder",

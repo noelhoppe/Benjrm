@@ -68,6 +68,29 @@ export type QuestionRequest =
     | MultipleChoiceQuestionRequest
 
 /**
+ * Adds an optional "id" property to the given type T, which is useful for updating existing options where the option's identifier is needed, but can be omitted when creating new options.
+ */
+type OptionUpdate<T> = T & { id?: string }
+
+/**
+ * Discriminated union type for update question requests.
+ * Adds the "id" property to each option for questions containing options.
+ * This updates the option on the backend instead of deleting the old one and creating a new one.
+ * As a result performance increases.
+ */
+export type UpdateQuestionRequest =
+    | SlideQuestionRequest
+    | (OrderQuestionRequest & {
+          options: OptionUpdate<OrderQuestionOptionRequest>[]
+      })
+    | (SingleChoiceQuestionRequest & {
+          options: OptionUpdate<SingleChoiceQuestionOptionRequest>[]
+      })
+    | (MultipleChoiceQuestionRequest & {
+          options: OptionUpdate<MultipleChoiceQuestionOptionRequest>[]
+      })
+
+/**
  * Common properties shared by all question responses,
  * including identifier and readonly metadata fields such as created and modified timestamps.
  * This serves as a base interface for all question response types, ensuring consistency across different question formats.
