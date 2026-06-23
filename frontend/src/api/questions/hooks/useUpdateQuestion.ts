@@ -2,10 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { UseMutationResult } from "@tanstack/react-query"
 import questionAdapterImpl from "@/api/questions/adapter/questionAdapterImpl.ts"
 import questionKeys from "@/api/questions/utils/questionKeys.ts"
-import type {
-    Question,
-    UpdateQuestionRequest,
-} from "@/api/questions/questions.types.ts"
+import type { Question, UpdateQuestionRequest } from "@/api/questions/questions.types.ts"
 
 interface UpdateQuestionArgs {
     questionId: string

@@ -8,17 +8,15 @@ import type {
     UpdateQuestionQueueItem,
 } from "@/queue/queue.types.ts"
 import assertNever from "@/utils/assertNever.ts"
-import { ApiError } from "@/api/utils.ts"
-import QuestionQueueError from "@/queue/queue.error.ts"
 
 async function processCreateOp<QI extends Extract<QueueItem, CreateQuestionQueueItem>>(
     item: QI,
     quizId: string
 ): Promise<ProcessResult> {
-    const payload = item.payload
+    const { payload } = item
     const created = await questionAdapterImpl.createQuestion(quizId, payload)
 
-    let optionIds: string[] | undefined = undefined
+    let optionIds: string[] | undefined
     if (created.type !== "SLIDE") {
         optionIds = created.options.map((option) => option.id)
     }
@@ -27,7 +25,7 @@ async function processCreateOp<QI extends Extract<QueueItem, CreateQuestionQueue
 
 async function processUpdateOp<QI extends Extract<QueueItem, UpdateQuestionQueueItem>>(
     item: QI,
-    quizId: string,
+    quizId: string
 ): Promise<ProcessResult> {
     if (!item.questionId) return { status: "skipped", reason: "no_question_id" }
 
@@ -37,7 +35,7 @@ async function processUpdateOp<QI extends Extract<QueueItem, UpdateQuestionQueue
 
     const updated = await questionAdapterImpl.updateQuestion(quizId, item.questionId, item.payload)
 
-    let optionIds: string[] | undefined = undefined
+    let optionIds: string[] | undefined
     if (updated.type !== "SLIDE") {
         optionIds = updated.options.map((option) => option.id)
     }
@@ -111,7 +109,7 @@ export default async function processQueue(
     failed: { itemId: string; error: string }[]
 }> {
     const idMap: Record<string, string> = {}
-    
+
     // maps client-side, temporary question IDs to server-side generated option IDs for each question
     const optionIdsByQuestion: Record<string, string[]> = {}
     const succeededIds = new Set<string>()
@@ -120,11 +118,6 @@ export default async function processQueue(
     // eslint-disable-next-line no-restricted-syntax
     for (const item of items) {
         try {
-            if ((item.op === "update" || item.op === "delete") && idMap[item.questionId]) {
-                console.error("should never happen")
-                item.questionId = idMap[item.questionId]
-            }
-
             // eslint-disable-next-line no-await-in-loop
             const result = await processQueueItem(item, idMap, quizId)
 
@@ -133,12 +126,13 @@ export default async function processQueue(
                 if (item.op === "create" && item.questionId && result.createdId) {
                     idMap[item.questionId] = result.createdId
                 }
-                if ((item.op === "create" || item.op === "update") && item.questionId && result.optionIds) {
+                if (
+                    (item.op === "create" || item.op === "update") &&
+                    item.questionId &&
+                    result.optionIds
+                ) {
                     optionIdsByQuestion[item.questionId] = result.optionIds
                 }
-                // if (item.op === "create" && result.createdOptionsIdMap) {
-                //         optionIdMapByQuestion[idMap[item.questionId]] = result.createdOptionsIdMap
-                // }
             } else {
                 failed.push({
                     itemId: item.id,
@@ -165,11 +159,4 @@ export function sortQueue(queue: QueueItem[]): QueueItem[] {
         }
         return (order[a.op] ?? 99) - (order[b.op] ?? 99)
     })
-}
-
-export function normalizeError(err: unknown): QuestionQueueError {
-    if (err instanceof QuestionQueueError) return err
-    const apiError = err instanceof ApiError || err instanceof Error ? err : new Error(String(err))
-
-    return new QuestionQueueError(undefined, apiError)
 }

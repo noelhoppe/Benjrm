@@ -7,7 +7,7 @@ import { useQuestions } from "@/api/questions"
 import questionKeys from "@/api/questions/utils/questionKeys"
 import tempId from "@/utils/tempId"
 import { ApiError } from "@/api/utils"
-import type { Question, QuestionOption, UpdateQuestionRequest } from "@/api/questions/questions.types.ts"
+import type { Question, UpdateQuestionRequest } from "@/api/questions/questions.types.ts"
 import { useDeleteQuiz, useQuiz } from "@/api/quizzes/quizzes.queries.ts"
 import { getQuiz } from "@/api/quizzes/quizzes.api.ts"
 import {
@@ -365,16 +365,24 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
         try {
             const flushResult = await flush()
 
-            if (Object.keys(flushResult.idMap).length > 0 || Object.keys(flushResult.optionIdsByQuestion).length > 0) {
+            if (
+                Object.keys(flushResult.idMap).length > 0 ||
+                Object.keys(flushResult.optionIdsByQuestion).length > 0
+            ) {
                 const { idMap, optionIdsByQuestion } = flushResult
-                setQuestions((prev) => prev.map((q) => {
-                    if (q.type !== "SLIDE" && optionIdsByQuestion[q.id]) {
-                        q.options.forEach((option, optionIndex) => 
-                            option.id = optionIdsByQuestion[q.id][optionIndex]
-                        )
-                    }
-                    return { ...q, id: idMap[q.id] ?? q.id }
-                }))
+                setQuestions((prev) =>
+                    prev.map((q) => {
+                        if (q.type !== "SLIDE" && optionIdsByQuestion[q.id]) {
+                            q.options.forEach(
+                                // eslint-disable-next-line no-return-assign
+                                (option, optionIndex) =>
+                                    // eslint-disable-next-line no-param-reassign
+                                    (option.id = optionIdsByQuestion[q.id][optionIndex])
+                            )
+                        }
+                        return { ...q, id: idMap[q.id] ?? q.id }
+                    })
+                )
             }
 
             await queryClient.invalidateQueries({ queryKey: questionKeys.all(quizId) })

@@ -9,7 +9,11 @@ import processQueue, { sortQueue } from "@/queue/queue.operations.ts"
 export interface UseQuestionChangeQueueReturn {
     clear: () => void
     cleanup: (isUsed: (id: string) => Promise<boolean>) => void
-    flush: () => Promise<{ items: QueueItem[]; idMap: Record<string, string>, optionIdsByQuestion: Record<string, string[]> }>
+    flush: () => Promise<{
+        items: QueueItem[]
+        idMap: Record<string, string>
+        optionIdsByQuestion: Record<string, string[]>
+    }>
     upsertCreate: (questionId: string, payload: QuestionRequest) => void
     upsertReorder: (order: string[]) => void
     upsertUpdate: (questionId: string, payload: UpdateQuestionRequest) => void
@@ -117,14 +121,17 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
             if (!quizId) {
                 throw new Error("Quiz id is required to flush the question change queue.")
             }
-            const { idMap, optionIdsByQuestion, succeededIds, failed } = await processQueue(sortedQueue, quizId)
+            const { idMap, optionIdsByQuestion, succeededIds, failed } = await processQueue(
+                sortedQueue,
+                quizId
+            )
             updateQueueState(queue, succeededIds, idMap)
 
             if (failed.length > 0) {
                 throw new QuestionQueueError(failed[0].itemId, new Error(failed[0].error))
             }
 
-            //setLastError(normalizeError(failed))
+            // setLastError(normalizeError(failed))
 
             return { items: sortedQueue, idMap, optionIdsByQuestion }
         } finally {

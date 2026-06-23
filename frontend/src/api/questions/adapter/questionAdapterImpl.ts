@@ -2,6 +2,7 @@ import type { QuestionAdapter } from "@/api/questions/adapter/questionAdapter.ts
 import QuestionApiAdapter from "@/api/questions/adapter/questionApiAdapter.ts"
 import type {
     Question,
+    QuestionRequest,
     UpdateQuestionRequest,
 } from "@/api/questions/questions.types.ts"
 
@@ -12,7 +13,7 @@ class QuestionAdapterImpl implements QuestionAdapter {
         this.service = service
     }
 
-    async createQuestion(quizId: string, request: T): Promise<Question> {
+    async createQuestion(quizId: string, request: QuestionRequest): Promise<Question> {
         return this.service.createQuestion(quizId, request)
     }
 
