@@ -21,3 +21,4 @@
 
 docs/githubpages/*
 !docs/githubpages/index.html
+!docs/githubpages/styles.css

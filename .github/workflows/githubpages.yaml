@@ -8,6 +8,7 @@ on:
       # OpenAPI Specification changes should trigger a re-deployment to GitHub Pages
       - 'docs/openapispec/index.html'
       - 'docs/openapispec/RestInterface.yaml'
+      - 'docs/openapispec/dist/**'
       # AsyncAPI Specification changes should trigger a re-deployment to GitHub Pages
       - 'docs/asyncapi/WebSockets.yaml'
       # Changes to the GitHub Actions workflow itself should also trigger a re-deployment to GitHub Pages
@@ -15,6 +16,7 @@ on:
       # Changes to the GitHub Pages entry point (index.html) providing links to different documentation artifacts
       # should trigger a re-deployment to GitHub Pages
       - 'docs/githubpages/index.html'
+      - 'docs/githubpages/styles.css'
   workflow_dispatch:
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
@@ -53,6 +55,7 @@ jobs:
           mkdir -p docs/githubpages/openapispec
           cp docs/openapispec/index.html docs/githubpages/openapispec/index.html
           cp docs/openapispec/RestInterface.yaml docs/githubpages/openapispec/RestInterface.yaml
+          cp -r docs/openapispec/dist docs/githubpages/openapispec/dist
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5.0.0
         with:
