@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import useQuestionQueueStorage from "@/api/questions/hooks/useQuestionQueueStorage.ts"
 import type { QueueItem } from "@/queue/queue.types.ts"
-import QuestionQueueError from "@/queue/queue.error.ts"
 import reducer from "@/queue/queue.reducer.ts"
 import type { QuestionRequest, UpdateQuestionRequest } from "@/api/questions/questions.types.ts"
 import processQueue, { sortQueue } from "@/queue/queue.operations.ts"
@@ -13,6 +12,7 @@ export interface UseQuestionChangeQueueReturn {
         items: QueueItem[]
         idMap: Record<string, string>
         optionIdsByQuestion: Record<string, string[]>
+        failed: { itemId: string; error: string }[]
     }>
     upsertCreate: (questionId: string, payload: QuestionRequest) => void
     upsertReorder: (order: string[]) => void
@@ -90,6 +90,7 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
         items: QueueItem[]
         idMap: Record<string, string>
         optionIdsByQuestion: Record<string, string[]>
+        failed: { itemId: string; error: string }[]
     }> => {
         setIsFlushing(true)
         const updateQueueState = (
@@ -127,13 +128,7 @@ export default function useQuestionChangeQueue(quizId?: string): UseQuestionChan
             )
             updateQueueState(queue, succeededIds, idMap)
 
-            if (failed.length > 0) {
-                throw new QuestionQueueError(failed[0].itemId, new Error(failed[0].error))
-            }
-
-            // setLastError(normalizeError(failed))
-
-            return { items: sortedQueue, idMap, optionIdsByQuestion }
+            return { items: sortedQueue, idMap, optionIdsByQuestion, failed }
         } finally {
             setIsFlushing(false)
         }

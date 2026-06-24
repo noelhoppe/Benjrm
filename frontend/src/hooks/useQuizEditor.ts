@@ -386,6 +386,12 @@ export default function useQuizEditor(quizId?: string): UseQuizEditorResult {
             }
 
             await queryClient.invalidateQueries({ queryKey: questionKeys.all(quizId) })
+            if (flushResult.failed.length > 0) {
+                const question = queue.find((item) => item.id === flushResult.failed[0].itemId)
+                const questionId =
+                    question && question.op !== "reorder" ? question.questionId : undefined
+                throw new QuestionQueueError(questionId, new Error(flushResult.failed[0].error))
+            }
             setHasUnsavedChanges(false)
             toast.success("Quiz changes saved.")
 
